@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리니지 클래식 통합 툴즈</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #121212; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+    <!-- 🟢 상단 통합 헤더 및 탭 메뉴 -->
+    <header class="bg-[#18181b] border-b border-zinc-800 px-4 py-3 flex items-center justify-between shadow-md shrink-0">
+        <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            <i class="fa-solid fa-swords text-indigo-500"></i> 리니지 툴즈
+        </h1>
+        
+        <div class="flex bg-[#09090b] p-1.5 rounded-lg border border-zinc-800 shadow-inner">
+            <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-4 py-1.5 text-xs sm:text-sm font-bold rounded transition-all bg-[#27272a] text-indigo-400 shadow">
+                축/저주 판별기
+            </button>
+            <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-4 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-400 hover:text-zinc-200">
+                혈마크 제작기
+            </button>
+        </div>
+    </header>
+
+    <!-- 🟢 하위 HTML 파일을 띄워주는 Iframe 영역 -->
+    <iframe id="tool-frame" src="html/stat.html" class="flex-1 w-full border-none bg-zinc-900 w-full h-full"></iframe>
+
+    <script>
+        function switchTab(tabId) {
+            const frame = document.getElementById('tool-frame');
+            const statBtn = document.getElementById('tab-btn-stat');
+            const markBtn = document.getElementById('tab-btn-mark');
+
+            if (tabId === 'stat') {
+                // stat.html 호출
+                frame.src = 'html/stat.html';
+                statBtn.classList.add('bg-[#27272a]', 'text-indigo-400', 'shadow');
+                statBtn.classList.remove('text-zinc-400', 'hover:text-zinc-200');
+                markBtn.classList.remove('bg-[#27272a]', 'text-indigo-400', 'shadow');
+                markBtn.classList.add('text-zinc-400', 'hover:text-zinc-200');
+            } else {
+                // mark.html 호출
+                frame.src = 'html/mark.html';
+                markBtn.classList.add('bg-[#27272a]', 'text-indigo-400', 'shadow');
+                markBtn.classList.remove('text-zinc-400', 'hover:text-zinc-200');
+                statBtn.classList.remove('bg-[#27272a]', 'text-indigo-400', 'shadow');
+                statBtn.classList.add('text-zinc-400', 'hover:text-zinc-200');
+            }
+        }
+    </script>
+</body>
+</html>
