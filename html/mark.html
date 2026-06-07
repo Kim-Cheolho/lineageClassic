@@ -1,1379 +1,1221 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="ko" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>리니지 클래식 혈마크 제작 툴</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- 구글 웹 폰트 -->
-    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300;500;700&family=Yeon+Sung&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = { darkMode: "class" };
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300;500;700&family=Yeon+Sung&display=swap"
+      rel="stylesheet" />
 
     <style>
-        body { background-color: #121212; color: #e5e5e5; font-family: 'Noto Sans KR', sans-serif; }
-        /* 픽셀 아트를 위한 캔버스 렌더링 설정 */
-        canvas { image-rendering: pixelated; }
-        
-        /* 커스텀 스크롤바 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #4a4a4a; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #666; }
-        
-        .panel-bg { background-color: #1e1e1e; border: 1px solid #333; }
-        .layer-item.active { background-color: #2d3748; border-color: #4a5568; }
-        
-        .color-swatch { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 1px solid #4a4a4a; transition: transform 0.1s; }
-        .color-swatch:hover { transform: scale(1.1); border-color: #fff; }
-        .hex-display { font-family: monospace; letter-spacing: 0.5px; }
+      body {
+        font-family: "Noto Sans KR", sans-serif;
+      }
+      canvas {
+        image-rendering: pixelated;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #a1a1aa;
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #3f3f46;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #71717a;
+      }
+
+      .color-swatch {
+        width: 22px;
+        height: 22px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid #71717a;
+        transition: transform 0.1s;
+      }
+      .color-swatch:hover {
+        transform: scale(1.1);
+        border-color: #fff;
+      }
+      .hex-display {
+        font-family: monospace;
+        letter-spacing: 0.5px;
+      }
     </style>
-</head>
-<!-- 🟢 반응형 변경: 데스크탑에선 꽉 찬 화면(h-screen), 모바일 환경에선 스크롤 가능한 높이(min-h-screen) 적용 -->
-<body class="min-h-screen lg:h-screen flex flex-col">
-
-    <!-- Header -->
-    <header class="bg-[#181818] border-b border-gray-800 p-3 flex justify-between items-center shadow-md z-10 sticky top-0">
-        <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-            리니지 혈마크 제작 툴
-        </h1>
-        <div class="flex items-center gap-3">
-            <div class="text-[10px] sm:text-xs text-gray-400 hidden sm:block">
-                <i class="fa-solid fa-circle-info mr-1"></i> 16x12 최적화 | <i class="fa-solid fa-floppy-disk ml-1 text-green-400"></i> 자동 저장됨
-            </div>
-            <!-- 초기화 버튼 -->
-            <button id="btnResetApp" class="text-[11px] font-bold bg-red-900/40 hover:bg-red-700 text-red-200 px-3 py-1.5 rounded border border-red-800 transition-colors flex items-center gap-1 shadow">
-                <i class="fa-solid fa-power-off"></i> 다시 시작
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Workspace -->
-    <!-- 🟢 반응형 변경: 모바일에서는 세로 스크롤 허용(overflow-y-auto), 데스크탑에서는 내부 스크롤을 쓰기 위해 숨김(lg:overflow-hidden) -->
+  </head>
+  <body class="min-h-screen lg:h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
     <main class="flex-1 overflow-y-auto lg:overflow-hidden p-2 sm:p-4">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-full">
-            
-            <!-- 1. 좌측: 레이어 관리 패널 -->
-            <!-- 🟢 반응형 변경: 모바일에서는 높이를 제한(h-[300px])하여 너무 길어지지 않게 방지, 데스크탑은 화면 꽉 차게(h-full) -->
-            <div class="lg:col-span-3 panel-bg rounded-xl flex flex-col shadow-lg h-[300px] lg:h-full">
-                <div class="p-3 sm:p-4 border-b border-gray-700 bg-[#252525] flex justify-between items-center shrink-0">
-                    <h2 class="text-xs sm:text-sm font-bold text-gray-200"><i class="fa-solid fa-layer-group mr-1"></i> 레이어 관리</h2>
-                </div>
-                
-                <div class="p-2 sm:p-3 grid grid-cols-2 gap-2 bg-[#1a1a1a] shrink-0">
-                    <button id="btnAddTextLayer" class="py-2 text-[11px] sm:text-xs font-bold bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors border border-gray-600 flex flex-col items-center gap-1">
-                        <i class="fa-solid fa-font"></i> 텍스트 추가
-                    </button>
-                    <button id="btnAddImageLayer" class="py-2 text-[11px] sm:text-xs font-bold bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors border border-gray-600 flex flex-col items-center gap-1">
-                        <i class="fa-solid fa-image"></i> 이미지 추가
-                    </button>
-                </div>
-                
-                <div id="layerListContainer" class="flex-1 overflow-y-auto p-2 space-y-2">
-                    <!-- Layer Items will be injected here -->
-                </div>
-            </div>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-full">
+        <div class="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col shadow-lg h-[300px] lg:h-full transition-colors duration-300">
+          <div class="p-3 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950/50 flex justify-between items-center shrink-0 rounded-t-xl">
+            <h2 class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-layer-group mr-1"></i> 레이어 관리</h2>
+          </div>
 
-            <!-- 2. 중앙: 속성 편집 패널 -->
-            <!-- 🟢 반응형 변경: 모바일에서 레이아웃 깨짐 방지 -->
-            <div class="lg:col-span-6 panel-bg rounded-xl flex flex-col shadow-lg relative min-h-[400px] lg:h-full">
-                <div class="p-3 sm:p-4 border-b border-gray-700 bg-[#252525] flex justify-between items-center shrink-0">
-                    <h2 class="text-xs sm:text-sm font-bold text-gray-200 truncate">
-                        <i class="fa-solid fa-sliders mr-1"></i> 속성 편집 
-                        <span id="propTitle" class="ml-2 text-gray-400 font-normal">선택된 레이어 없음</span>
-                    </h2>
-                    <span id="propTypeBadge" class="hidden shrink-0 ml-2"></span>
-                </div>
-                
-                <div id="noLayerMessage" class="absolute inset-0 top-[50px] flex items-center justify-center text-gray-500 text-sm z-10 bg-[#1e1e1e] rounded-b-xl">
-                    레이어를 선택해주세요.
-                </div>
+          <div class="p-2 sm:p-3 grid grid-cols-2 gap-2 bg-zinc-50 dark:bg-zinc-900/50 shrink-0">
+            <button
+              id="btnAddTextLayer"
+              class="py-2 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded transition-colors border border-zinc-300 dark:border-zinc-700 flex flex-col items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-font"></i> 텍스트 추가
+            </button>
+            <button
+              id="btnAddImageLayer"
+              class="py-2 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded transition-colors border border-zinc-300 dark:border-zinc-700 flex flex-col items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-image"></i> 이미지 추가
+            </button>
+          </div>
 
-                <div id="propertiesPanel" class="p-3 sm:p-5 overflow-y-auto hidden flex-col gap-5 flex-1">
-                    
-                    <!-- [TEXT SPECIFIC INPUTS] -->
-                    <div id="propTextGroup" class="flex flex-col gap-4 hidden">
-                        <div>
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">텍스트 내용</label>
-                            <input type="text" id="propText" value="" class="w-full bg-[#111] border border-gray-600 rounded p-2 text-sm text-white focus:border-blue-500 focus:outline-none placeholder-gray-600" placeholder="예: 전투, 혈">
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">글꼴 (Font)</label>
-                                <select id="propFontFamily" class="w-full bg-[#111] border border-gray-600 rounded p-1.5 text-xs text-white focus:outline-none">
-                                    <optgroup label="고딕/스퀘어">
-                                        <option value="Noto Sans KR">노토 산스 (Noto Sans)</option>
-                                        <option value="Black Han Sans">검은고딕</option>
-                                        <option value="Do Hyeon">도현</option>
-                                        <option value="맑은 고딕">맑은 고딕</option>
-                                        <option value="굴림">굴림</option>
-                                        <option value="돋움">돋움</option>
-                                    </optgroup>
-                                    <optgroup label="명조/바탕">
-                                        <option value="Noto Serif KR">노토 세리프 (Noto Serif)</option>
-                                        <option value="Nanum Myeongjo">나눔명조</option>
-                                        <option value="Song Myung">송명</option>
-                                        <option value="궁서">궁서</option>
-                                        <option value="바탕">바탕</option>
-                                    </optgroup>
-                                    <optgroup label="캐주얼/손글씨">
-                                        <option value="Jua">주아</option>
-                                        <option value="Yeon Sung">연성</option>
-                                        <option value="Nanum Pen Script">나눔펜</option>
-                                        <option value="Poor Story">푸어스토리</option>
-                                        <option value="Single Day">싱글데이</option>
-                                        <option value="Stylish">스타일리시</option>
-                                        <option value="Sunflower">해바라기</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">스타일</label>
-                                <div class="flex gap-2">
-                                    <select id="propFontWeight" class="w-1/2 bg-[#111] border border-gray-600 rounded p-1.5 text-xs text-white focus:outline-none">
-                                        <option value="300">얇게</option>
-                                        <option value="normal">보통</option>
-                                        <option value="bold">굵게</option>
-                                        <option value="900">매우 굵게</option>
-                                    </select>
-                                    <label class="w-1/2 flex items-center justify-center gap-1 bg-[#111] border border-gray-600 rounded p-1.5 text-xs cursor-pointer hover:bg-gray-700">
-                                        <input type="checkbox" id="propFontStyle" class="rounded bg-gray-800 border-gray-600">
-                                        <i>기울임</i>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-[#1a1a1a] p-3 rounded border border-gray-700">
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-gray-400">색상 채우기</label>
-                            <div class="flex items-center gap-3 mb-2 flex-wrap">
-                                <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer">
-                                    <input type="radio" name="colorType" value="solid" checked class="text-blue-500 bg-gray-800 border-gray-600"> 단색
-                                </label>
-                                <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer">
-                                    <input type="radio" name="colorType" value="gradient" class="text-blue-500 bg-gray-800 border-gray-600"> 그라데이션
-                                </label>
-                                <select id="propGradientDir" class="bg-[#111] border border-gray-600 rounded p-1 text-[11px] text-gray-300 hidden">
-                                    <option value="vertical">위 ➔ 아래</option>
-                                    <option value="horizontal">왼쪽 ➔ 오른쪽</option>
-                                </select>
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="flex-1">
-                                    <span class="text-[10px] text-gray-500 flex justify-between mb-1">
-                                        <span>색상 1 <span class="text-gray-600 text-[9px]">(시작)</span></span>
-                                        <span id="txtHexColor1" class="hex-display text-gray-400">#000000</span>
-                                    </span>
-                                    <input type="color" id="propColor1" value="#000000" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0">
-                                </div>
-                                <div class="flex-1" id="color2Container" style="opacity: 0.3; pointer-events: none;">
-                                    <span class="text-[10px] text-gray-500 flex justify-between mb-1">
-                                        <span>색상 2 <span class="text-gray-600 text-[9px]">(끝)</span></span>
-                                        <span id="txtHexColor2" class="hex-display text-gray-400">#AAAAAA</span>
-                                    </span>
-                                    <input type="color" id="propColor2" value="#aaaaaa" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- [IMAGE SPECIFIC INPUTS] -->
-                    <div id="propImageGroup" class="flex flex-col gap-4 hidden">
-                        <div class="bg-[#1a1a1a] p-3 rounded border border-gray-700">
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-gray-400">이미지 파일 (투명 PNG 권장)</label>
-                            <input type="file" id="propImageUpload" accept="image/*" class="w-full bg-[#111] border border-gray-600 rounded p-1.5 text-[10px] sm:text-xs text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-700 file:text-white file:font-bold file:cursor-pointer cursor-pointer hover:file:bg-gray-600">
-                            <button id="btnRemoveBg" class="mt-2 w-full py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors hidden flex items-center justify-center gap-1 shadow-sm">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> 단색 배경 자동 제거
-                            </button>
-                            <p class="text-[9px] sm:text-[10px] text-gray-500 mt-2">* 배경이 투명한 이미지를 올리거나, 배경이 완전 검정색(0,0,0)인 이미지를 올리면 자동으로 투명 처리됩니다.</p>
-                        </div>
-                    </div>
-
-                    <hr class="border-gray-700">
-
-                    <!-- [COMMON CONTROLS: Size & Position & Outline] -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div id="propFontSizeGroup">
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">글자 크기 (<span id="valFontSize">10</span>px)</label>
-                            <input type="range" id="propFontSize" min="6" max="24" value="10" class="w-full accent-blue-500">
-                        </div>
-                        <div id="propImgScaleGroup" class="hidden">
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">이미지 배율 (<span id="valImgScale">100</span>%)</label>
-                            <input type="range" id="propImgScale" min="10" max="200" value="100" class="w-full accent-green-500">
-                        </div>
-                        <div id="propScaleXGroup">
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">가로 압축/장평 (<span id="valScaleX">100</span>%)</label>
-                            <input type="range" id="propScaleX" min="30" max="150" value="100" class="w-full accent-blue-500">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">X 위치 조정 (<span id="valOffsetX">0</span>)</label>
-                            <input type="range" id="propOffsetX" min="-16" max="16" value="0" class="w-full accent-gray-400">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-gray-400">Y 위치 조정 (<span id="valOffsetY">0</span>)</label>
-                            <input type="range" id="propOffsetY" min="-12" max="12" value="0" class="w-full accent-gray-400">
-                        </div>
-                    </div>
-
-                    <div class="bg-[#1a1a1a] p-3 rounded border border-gray-700 flex flex-col gap-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="propAddOutline" class="w-4 h-4 rounded bg-gray-800 border-gray-600 accent-blue-500">
-                            <span class="text-[11px] sm:text-xs font-bold text-gray-200">1px 외곽선(Outline) 추가</span>
-                        </label>
-                        <div class="flex items-center gap-2 pl-6" id="outlineColorContainer" style="opacity: 0.3; pointer-events: none;">
-                            <span class="text-[10px] text-gray-500 block w-14">외곽선 색상</span>
-                            <input type="color" id="propOutlineColor" value="#050505" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0">
-                            <span id="txtHexOutline" class="hex-display text-[10px] text-gray-400 ml-1">#050505</span>
-                        </div>
-                        <p class="text-[9px] text-gray-500 pl-6 mt-1">* 리니지 시스템 상 완전 검정(#000000)은 투명해지므로 기본값은 진한 블랙(#050505)입니다.</p>
-                    </div>
-
-                    <!-- [DRAW TOOLS (COMMON FOR ALL LAYERS)] -->
-                    <div class="bg-[#2a231d] p-3 rounded border border-orange-900/50 shadow-inner">
-                        <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-orange-200 flex justify-between items-center">
-                            <span><i class="fa-solid fa-paintbrush"></i> 선택된 레이어 직접 수정 (비파괴 편집)</span>
-                        </label>
-                        <p class="text-[9px] sm:text-[10px] text-orange-400/80 mb-3 leading-tight">
-                            미리보기 캔버스를 클릭하여 텍스트나 이미지 위에 덧칠하거나 픽셀을 지울 수 있습니다.
-                        </p>
-
-                        <!-- 펜/지우개 도구 -->
-                        <div class="flex gap-2 mb-3">
-                            <button id="btnToolBrush" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-orange-600 text-white rounded border border-orange-500 transition-colors shadow">
-                                <i class="fa-solid fa-pen"></i> 펜
-                            </button>
-                            <button id="btnToolEraser" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-gray-700 text-gray-300 rounded border border-gray-600 transition-colors hover:bg-gray-600">
-                                <i class="fa-solid fa-eraser"></i> 지우개
-                            </button>
-                        </div>
-
-                        <!-- 색상 팔레트 UI -->
-                        <div class="mb-3">
-                            <div class="flex items-center gap-2 mb-1.5">
-                                <span class="text-[10px] text-gray-400 block w-10">현재 펜</span>
-                                <input type="color" id="propDrawColor" value="#ff0000" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0">
-                                <span id="txtHexDrawColor" class="hex-display text-[10px] text-gray-400 ml-1">#FF0000</span>
-                            </div>
-                            <div class="flex flex-wrap gap-1" id="colorPalette">
-                                <!-- JS에서 동적 생성됨 -->
-                            </div>
-                        </div>
-
-                        <!-- 실행 취소 및 전체 초기화 버튼 -->
-                        <div class="flex gap-2 mt-4 pt-3 border-t border-orange-900/30">
-                            <button id="btnUndo" class="flex-1 py-1.5 text-[11px] font-bold bg-gray-700 hover:bg-gray-600 text-white rounded border border-gray-600 transition-colors" title="단축키: Ctrl + Z">
-                                <i class="fa-solid fa-rotate-left mr-1"></i> 취소
-                            </button>
-                            <button id="btnDrawClear" class="flex-1 py-1.5 text-[11px] font-bold bg-red-900/40 hover:bg-red-800 text-red-300 rounded border border-red-800 transition-colors">
-                                <i class="fa-solid fa-trash-can mr-1"></i> 도트 비우기
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- 3. 우측: 미리보기 & 다운로드 패널 -->
-            <!-- 🟢 반응형 변경: 모바일에서는 하단으로 자연스럽게 떨어짐 -->
-            <div class="lg:col-span-3 flex flex-col gap-4">
-                
-                <!-- Preview Canvas -->
-                <div class="panel-bg rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center">
-                    <h2 class="text-xs sm:text-sm font-bold text-gray-200 w-full mb-3 sm:mb-4 flex justify-between items-center">
-                        <span><i class="fa-solid fa-magnifying-glass mr-1"></i> 미리보기 (확대)</span>
-                        <span class="text-[10px] bg-gray-700 px-2 py-0.5 rounded">16 x 12</span>
-                    </h2>
-                    
-                    <!-- 🟢 최초 업로드 버전으로 캔버스 컨테이너 및 크기 롤백 -->
-                    <div class="relative bg-[#ffffff] rounded p-2 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] border border-gray-700" style="width: fit-content;">
-                        <!-- Grid overlay -->
-                        <!-- 🟢 수정 포인트: display: block; 으로 기본 노출 -->
-                        <div id="gridOverlay" class="absolute inset-2 pointer-events-none opacity-20" style="background-image: linear-gradient(to right, gray 1px, transparent 1px), linear-gradient(to bottom, gray 1px, transparent 1px); background-size: 16px 16px; display: block;"></div>
-                        <!-- Display Canvas -->
-                        <canvas id="displayCanvas" width="16" height="12" class="cursor-crosshair" style="width: 256px; height: 192px;"></canvas>
-                    </div>
-
-                    <div class="w-full mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-2">
-                        <label class="flex items-center gap-2 cursor-pointer text-gray-400 hover:text-white transition-colors">
-                            <!-- 🟢 수정 포인트: checked 속성 추가 -->
-                            <input type="checkbox" id="showGrid" class="accent-blue-500" checked> 픽셀 격자 보기
-                        </label>
-                        <div class="flex items-center gap-1">
-                            <span class="text-[10px] text-gray-400">작업용 배경</span>
-                            <input type="color" id="bgColor" value="#ffffff" class="w-5 h-5 sm:w-6 sm:h-6 rounded cursor-pointer bg-transparent border-0 p-0" title="작업하기 편한 색상으로 설정하세요 (저장 시에는 자동으로 검정색으로 변환됩니다)">
-                            <span id="txtHexBgColor" class="hex-display text-[10px] text-gray-500 ml-1">#FFFFFF</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 🟢 인게임 적용 미리보기 패널 -->
-                <div class="panel-bg rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center">
-                    <h2 class="text-xs sm:text-sm font-bold text-gray-200 w-full mb-3 flex justify-between items-center">
-                        <span><i class="fa-solid fa-gamepad mr-1"></i> 인게임 미리보기</span>
-                    </h2>
-                    
-                    <!-- 미리보기 영역 -->
-                    <div id="previewContainer" class="relative w-[102px] h-[132px] bg-[#7a6b58] rounded border border-gray-700 overflow-hidden shadow-inner mx-auto flex-shrink-0 touch-none">
-                        <img id="inGameBgImg" src="https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true" class="absolute inset-0 w-full h-full object-cover pointer-events-none" onload="document.getElementById('defaultBgPattern').classList.add('hidden'); document.getElementById('defaultAceText').classList.add('hidden');" onerror="this.onerror=null; this.classList.add('hidden'); document.getElementById('defaultBgPattern').classList.remove('hidden'); document.getElementById('defaultAceText').classList.remove('hidden');">
-                        
-                        <!-- 배경 미적용시 기본 패턴 -->
-                        <div id="defaultBgPattern" class="absolute inset-0 hidden pointer-events-none" style="background-image: radial-gradient(#635545 1px, transparent 1px); background-size: 8px 8px;"></div>
-                        
-                        <!-- 🟢 모바일 터치 드래그 지원을 위한 CSS 조정 -->
-                        <div id="dragMark" class="absolute top-[20px] left-[31px] cursor-move group z-10 flex items-center gap-[2px] touch-none">
-                            <!-- 실제 렌더링되는 투명 마크 -->
-                            <canvas id="inGameCanvas" width="16" height="12" class="w-[16px] h-[12px] shadow-sm pointer-events-none" style="image-rendering: pixelated;"></canvas>
-                            <!-- 스크린샷 업로드 전 기본 노출되는 텍스트 -->
-                            <span id="defaultAceText" class="text-[13px] font-bold text-[#5c6dff] hidden pointer-events-none" style="text-shadow: 1px 0px 0 #000, 0px 1px 0 #000, -1px 0px 0 #000, 0px -1px 0 #000; font-family: 'Gulim', '굴림', sans-serif; letter-spacing: -0.5px;">Ace</span>
-                            <!-- 호버시 드래그 가이드 테두리 -->
-                            <div class="absolute inset-[-4px] border border-dashed border-yellow-400/0 group-hover:border-yellow-400/80 rounded pointer-events-none transition-colors"></div>
-                        </div>
-                    </div>
-                    <div class="w-full text-center mt-2 text-[10px] font-bold text-gray-400 hidden sm:block">마우스로 마크를 드래그 해보세요</div>
-                    <div class="w-full text-center mt-2 text-[10px] font-bold text-gray-400 sm:hidden">마크를 터치하여 움직여보세요</div>
-                </div>
-
-                <!-- Export Actions -->
-                <div class="panel-bg rounded-xl p-3 sm:p-4 shadow-lg flex flex-col gap-3">
-                    <h2 class="text-xs sm:text-sm font-bold text-gray-200 mb-1"><i class="fa-solid fa-download mr-1"></i> 내보내기</h2>
-                    <p class="text-[9px] sm:text-[10px] text-gray-400 mb-1 leading-tight">클라이언트에 바로 적용 가능한 24-bit BMP로 저장<br>
-                        <span class="text-green-400">※ 다운로드 시 배경은 검정(투명)으로 자동 변환</span>
-                    </p>
-                    <button id="btnDownload" class="w-full py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold rounded-lg shadow transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2">
-                        <i class="fa-solid fa-file-arrow-down"></i> mark.bmp 저장
-                    </button>
-                    <div class="mt-1 text-[9px] sm:text-[10px] text-gray-500 p-2 bg-[#1a1a1a] rounded border border-gray-700">
-                        <strong class="text-gray-300">적용법:</strong> 파일 리니지 폴더 이동 후 채팅창 <code class="text-green-400 font-mono">/혈맹마크 mark.bmp</code>
-                    </div>
-                </div>
-
-            </div>
+          <div id="layerListContainer" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
         </div>
+
+        <div class="lg:col-span-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col shadow-lg relative min-h-[400px] lg:h-full transition-colors duration-300">
+          <div class="p-3 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950/50 flex justify-between items-center shrink-0 rounded-t-xl">
+            <h2 class="text-xs sm:text-sm font-bold truncate">
+              <i class="fa-solid fa-sliders mr-1"></i> 속성 편집
+              <span id="propTitle" class="ml-2 text-zinc-500 dark:text-zinc-400 font-normal">선택된 레이어 없음</span>
+            </h2>
+            <span id="propTypeBadge" class="hidden shrink-0 ml-2"></span>
+          </div>
+
+          <div id="noLayerMessage" class="absolute inset-0 top-[50px] flex items-center justify-center text-zinc-500 text-sm z-10 bg-white/90 dark:bg-zinc-900/90 rounded-b-xl backdrop-blur-sm">레이어를 선택해주세요.</div>
+
+          <div id="propertiesPanel" class="p-3 sm:p-5 overflow-y-auto hidden flex-col gap-5 flex-1">
+            <div id="propTextGroup" class="flex flex-col gap-4 hidden">
+              <div>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">텍스트 내용</label>
+                <input type="text" id="propText" value="" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-2 text-sm text-zinc-900 dark:text-white focus:border-blue-500 focus:outline-none" placeholder="예: 전투, 혈" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">글꼴 (Font)</label>
+                  <select id="propFontFamily" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none">
+                    <optgroup label="고딕/스퀘어">
+                      <option value="Noto Sans KR">노토 산스 (Noto Sans)</option>
+                      <option value="Black Han Sans">검은고딕</option>
+                      <option value="Do Hyeon">도현</option>
+                      <option value="맑은 고딕">맑은 고딕</option>
+                      <option value="굴림">굴림</option>
+                      <option value="돋움">돋움</option>
+                    </optgroup>
+                    <optgroup label="명조/바탕">
+                      <option value="Noto Serif KR">노토 세리프 (Noto Serif)</option>
+                      <option value="Nanum Myeongjo">나눔명조</option>
+                      <option value="Song Myung">송명</option>
+                      <option value="궁서">궁서</option>
+                      <option value="바탕">바탕</option>
+                    </optgroup>
+                    <optgroup label="캐주얼/손글씨">
+                      <option value="Jua">주아</option>
+                      <option value="Yeon Sung">연성</option>
+                      <option value="Nanum Pen Script">나눔펜</option>
+                      <option value="Poor Story">푸어스토리</option>
+                      <option value="Single Day">싱글데이</option>
+                      <option value="Stylish">스타일리시</option>
+                      <option value="Sunflower">해바라기</option>
+                    </optgroup>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">스타일</label>
+                  <div class="flex gap-2">
+                    <select id="propFontWeight" class="w-1/2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none">
+                      <option value="300">얇게</option>
+                      <option value="normal">보통</option>
+                      <option value="bold">굵게</option>
+                      <option value="900">매우 굵게</option>
+                    </select>
+                    <label class="w-1/2 flex items-center justify-center gap-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                      <input type="checkbox" id="propFontStyle" class="rounded border-zinc-400 dark:border-zinc-600" />
+                      <i>기울임</i>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800">
+                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-500 dark:text-zinc-400">색상 채우기</label>
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="solid" checked class="text-blue-500" /> 단색 </label>
+                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="gradient" class="text-blue-500" /> 그라데이션 </label>
+                  <select id="propGradientDir" class="bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1 text-[11px] hidden">
+                    <option value="vertical">위 ➔ 아래</option>
+                    <option value="horizontal">왼쪽 ➔ 오른쪽</option>
+                  </select>
+                </div>
+                <div class="flex gap-3">
+                  <div class="flex-1">
+                    <span class="text-[10px] text-zinc-500 flex justify-between mb-1">
+                      <span>색상 1 <span class="text-zinc-400 dark:text-zinc-600 text-[9px]">(시작)</span></span>
+                      <span id="txtHexColor1" class="hex-display text-zinc-500 dark:text-zinc-400">#000000</span>
+                    </span>
+                    <input type="color" id="propColor1" value="#000000" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0" />
+                  </div>
+                  <div class="flex-1" id="color2Container" style="opacity: 0.3; pointer-events: none">
+                    <span class="text-[10px] text-zinc-500 flex justify-between mb-1">
+                      <span>색상 2 <span class="text-zinc-400 dark:text-zinc-600 text-[9px]">(끝)</span></span>
+                      <span id="txtHexColor2" class="hex-display text-zinc-500 dark:text-zinc-400">#AAAAAA</span>
+                    </span>
+                    <input type="color" id="propColor2" value="#aaaaaa" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="propImageGroup" class="flex flex-col gap-4 hidden">
+              <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800">
+                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-500 dark:text-zinc-400">이미지 파일 (투명 PNG 권장)</label>
+                <input type="file" id="propImageUpload" accept="image/*" class="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-[10px] sm:text-xs cursor-pointer" />
+                <button id="btnRemoveBg" class="mt-2 w-full py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors hidden flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> 단색 배경 자동 제거</button>
+                <p class="text-[9px] sm:text-[10px] text-zinc-500 mt-2">* 배경이 투명한 이미지를 올리거나, 배경이 완전 검정색(0,0,0)인 이미지를 올리면 자동으로 투명 처리됩니다.</p>
+              </div>
+            </div>
+
+            <hr class="border-zinc-200 dark:border-zinc-800" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div id="propFontSizeGroup">
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">글자 크기 (<span id="valFontSize">10</span>px)</label>
+                <input type="range" id="propFontSize" min="6" max="24" value="10" class="w-full accent-blue-500" />
+              </div>
+              <div id="propImgScaleGroup" class="hidden">
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">이미지 배율 (<span id="valImgScale">100</span>%)</label>
+                <input type="range" id="propImgScale" min="10" max="200" value="100" class="w-full accent-green-500" />
+              </div>
+              <div id="propScaleXGroup">
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">가로 압축/장평 (<span id="valScaleX">100</span>%)</label>
+                <input type="range" id="propScaleX" min="30" max="150" value="100" class="w-full accent-blue-500" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">X 위치 조정 (<span id="valOffsetX">0</span>)</label>
+                <input type="range" id="propOffsetX" min="-16" max="16" value="0" class="w-full accent-zinc-400" />
+              </div>
+              <div>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Y 위치 조정 (<span id="valOffsetY">0</span>)</label>
+                <input type="range" id="propOffsetY" min="-12" max="12" value="0" class="w-full accent-zinc-400" />
+              </div>
+            </div>
+
+            <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="propAddOutline" class="w-4 h-4 rounded border-zinc-400 dark:border-zinc-600 accent-blue-500" />
+                <span class="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-zinc-200">1px 외곽선(Outline) 추가</span>
+              </label>
+              <div class="flex items-center gap-2 pl-6" id="outlineColorContainer" style="opacity: 0.3; pointer-events: none">
+                <span class="text-[10px] text-zinc-500 block w-14">외곽선 색상</span>
+                <input type="color" id="propOutlineColor" value="#050505" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
+                <span id="txtHexOutline" class="hex-display text-[10px] text-zinc-500 ml-1">#050505</span>
+              </div>
+            </div>
+
+            <div class="bg-amber-50 dark:bg-[#2a231d] p-3 rounded border border-amber-200 dark:border-orange-900/50 shadow-inner">
+              <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-amber-700 dark:text-orange-200 flex justify-between items-center">
+                <span><i class="fa-solid fa-paintbrush"></i> 비파괴 직접 편집</span>
+              </label>
+
+              <div class="flex gap-2 mb-3">
+                <button id="btnToolBrush" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-amber-500 dark:bg-orange-600 text-white rounded shadow-sm"><i class="fa-solid fa-pen"></i> 펜</button>
+                <button id="btnToolEraser" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded shadow-sm"><i class="fa-solid fa-eraser"></i> 지우개</button>
+              </div>
+
+              <div class="mb-3">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <span class="text-[10px] text-zinc-500 block w-10">현재 펜</span>
+                  <input type="color" id="propDrawColor" value="#ff0000" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
+                </div>
+                <div class="flex flex-wrap gap-1" id="colorPalette"></div>
+              </div>
+
+              <div class="flex gap-2 mt-4 pt-3 border-t border-amber-200 dark:border-orange-900/30">
+                <button id="btnUndo" class="flex-1 py-1.5 text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 text-zinc-700 dark:text-white rounded transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i> 취소</button>
+                <button id="btnDrawClear" class="flex-1 py-1.5 text-[11px] font-bold bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 rounded transition-colors border border-red-200 dark:border-red-800">도트 비우기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-3 flex flex-col gap-4">
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center transition-colors duration-300">
+            <h2 class="text-xs sm:text-sm font-bold w-full mb-3 sm:mb-4 flex justify-between items-center">
+              <span><i class="fa-solid fa-magnifying-glass mr-1"></i> 확대 캔버스</span>
+            </h2>
+
+            <div class="relative bg-white rounded p-2 shadow-inner border border-zinc-300 dark:border-zinc-700" style="width: fit-content">
+              <div id="gridOverlay" class="absolute inset-2 pointer-events-none opacity-20" style="background-image: linear-gradient(to right, gray 1px, transparent 1px), linear-gradient(to bottom, gray 1px, transparent 1px); background-size: 16px 16px; display: block"></div>
+              <canvas id="displayCanvas" width="16" height="12" class="cursor-crosshair" style="width: 256px; height: 192px"></canvas>
+            </div>
+
+            <div class="w-full mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-2">
+              <label class="flex items-center gap-2 cursor-pointer text-zinc-500 dark:text-zinc-400"> <input type="checkbox" id="showGrid" class="accent-blue-500" checked /> 격자 보기 </label>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-zinc-500">배경</span>
+                <input type="color" id="bgColor" value="#ffffff" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center transition-colors duration-300">
+            <h2 class="text-xs sm:text-sm font-bold w-full mb-3 flex justify-between items-center">
+              <span><i class="fa-solid fa-gamepad mr-1"></i> 인게임 적용 샷</span>
+              <button id="btnResetApp" class="text-[10px] sm:text-[11px] font-bold bg-red-50 hover:bg-red-100 dark:bg-red-900/40 dark:hover:bg-red-800 text-red-600 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800 transition-colors shadow-sm">
+                <i class="fa-solid fa-power-off"></i> 초기화
+              </button>
+            </h2>
+
+            <div id="previewContainer" class="relative w-[102px] h-[132px] bg-[#7a6b58] rounded border border-zinc-300 dark:border-zinc-700 overflow-hidden mx-auto flex-shrink-0 touch-none">
+              <img id="inGameBgImg" src="https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true" class="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+              <div id="defaultBgPattern" class="absolute inset-0 hidden pointer-events-none" style="background-image: radial-gradient(#635545 1px, transparent 1px); background-size: 8px 8px"></div>
+
+              <div id="dragMark" class="absolute top-[20px] left-[31px] cursor-move group z-10 flex items-center gap-[2px] touch-none">
+                <canvas id="inGameCanvas" width="16" height="12" class="w-[16px] h-[12px] shadow-sm pointer-events-none" style="image-rendering: pixelated"></canvas>
+                <span
+                  id="defaultAceText"
+                  class="text-[13px] font-bold text-[#5c6dff] hidden pointer-events-none"
+                  style="
+                    text-shadow:
+                      1px 0px 0 #000,
+                      0px 1px 0 #000,
+                      -1px 0px 0 #000,
+                      0px -1px 0 #000;
+                    font-family: &quot;Gulim&quot;, sans-serif;
+                    letter-spacing: -0.5px;
+                  "
+                  >Ace</span
+                >
+                <div class="absolute inset-[-4px] border border-dashed border-yellow-400/0 group-hover:border-yellow-400/80 rounded pointer-events-none transition-colors"></div>
+              </div>
+            </div>
+            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hidden sm:block">마우스로 마크를 드래그 해보세요</div>
+            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 sm:hidden">마크를 터치하여 움직여보세요</div>
+          </div>
+
+          <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col gap-3 transition-colors duration-300">
+            <button id="btnDownload" class="w-full py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg shadow-md transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2">
+              <i class="fa-solid fa-file-arrow-down"></i> mark.bmp 다운로드
+            </button>
+            <div class="mt-1 text-[9px] sm:text-[10px] text-zinc-500 p-2 bg-zinc-50 dark:bg-zinc-950/50 rounded border border-zinc-200 dark:border-zinc-800">
+              <strong class="text-zinc-600 dark:text-zinc-300">적용법:</strong> 리니지 폴더 이동 후 <code class="text-indigo-500 font-mono">/혈맹마크 mark.bmp</code> <br /><span class="text-emerald-500 dark:text-emerald-400">※ 다운로드 시 캔버스 배경은 검정(투명)으로 자동 변환됩니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
-    <!-- 🟢 Custom Confirm Modal (iframe 차단 방지용 모달창 추가) -->
     <div id="confirmModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden p-4">
-        <div class="bg-[#1e1e1e] border border-gray-700 rounded-lg p-5 w-full max-w-[320px] shadow-2xl">
-            <h3 class="text-white font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> 초기화 확인</h3>
-            <p class="text-gray-300 text-xs mb-5">모든 작업 내용이 삭제되고 처음 상태로 돌아갑니다. 계속하시겠습니까?</p>
-            <div class="flex gap-2 justify-end">
-                <button id="btnCancelReset" class="px-4 py-1.5 text-xs font-bold text-gray-300 bg-gray-700 hover:bg-gray-600 rounded transition-colors border border-gray-600">취소</button>
-                <button id="btnConfirmReset" class="px-4 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded transition-colors border border-red-700">다시 시작</button>
-            </div>
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 w-full max-w-[320px] shadow-2xl">
+        <h3 class="font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-white"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> 초기화 확인</h3>
+        <p class="text-zinc-500 dark:text-zinc-400 text-xs mb-5">모든 작업 내용이 삭제되고 처음 상태로 돌아갑니다. 계속하시겠습니까?</p>
+        <div class="flex gap-2 justify-end">
+          <button id="btnCancelReset" class="px-4 py-1.5 text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded transition-colors border border-zinc-200 dark:border-zinc-700">취소</button>
+          <button id="btnConfirmReset" class="px-4 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded transition-colors border border-red-700">다시 시작</button>
         </div>
+      </div>
     </div>
 
-    <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Canvases
-            const displayCanvas = document.getElementById('displayCanvas');
-            const displayCtx = displayCanvas.getContext('2d', { willReadFrequently: true });
-            
-            // 인게임 1:1 미리보기 캔버스 설정
-            const inGameCanvas = document.getElementById('inGameCanvas');
-            const inGameCtx = inGameCanvas.getContext('2d', { willReadFrequently: true });
-            
-            // Background & Grid
-            const inBgColor = document.getElementById('bgColor');
-            const inShowGrid = document.getElementById('showGrid');
-            const gridOverlay = document.getElementById('gridOverlay');
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "THEME_CHANGE") {
+          const html = document.documentElement;
+          if (event.data.isDark) {
+            html.classList.add("dark");
+          } else {
+            html.classList.remove("dark");
+          }
+        }
+      });
 
-            // --- Global State & History System ---
-            let layers = [];
-            let selectedLayerId = null;
-            let layerCounter = 0;
-            
-            let undoHistory = [];
-            let isStateRestoring = false;
+      document.addEventListener("DOMContentLoaded", () => {
+        const displayCanvas = document.getElementById("displayCanvas");
+        const displayCtx = displayCanvas.getContext("2d", { willReadFrequently: true });
+        const inGameCanvas = document.getElementById("inGameCanvas");
+        const inGameCtx = inGameCanvas.getContext("2d", { willReadFrequently: true });
+        const inBgColor = document.getElementById("bgColor");
+        const inShowGrid = document.getElementById("showGrid");
+        const gridOverlay = document.getElementById("gridOverlay");
 
-            // Draw Tool State
-            let activeDrawTool = 'brush'; 
-            let activeDrawColor = '#ff0000';
+        // 🟢 누락되었다고 생각하셨던 이미지 에러/로드 처리 로직을 JS 영역에 명시적으로 복원
+        const inGameBgImg = document.getElementById("inGameBgImg");
+        inGameBgImg.onerror = function () {
+          this.classList.add("hidden");
+          document.getElementById("defaultBgPattern").classList.remove("hidden");
+          document.getElementById("defaultAceText").classList.remove("hidden");
+        };
+        inGameBgImg.onload = function () {
+          this.classList.remove("hidden");
+          document.getElementById("defaultBgPattern").classList.add("hidden");
+          document.getElementById("defaultAceText").classList.add("hidden");
+        };
 
-            // UI Elements Reference
-            const layerListContainer = document.getElementById('layerListContainer');
-            const propertiesPanel = document.getElementById('propertiesPanel');
-            const noLayerMessage = document.getElementById('noLayerMessage');
-            const propTitle = document.getElementById('propTitle');
-            const propTypeBadge = document.getElementById('propTypeBadge');
-            const propTextGroup = document.getElementById('propTextGroup');
-            const propImageGroup = document.getElementById('propImageGroup');
-            const btnRemoveBg = document.getElementById('btnRemoveBg');
-            
-            const btnToolBrush = document.getElementById('btnToolBrush');
-            const btnToolEraser = document.getElementById('btnToolEraser');
-            const inDrawColor = document.getElementById('propDrawColor');
-            const btnDrawClear = document.getElementById('btnDrawClear');
-            const btnUndo = document.getElementById('btnUndo');
+        let layers = [];
+        let selectedLayerId = null;
+        let layerCounter = 0;
+        let undoHistory = [];
+        let isStateRestoring = false;
+        let activeDrawTool = "brush";
+        let activeDrawColor = "#ff0000";
 
-            // Inputs
-            const inText = document.getElementById('propText');
-            const inFontFamily = document.getElementById('propFontFamily');
-            const inFontWeight = document.getElementById('propFontWeight');
-            const inFontStyle = document.getElementById('propFontStyle');
-            const inFontSize = document.getElementById('propFontSize');
-            const inScaleX = document.getElementById('propScaleX');
-            const inOffsetX = document.getElementById('propOffsetX');
-            const inOffsetY = document.getElementById('propOffsetY');
-            const radiosColorType = document.getElementsByName('colorType');
-            const inGradientDir = document.getElementById('propGradientDir');
-            const inColor1 = document.getElementById('propColor1');
-            const inColor2 = document.getElementById('propColor2');
-            const color2Container = document.getElementById('color2Container');
-            const inAddOutline = document.getElementById('propAddOutline');
-            const inOutlineColor = document.getElementById('propOutlineColor');
-            const inImgScale = document.getElementById('propImgScale');
+        const layerListContainer = document.getElementById("layerListContainer");
+        const propertiesPanel = document.getElementById("propertiesPanel");
+        const noLayerMessage = document.getElementById("noLayerMessage");
+        const propTitle = document.getElementById("propTitle");
+        const propTypeBadge = document.getElementById("propTypeBadge");
+        const propTextGroup = document.getElementById("propTextGroup");
+        const propImageGroup = document.getElementById("propImageGroup");
+        const btnRemoveBg = document.getElementById("btnRemoveBg");
 
-            function updateHexText(inputId, hexTextId) {
-                const hexStr = document.getElementById(inputId).value.toUpperCase();
-                document.getElementById(hexTextId).textContent = hexStr;
-            }
+        const btnToolBrush = document.getElementById("btnToolBrush");
+        const btnToolEraser = document.getElementById("btnToolEraser");
+        const inDrawColor = document.getElementById("propDrawColor");
+        const btnDrawClear = document.getElementById("btnDrawClear");
+        const btnUndo = document.getElementById("btnUndo");
 
-            // --- State Serialization (Auto-save & Undo) ---
-            function serializeApp() {
-                const state = {
-                    bgColor: inBgColor.value,
-                    selectedLayerId: selectedLayerId,
-                    layerCounter: layerCounter,
-                    layers: layers.map(l => ({
-                        ...l,
-                        imageObj: undefined 
-                    }))
-                };
-                return JSON.stringify(state);
-            }
+        const inText = document.getElementById("propText");
+        const inFontFamily = document.getElementById("propFontFamily");
+        const inFontWeight = document.getElementById("propFontWeight");
+        const inFontStyle = document.getElementById("propFontStyle");
+        const inFontSize = document.getElementById("propFontSize");
+        const inScaleX = document.getElementById("propScaleX");
+        const inOffsetX = document.getElementById("propOffsetX");
+        const inOffsetY = document.getElementById("propOffsetY");
+        const radiosColorType = document.getElementsByName("colorType");
+        const inGradientDir = document.getElementById("propGradientDir");
+        const inColor1 = document.getElementById("propColor1");
+        const inColor2 = document.getElementById("propColor2");
+        const color2Container = document.getElementById("color2Container");
+        const inAddOutline = document.getElementById("propAddOutline");
+        const inOutlineColor = document.getElementById("propOutlineColor");
+        const inImgScale = document.getElementById("propImgScale");
 
-            async function deserializeApp(jsonStr, saveHistoryAfterLoad = true) {
-                if (!jsonStr) return;
-                try {
-                    isStateRestoring = true;
-                    const state = JSON.parse(jsonStr);
-                    
-                    inBgColor.value = state.bgColor || '#ffffff';
-                    updateHexText('bgColor', 'txtHexBgColor');
-                    
-                    selectedLayerId = state.selectedLayerId;
-                    layerCounter = state.layerCounter || 0;
-                    
-                    layers = await Promise.all(state.layers.map(l => {
-                        return new Promise(resolve => {
-                            if(l.type === 'text' && !l.gradientDir) l.gradientDir = 'vertical';
-                            if(!l.outlineColor) l.outlineColor = '#050505';
+        function updateHexText(inputId, hexTextId) {
+          const hexStr = document.getElementById(inputId).value.toUpperCase();
+          const el = document.getElementById(hexTextId);
+          if (el) el.textContent = hexStr;
+        }
 
-                            if (l.type === 'image' && l.imageDataUrl) {
-                                const img = new Image();
-                                img.onload = () => { l.imageObj = img; resolve(l); };
-                                img.onerror = () => resolve(l);
-                                img.src = l.imageDataUrl;
-                            } else {
-                                resolve(l);
-                            }
-                        });
-                    }));
+        function serializeApp() {
+          const state = {
+            bgColor: inBgColor.value,
+            selectedLayerId: selectedLayerId,
+            layerCounter: layerCounter,
+            layers: layers.map((l) => ({ ...l, imageObj: undefined })),
+          };
+          return JSON.stringify(state);
+        }
 
-                    isStateRestoring = false;
-                    renderLayerList();
-                    updatePropertiesPanel();
-                    drawComposite();
-                    
-                    if(saveHistoryAfterLoad) saveState();
-                } catch(e) {
-                    console.error("Failed to load state", e);
-                    isStateRestoring = false;
-                }
-            }
+        async function deserializeApp(jsonStr, saveHistoryAfterLoad = true) {
+          if (!jsonStr) return;
+          try {
+            isStateRestoring = true;
+            const state = JSON.parse(jsonStr);
 
-            function saveState() {
-                if (isStateRestoring) return;
-                const stateStr = serializeApp();
-                if (undoHistory.length > 0 && undoHistory[undoHistory.length - 1] === stateStr) return;
-                undoHistory.push(stateStr);
-                if (undoHistory.length > 30) undoHistory.shift();
-                localStorage.setItem('lineageMarkMakerState', stateStr);
-            }
+            inBgColor.value = state.bgColor || "#ffffff";
+            updateHexText("bgColor", "txtHexBgColor");
 
-            function performUndo() {
-                if (undoHistory.length > 1) {
-                    undoHistory.pop();
-                    const prevState = undoHistory[undoHistory.length - 1];
-                    deserializeApp(prevState, false);
-                    localStorage.setItem('lineageMarkMakerState', prevState);
-                }
-            }
+            selectedLayerId = state.selectedLayerId;
+            layerCounter = state.layerCounter || 0;
 
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key === 'z') {
-                    e.preventDefault();
-                    performUndo();
-                }
-            });
-            btnUndo.addEventListener('click', performUndo);
-
-            // --- Layer Management ---
-            function createDefaultTextLayer() {
-                layerCounter++;
-                return {
-                    id: layerCounter,
-                    name: `텍스트 ${layerCounter}`,
-                    type: 'text',
-                    visible: true,
-                    text: '혈',
-                    fontFamily: 'Noto Sans KR',
-                    fontWeight: 'normal',
-                    fontStyle: 'normal',
-                    fontSize: 13,
-                    scaleX: 100,
-                    offsetX: 0,
-                    offsetY: 0,
-                    colorType: 'solid',
-                    gradientDir: 'vertical',
-                    color1: '#000000',
-                    color2: '#aaaaaa',
-                    addOutline: false,
-                    outlineColor: '#050505',
-                    pixelOverrides: {} 
-                };
-            }
-
-            function createDefaultImageLayer() {
-                layerCounter++;
-                return {
-                    id: layerCounter,
-                    name: `이미지 ${layerCounter}`,
-                    type: 'image',
-                    visible: true,
-                    text: '',
-                    scaleX: 100,
-                    offsetX: 0,
-                    offsetY: 0,
-                    addOutline: false,
-                    outlineColor: '#050505',
-                    imageObj: null,
-                    imageDataUrl: null,
-                    imgScale: 100,
-                    pixelOverrides: {} 
-                };
-            }
-
-            function addLayer(type) {
-                let newLayer;
-                if (type === 'text') newLayer = createDefaultTextLayer();
-                else if (type === 'image') newLayer = createDefaultImageLayer();
-                
-                layers.push(newLayer);
-                selectedLayerId = newLayer.id;
-                renderLayerList();
-                updatePropertiesPanel();
-                drawComposite();
-                saveState();
-                
-                // 모바일에서 레이어 추가 시 속성 편집 패널로 살짝 스크롤 유도
-                if (window.innerWidth < 1024) {
-                    document.getElementById('propertiesPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                }
-            }
-
-            function deleteLayer(id) {
-                layers = layers.filter(l => l.id !== id);
-                if (selectedLayerId === id) {
-                    selectedLayerId = layers.length > 0 ? layers[layers.length - 1].id : null;
-                }
-                renderLayerList();
-                updatePropertiesPanel();
-                drawComposite();
-                saveState();
-            }
-
-            window.doToggleVisibility = function(id) {
-                const layer = layers.find(l => l.id === id);
-                if (layer) { layer.visible = !layer.visible; renderLayerList(); drawComposite(); saveState(); }
-            }
-            window.doMoveLayer = function(id, direction) {
-                const index = layers.findIndex(l => l.id === id);
-                if (index < 0) return;
-                if (direction === 'up' && index < layers.length - 1) {
-                    const temp = layers[index]; layers[index] = layers[index + 1]; layers[index + 1] = temp;
-                } else if (direction === 'down' && index > 0) {
-                    const temp = layers[index]; layers[index] = layers[index - 1]; layers[index - 1] = temp;
-                }
-                renderLayerList(); drawComposite(); saveState();
-            }
-            window.doDeleteLayer = function(id) { deleteLayer(id); }
-
-            function renderLayerList() {
-                layerListContainer.innerHTML = '';
-                if (layers.length === 0) {
-                    layerListContainer.innerHTML = '<div class="text-center text-xs text-gray-500 py-4">레이어가 없습니다.</div>';
-                    return;
-                }
-                const reversedLayers = [...layers].reverse();
-                reversedLayers.forEach(layer => {
-                    const item = document.createElement('div');
-                    item.className = `layer-item flex items-center justify-between p-2 rounded cursor-pointer border ${layer.id === selectedLayerId ? 'active' : 'border-gray-700 bg-[#1a1a1a] hover:bg-[#222]'}`;
-                    
-                    item.onclick = (e) => {
-                        if(e.target.closest('button')) return;
-                        selectedLayerId = layer.id;
-                        renderLayerList();
-                        updatePropertiesPanel();
-                        // 🟢 모바일 환경에서는 레이어 선택 시 속성창으로 부드럽게 스크롤
-                        if (window.innerWidth < 1024) {
-                            propertiesPanel.parentElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
+            layers = await Promise.all(
+              state.layers.map((l) => {
+                return new Promise((resolve) => {
+                  if (l.type === "text" && !l.gradientDir) l.gradientDir = "vertical";
+                  if (!l.outlineColor) l.outlineColor = "#050505";
+                  if (l.type === "image" && l.imageDataUrl) {
+                    const img = new Image();
+                    img.onload = () => {
+                      l.imageObj = img;
+                      resolve(l);
                     };
+                    img.onerror = () => resolve(l);
+                    img.src = l.imageDataUrl;
+                  } else resolve(l);
+                });
+              }),
+            );
+            isStateRestoring = false;
+            renderLayerList();
+            updatePropertiesPanel();
+            drawComposite();
+            if (saveHistoryAfterLoad) saveState();
+          } catch (e) {
+            isStateRestoring = false;
+          }
+        }
 
-                    let iconStr = '<i class="fa-solid fa-font text-blue-400 w-4 text-center"></i>';
-                    if (layer.type === 'image') iconStr = '<i class="fa-solid fa-image text-green-400 w-4 text-center"></i>';
-                    
-                    item.innerHTML = `
+        function saveState() {
+          if (isStateRestoring) return;
+          const stateStr = serializeApp();
+          if (undoHistory.length > 0 && undoHistory[undoHistory.length - 1] === stateStr) return;
+          undoHistory.push(stateStr);
+          if (undoHistory.length > 30) undoHistory.shift();
+          localStorage.setItem("lineageMarkMakerState", stateStr);
+        }
+
+        function performUndo() {
+          if (undoHistory.length > 1) {
+            undoHistory.pop();
+            const prevState = undoHistory[undoHistory.length - 1];
+            deserializeApp(prevState, false);
+            localStorage.setItem("lineageMarkMakerState", prevState);
+          }
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (e.ctrlKey && e.key === "z") {
+            e.preventDefault();
+            performUndo();
+          }
+        });
+        btnUndo.addEventListener("click", performUndo);
+
+        function createDefaultTextLayer() {
+          layerCounter++;
+          return {
+            id: layerCounter,
+            name: `텍스트 ${layerCounter}`,
+            type: "text",
+            visible: true,
+            text: "혈",
+            fontFamily: "Noto Sans KR",
+            fontWeight: "normal",
+            fontStyle: "normal",
+            fontSize: 13,
+            scaleX: 100,
+            offsetX: 0,
+            offsetY: 0,
+            colorType: "solid",
+            gradientDir: "vertical",
+            color1: "#000000",
+            color2: "#aaaaaa",
+            addOutline: false,
+            outlineColor: "#050505",
+            pixelOverrides: {},
+          };
+        }
+
+        function createDefaultImageLayer() {
+          layerCounter++;
+          return { id: layerCounter, name: `이미지 ${layerCounter}`, type: "image", visible: true, text: "", scaleX: 100, offsetX: 0, offsetY: 0, addOutline: false, outlineColor: "#050505", imageObj: null, imageDataUrl: null, imgScale: 100, pixelOverrides: {} };
+        }
+
+        function addLayer(type) {
+          let newLayer;
+          if (type === "text") newLayer = createDefaultTextLayer();
+          else if (type === "image") newLayer = createDefaultImageLayer();
+          layers.push(newLayer);
+          selectedLayerId = newLayer.id;
+          renderLayerList();
+          updatePropertiesPanel();
+          drawComposite();
+          saveState();
+          if (window.innerWidth < 1024) document.getElementById("propertiesPanel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        function deleteLayer(id) {
+          layers = layers.filter((l) => l.id !== id);
+          if (selectedLayerId === id) selectedLayerId = layers.length > 0 ? layers[layers.length - 1].id : null;
+          renderLayerList();
+          updatePropertiesPanel();
+          drawComposite();
+          saveState();
+        }
+
+        window.doToggleVisibility = function (id) {
+          const layer = layers.find((l) => l.id === id);
+          if (layer) {
+            layer.visible = !layer.visible;
+            renderLayerList();
+            drawComposite();
+            saveState();
+          }
+        };
+        window.doMoveLayer = function (id, direction) {
+          const index = layers.findIndex((l) => l.id === id);
+          if (index < 0) return;
+          if (direction === "up" && index < layers.length - 1) {
+            const temp = layers[index];
+            layers[index] = layers[index + 1];
+            layers[index + 1] = temp;
+          } else if (direction === "down" && index > 0) {
+            const temp = layers[index];
+            layers[index] = layers[index - 1];
+            layers[index - 1] = temp;
+          }
+          renderLayerList();
+          drawComposite();
+          saveState();
+        };
+        window.doDeleteLayer = function (id) {
+          deleteLayer(id);
+        };
+
+        function renderLayerList() {
+          layerListContainer.innerHTML = "";
+          if (layers.length === 0) {
+            layerListContainer.innerHTML = '<div class="text-center text-xs text-zinc-500 py-4">레이어가 없습니다.</div>';
+            return;
+          }
+          const reversedLayers = [...layers].reverse();
+          reversedLayers.forEach((layer) => {
+            const item = document.createElement("div");
+            item.className = `layer-item flex items-center justify-between p-2 rounded cursor-pointer border ${layer.id === selectedLayerId ? "bg-indigo-50 dark:bg-zinc-800 border-indigo-200 dark:border-zinc-600" : "border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 hover:bg-zinc-100 dark:hover:bg-zinc-800/80"}`;
+            item.onclick = (e) => {
+              if (e.target.closest("button")) return;
+              selectedLayerId = layer.id;
+              renderLayerList();
+              updatePropertiesPanel();
+              if (window.innerWidth < 1024) propertiesPanel.parentElement.scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+            let iconStr = '<i class="fa-solid fa-font text-blue-500 w-4 text-center"></i>';
+            if (layer.type === "image") iconStr = '<i class="fa-solid fa-image text-green-500 w-4 text-center"></i>';
+            item.innerHTML = `
                         <div class="flex items-center gap-2 flex-1 overflow-hidden">
-                            <button onclick="doToggleVisibility(${layer.id})" class="text-gray-400 hover:text-white w-5 text-center shrink-0">
-                                <i class="fa-solid ${layer.visible ? 'fa-eye' : 'fa-eye-slash'}"></i>
-                            </button>
+                            <button onclick="doToggleVisibility(${layer.id})" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white w-5 text-center shrink-0"><i class="fa-solid ${layer.visible ? "fa-eye" : "fa-eye-slash"}"></i></button>
                             ${iconStr}
-                            <span class="text-[11px] sm:text-xs truncate text-gray-200">${layer.name} ${layer.type === 'text' ? `"${layer.text}"` : ''}</span>
+                            <span class="text-[11px] sm:text-xs truncate text-zinc-800 dark:text-zinc-200">${layer.name} ${layer.type === "text" ? `"${layer.text}"` : ""}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button onclick="doMoveLayer(${layer.id}, 'up')" class="text-gray-500 hover:text-white px-1 sm:px-1.5" title="위로"><i class="fa-solid fa-chevron-up"></i></button>
-                            <button onclick="doMoveLayer(${layer.id}, 'down')" class="text-gray-500 hover:text-white px-1 sm:px-1.5" title="아래로"><i class="fa-solid fa-chevron-down"></i></button>
-                            <button onclick="doDeleteLayer(${layer.id})" class="text-red-500 hover:text-red-400 px-1 sm:px-1.5 ml-1" title="삭제"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="doMoveLayer(${layer.id}, 'up')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white px-1 sm:px-1.5" title="위로"><i class="fa-solid fa-chevron-up"></i></button>
+                            <button onclick="doMoveLayer(${layer.id}, 'down')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white px-1 sm:px-1.5" title="아래로"><i class="fa-solid fa-chevron-down"></i></button>
+                            <button onclick="doDeleteLayer(${layer.id})" class="text-red-500 hover:text-red-600 px-1 sm:px-1.5 ml-1" title="삭제"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     `;
-                    layerListContainer.appendChild(item);
-                });
-            }
-
-            // --- Properties UI Sync ---
-            function updatePropertiesPanel() {
-                const layer = layers.find(l => l.id === selectedLayerId);
-                
-                if (!layer) {
-                    propertiesPanel.classList.remove('flex');
-                    propertiesPanel.classList.add('hidden');
-                    noLayerMessage.classList.remove('hidden');
-                    propTitle.textContent = '선택된 레이어 없음';
-                    propTypeBadge.classList.add('hidden');
-                    return;
-                }
-
-                propTitle.textContent = layer.name;
-                propTypeBadge.classList.remove('hidden');
-                propertiesPanel.classList.remove('hidden');
-                propertiesPanel.classList.add('flex');
-                noLayerMessage.classList.add('hidden');
-                
-                if (layer.type === 'text') {
-                    propTypeBadge.textContent = '텍스트';
-                    propTypeBadge.className = 'text-[10px] px-2 py-0.5 rounded text-white bg-blue-600 font-medium';
-                } else if (layer.type === 'image') {
-                    propTypeBadge.textContent = '이미지';
-                    propTypeBadge.className = 'text-[10px] px-2 py-0.5 rounded text-white bg-green-600 font-medium';
-                }
-                
-                propTextGroup.classList.add('hidden');
-                propImageGroup.classList.add('hidden');
-
-                if (layer.type === 'text') {
-                    propTextGroup.classList.remove('hidden');
-                    document.getElementById('propFontSizeGroup').classList.remove('hidden');
-                    document.getElementById('propScaleXGroup').classList.remove('hidden');
-                    document.getElementById('propImgScaleGroup').classList.add('hidden');
-
-                    inText.value = layer.text;
-                    inFontFamily.value = layer.fontFamily;
-                    inFontWeight.value = layer.fontWeight;
-                    inFontStyle.checked = (layer.fontStyle === 'italic');
-                    inFontSize.value = layer.fontSize;
-                    document.getElementById('valFontSize').textContent = layer.fontSize;
-                    
-                    document.querySelector(`input[name="colorType"][value="${layer.colorType}"]`).checked = true;
-                    inGradientDir.value = layer.gradientDir || 'vertical';
-                    
-                    inColor1.value = layer.color1;
-                    inColor2.value = layer.color2;
-                    updateHexText('propColor1', 'txtHexColor1');
-                    updateHexText('propColor2', 'txtHexColor2');
-
-                    const isGrad = layer.colorType === 'gradient';
-                    color2Container.style.opacity = isGrad ? '1' : '0.3';
-                    color2Container.style.pointerEvents = isGrad ? 'auto' : 'none';
-                    if (isGrad) {
-                        inGradientDir.classList.remove('hidden');
-                    } else {
-                        inGradientDir.classList.add('hidden');
-                    }
-
-                } else if (layer.type === 'image') {
-                    propImageGroup.classList.remove('hidden');
-                    document.getElementById('propFontSizeGroup').classList.add('hidden');
-                    document.getElementById('propScaleXGroup').classList.add('hidden');
-                    document.getElementById('propImgScaleGroup').classList.remove('hidden');
-                    
-                    inImgScale.value = layer.imgScale;
-                    document.getElementById('valImgScale').textContent = layer.imgScale;
-                    document.getElementById('propImageUpload').value = ''; 
-                    
-                    if (layer.imageObj) {
-                        btnRemoveBg.classList.remove('hidden');
-                    } else {
-                        btnRemoveBg.classList.add('hidden');
-                    }
-                }
-
-                inScaleX.value = layer.scaleX || 100;
-                document.getElementById('valScaleX').textContent = layer.scaleX || 100;
-                inOffsetX.value = layer.offsetX;
-                document.getElementById('valOffsetX').textContent = layer.offsetX;
-                inOffsetY.value = layer.offsetY;
-                document.getElementById('valOffsetY').textContent = layer.offsetY;
-                
-                inAddOutline.checked = layer.addOutline;
-                inOutlineColor.value = layer.outlineColor || '#050505';
-                updateHexText('propOutlineColor', 'txtHexOutline');
-                document.getElementById('outlineColorContainer').style.opacity = layer.addOutline ? '1' : '0.3';
-                document.getElementById('outlineColorContainer').style.pointerEvents = layer.addOutline ? 'auto' : 'none';
-                
-                syncDrawToolUI();
-            }
-
-            // 실시간 렌더링 업데이트 함수 (저장 유무 분리)
-            function updateActiveLayer(key, value, doSave = true) {
-                const layer = layers.find(l => l.id === selectedLayerId);
-                if (layer) {
-                    layer[key] = value;
-                    if (key === 'text') renderLayerList(); 
-                    drawComposite();
-                    if (doSave) saveState();
-                }
-            }
-
-            // Event Bindings (실시간 속성 반영)
-            inText.addEventListener('input', (e) => updateActiveLayer('text', e.target.value, false));
-            inText.addEventListener('change', () => saveState());
-
-            inFontFamily.addEventListener('input', (e) => updateActiveLayer('fontFamily', e.target.value, false));
-            inFontFamily.addEventListener('keyup', (e) => updateActiveLayer('fontFamily', e.target.value, false));
-            inFontFamily.addEventListener('change', () => saveState());
-
-            inFontWeight.addEventListener('input', (e) => updateActiveLayer('fontWeight', e.target.value, false));
-            inFontWeight.addEventListener('change', () => saveState());
-
-            inFontStyle.addEventListener('change', (e) => updateActiveLayer('fontStyle', e.target.checked ? 'italic' : 'normal', true));
-            
-            inFontSize.addEventListener('input', (e) => {
-                document.getElementById('valFontSize').textContent = e.target.value;
-                updateActiveLayer('fontSize', parseInt(e.target.value), false);
-            });
-            inFontSize.addEventListener('change', () => saveState());
-            
-            Array.from(radiosColorType).forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    const isGrad = e.target.value === 'gradient';
-                    updateActiveLayer('colorType', e.target.value, true);
-                    color2Container.style.opacity = isGrad ? '1' : '0.3';
-                    color2Container.style.pointerEvents = isGrad ? 'auto' : 'none';
-                    if (isGrad) inGradientDir.classList.remove('hidden');
-                    else inGradientDir.classList.add('hidden');
-                });
-            });
-            inGradientDir.addEventListener('change', (e) => updateActiveLayer('gradientDir', e.target.value, true));
-
-            inColor1.addEventListener('input', (e) => { 
-                updateHexText('propColor1', 'txtHexColor1'); 
-                updateActiveLayer('color1', e.target.value, false); 
-            });
-            inColor1.addEventListener('change', () => saveState());
-
-            inColor2.addEventListener('input', (e) => { 
-                updateHexText('propColor2', 'txtHexColor2'); 
-                updateActiveLayer('color2', e.target.value, false); 
-            });
-            inColor2.addEventListener('change', () => saveState());
-            
-            inScaleX.addEventListener('input', (e) => {
-                document.getElementById('valScaleX').textContent = e.target.value;
-                updateActiveLayer('scaleX', parseInt(e.target.value), false);
-            });
-            inScaleX.addEventListener('change', () => saveState());
-            
-            inOffsetX.addEventListener('input', (e) => {
-                document.getElementById('valOffsetX').textContent = e.target.value;
-                updateActiveLayer('offsetX', parseInt(e.target.value), false);
-            });
-            inOffsetX.addEventListener('change', () => saveState());
-            
-            inOffsetY.addEventListener('input', (e) => {
-                document.getElementById('valOffsetY').textContent = e.target.value;
-                updateActiveLayer('offsetY', parseInt(e.target.value), false);
-            });
-            inOffsetY.addEventListener('change', () => saveState());
-            
-            inAddOutline.addEventListener('change', (e) => {
-                document.getElementById('outlineColorContainer').style.opacity = e.target.checked ? '1' : '0.3';
-                document.getElementById('outlineColorContainer').style.pointerEvents = e.target.checked ? 'auto' : 'none';
-                updateActiveLayer('addOutline', e.target.checked, true);
-            });
-            
-            inOutlineColor.addEventListener('input', (e) => { 
-                updateHexText('propOutlineColor', 'txtHexOutline'); 
-                updateActiveLayer('outlineColor', e.target.value, false); 
-            });
-            inOutlineColor.addEventListener('change', () => saveState());
-            
-            inImgScale.addEventListener('input', (e) => {
-                document.getElementById('valImgScale').textContent = e.target.value;
-                updateActiveLayer('imgScale', parseInt(e.target.value), false);
-            });
-            inImgScale.addEventListener('change', () => saveState());
-
-            // Image Upload Event
-            document.getElementById('propImageUpload').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.onload = function() {
-                        const layer = layers.find(l => l.id === selectedLayerId);
-                        if (layer) {
-                            layer.imageObj = img;
-                            layer.imageDataUrl = event.target.result;
-                            layer.imgScale = 100;
-                            layer.offsetX = 0;
-                            layer.offsetY = 0;
-                            updatePropertiesPanel();
-                            drawComposite();
-                            saveState();
-                        }
-                    }
-                    img.src = event.target.result;
-                }
-                reader.readAsDataURL(file);
-            });
-
-            // 배경 자동 제거 이벤트 (마법봉)
-            btnRemoveBg.addEventListener('click', () => {
-                const layer = layers.find(l => l.id === selectedLayerId);
-                if (!layer || layer.type !== 'image' || !layer.imageObj) return;
-
-                const img = layer.imageObj;
-                const cvs = document.createElement('canvas');
-                cvs.width = img.width;
-                cvs.height = img.height;
-                const ctx = cvs.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-
-                const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
-                const data = imgData.data;
-
-                // 좌상단(0,0) 픽셀의 색상을 배경색 기준으로 잡음
-                const bgR = data[0];
-                const bgG = data[1];
-                const bgB = data[2];
-                const bgA = data[3];
-
-                if (bgA === 0) return; // 이미 좌상단이 투명하면 무시
-
-                const tolerance = 25; // 색상 오차 허용치 (JPEG 노이즈 등 감안)
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i];
-                    const g = data[i+1];
-                    const b = data[i+2];
-                    
-                    // 알파채널이 살아있고 색상이 배경 기준색과 비슷한 픽셀이면
-                    if (data[i+3] > 0 && Math.abs(r - bgR) <= tolerance && Math.abs(g - bgG) <= tolerance && Math.abs(b - bgB) <= tolerance) {
-                        data[i+3] = 0; // 알파 채널(투명도)을 0으로 만들어 투명화
-                    }
-                }
-
-                ctx.putImageData(imgData, 0, 0);
-                
-                // 투명화가 반영된 데이터로 원본 레이어 교체
-                const newImg = new Image();
-                newImg.onload = function() {
-                    layer.imageObj = newImg;
-                    layer.imageDataUrl = cvs.toDataURL('image/png');
-                    drawComposite();
-                    saveState();
-                };
-                newImg.src = cvs.toDataURL('image/png');
-            });
-
-            btnAddTextLayer.addEventListener('click', () => addLayer('text'));
-            btnAddImageLayer.addEventListener('click', () => addLayer('image'));
-
-            // Color Palette Generator
-            const colorPaletteContainer = document.getElementById('colorPalette');
-            const predefinedColors = [
-                '#ffffff', '#000000', '#aaaaaa', '#050505',
-                '#ff0000', '#00ff00', '#0000ff', '#ff00ff', 
-                '#ffff00', '#00ffff', '#ff8800', '#88ff00', 
-                '#0088ff', '#8b4513', '#ffd700'
-            ];
-            
-            predefinedColors.forEach(color => {
-                const swatch = document.createElement('div');
-                swatch.className = 'color-swatch';
-                swatch.style.backgroundColor = color;
-                swatch.title = color.toUpperCase();
-                swatch.onclick = () => {
-                    activeDrawColor = color;
-                    inDrawColor.value = color;
-                    updateHexText('propDrawColor', 'txtHexDrawColor');
-                    activeDrawTool = 'brush'; 
-                    syncDrawToolUI();
-                };
-                colorPaletteContainer.appendChild(swatch);
-            });
-
-            // Draw Tool Actions
-            function syncDrawToolUI() {
-                if (activeDrawTool === 'brush') {
-                    btnToolBrush.classList.replace('bg-gray-700', 'bg-orange-600');
-                    btnToolBrush.classList.replace('text-gray-300', 'text-white');
-                    btnToolEraser.classList.replace('bg-orange-600', 'bg-gray-700');
-                    btnToolEraser.classList.replace('text-white', 'text-gray-300');
-                } else {
-                    btnToolEraser.classList.replace('bg-gray-700', 'bg-orange-600');
-                    btnToolEraser.classList.replace('text-gray-300', 'text-white');
-                    btnToolBrush.classList.replace('bg-orange-600', 'bg-gray-700');
-                    btnToolBrush.classList.replace('text-white', 'text-gray-300');
-                }
-                inDrawColor.value = activeDrawColor;
-                updateHexText('propDrawColor', 'txtHexDrawColor');
-            }
-            
-            btnToolBrush.addEventListener('click', () => { activeDrawTool = 'brush'; syncDrawToolUI(); });
-            btnToolEraser.addEventListener('click', () => { activeDrawTool = 'eraser'; syncDrawToolUI(); });
-            inDrawColor.addEventListener('input', (e) => { 
-                activeDrawColor = e.target.value; 
-                updateHexText('propDrawColor', 'txtHexDrawColor');
-            });
-            
-            btnDrawClear.addEventListener('click', () => {
-                const layer = layers.find(l => l.id === selectedLayerId);
-                if (layer) {
-                    layer.pixelOverrides = {}; 
-                    drawComposite();
-                    saveState();
-                }
-            });
-
-            // Canvas Drawing Interaction & Undo hook (터치 이벤트 추가)
-            let isDrawing = false;
-            let strokeChanged = false;
-            
-            function handleCanvasDraw(e) {
-                if (!isDrawing) return;
-                const layer = layers.find(l => l.id === selectedLayerId);
-                if (!layer || !layer.visible) return;
-
-                // 터치 이벤트 대응
-                let clientX, clientY;
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-
-                const rect = displayCanvas.getBoundingClientRect();
-                const x = Math.floor((clientX - rect.left) / rect.width * 16);
-                const y = Math.floor((clientY - rect.top) / rect.height * 12);
-
-                if (x >= 0 && x < 16 && y >= 0 && y < 12) {
-                    const localX = x - (layer.offsetX || 0);
-                    const localY = y - (layer.offsetY || 0);
-                    const key = `${localX},${localY}`;
-                    
-                    const beforeVal = layer.pixelOverrides[key]?.color || layer.pixelOverrides[key]?.type;
-                    
-                    if (activeDrawTool === 'brush') {
-                        layer.pixelOverrides[key] = { type: 'brush', color: activeDrawColor };
-                    } else if (activeDrawTool === 'eraser') {
-                        layer.pixelOverrides[key] = { type: 'erase' };
-                    }
-                    
-                    if (beforeVal !== (activeDrawTool === 'brush' ? activeDrawColor : 'erase')) {
-                        strokeChanged = true;
-                        drawComposite();
-                    }
-                }
-            }
-
-            // Mouse Events
-            displayCanvas.addEventListener('mousedown', (e) => {
-                isDrawing = true;
-                strokeChanged = false;
-                handleCanvasDraw(e);
-            });
-            window.addEventListener('mouseup', () => {
-                if (isDrawing) {
-                    isDrawing = false;
-                    if (strokeChanged) saveState();
-                }
-            });
-            displayCanvas.addEventListener('mousemove', handleCanvasDraw);
-            
-            // Touch Events (Mobile)
-            displayCanvas.addEventListener('touchstart', (e) => {
-                // 스크롤 방지
-                if(e.cancelable) e.preventDefault(); 
-                isDrawing = true;
-                strokeChanged = false;
-                handleCanvasDraw(e);
-            }, { passive: false });
-            
-            window.addEventListener('touchend', () => {
-                if (isDrawing) {
-                    isDrawing = false;
-                    if (strokeChanged) saveState();
-                }
-            });
-            
-            displayCanvas.addEventListener('touchmove', (e) => {
-                if (isDrawing && e.cancelable) {
-                    e.preventDefault(); 
-                    handleCanvasDraw(e);
-                }
-            }, { passive: false });
-            
-            displayCanvas.addEventListener('dragstart', e => e.preventDefault());
-
-
-            // 배경 변경 시 실시간 반영
-            inBgColor.addEventListener('input', () => { 
-                updateHexText('bgColor', 'txtHexBgColor'); 
-                drawComposite(); 
-            });
-            inBgColor.addEventListener('change', () => saveState());
-
-            // 인게임 마크 자유 드래그 로직 (터치 지원)
-            const dragMark = document.getElementById('dragMark');
-            const previewContainer = document.getElementById('previewContainer');
-            let isDraggingMark = false;
-
-            function startDragMark(e) {
-                isDraggingMark = true;
-                if(e.cancelable) e.preventDefault();
-            }
-
-            function stopDragMark() {
-                isDraggingMark = false;
-            }
-
-            function moveDragMark(e) {
-                if (!isDraggingMark) return;
-                if(e.cancelable) e.preventDefault();
-                
-                let clientX, clientY;
-                if (e.touches && e.touches.length > 0) {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-
-                const rect = previewContainer.getBoundingClientRect();
-                let x = clientX - rect.left - 8; // 8은 마크 너비의 절반 오프셋
-                let y = clientY - rect.top - 6; // 6은 마크 높이의 절반 오프셋
-
-                // 컨테이너 밖으로 나가지 않도록 제한
-                if (x < 0) x = 0;
-                if (x > rect.width - 16) x = rect.width - 16;
-                if (y < 0) y = 0;
-                if (y > rect.height - 12) y = rect.height - 12;
-
-                dragMark.style.left = `${x}px`;
-                dragMark.style.top = `${y}px`;
-            }
-
-            dragMark.addEventListener('mousedown', startDragMark);
-            window.addEventListener('mouseup', stopDragMark);
-            window.addEventListener('mousemove', moveDragMark);
-
-            dragMark.addEventListener('touchstart', startDragMark, { passive: false });
-            window.addEventListener('touchend', stopDragMark);
-            window.addEventListener('touchmove', moveDragMark, { passive: false });
-
-
-            // --- Rendering Engine ---
-            const canvasLayerTemp = document.createElement('canvas');
-            canvasLayerTemp.width = 16;
-            canvasLayerTemp.height = 12;
-            const ctxLayerTemp = canvasLayerTemp.getContext('2d', { willReadFrequently: true });
-
-            function hexToRgb(hex) {
-                const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-                return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
-            }
-
-            function drawComposite(forceBgColor = null) {
-                displayCtx.clearRect(0, 0, 16, 12);
-                inGameCtx.clearRect(0, 0, 16, 12);
-                
-                displayCtx.fillStyle = forceBgColor || inBgColor.value;
-                displayCtx.fillRect(0, 0, 16, 12);
-
-                layers.forEach(layer => {
-                    if (!layer.visible) return;
-                    ctxLayerTemp.clearRect(0, 0, 16, 12);
-
-                    if (layer.type === 'text' && layer.text) {
-                        ctxLayerTemp.save();
-                        const scale = (layer.scaleX || 100) / 100;
-                        ctxLayerTemp.scale(scale, 1);
-
-                        const fontStyleStr = layer.fontStyle === 'italic' ? 'italic ' : '';
-                        ctxLayerTemp.font = `${fontStyleStr}${layer.fontWeight} ${layer.fontSize}px "${layer.fontFamily}"`;
-                        ctxLayerTemp.textAlign = 'center';
-                        ctxLayerTemp.textBaseline = 'middle';
-
-                        const drawX = (8 + layer.offsetX) / scale; 
-                        const drawY = 6 + layer.offsetY + (layer.fontSize * 0.05); 
-
-                        if (layer.colorType === 'gradient') {
-                            let gradient;
-                            if (layer.gradientDir === 'horizontal') {
-                                const metrics = ctxLayerTemp.measureText(layer.text);
-                                const halfW = metrics.width / 2;
-                                gradient = ctxLayerTemp.createLinearGradient(drawX - halfW, 0, drawX + halfW, 0);
-                            } else {
-                                gradient = ctxLayerTemp.createLinearGradient(0, drawY - layer.fontSize/2, 0, drawY + layer.fontSize/2);
-                            }
-                            gradient.addColorStop(0, layer.color1);
-                            gradient.addColorStop(1, layer.color2);
-                            ctxLayerTemp.fillStyle = gradient;
-                        } else {
-                            ctxLayerTemp.fillStyle = layer.color1;
-                        }
-
-                        // Anti-aliasing workaround
-                        ctxLayerTemp.fillText(layer.text, drawX, drawY);
-                        ctxLayerTemp.fillText(layer.text, drawX, drawY);
-                        ctxLayerTemp.fillText(layer.text, drawX, drawY);
-
-                        ctxLayerTemp.restore();
-                    } else if (layer.type === 'image' && layer.imageObj) {
-                        const img = layer.imageObj;
-                        const wRatio = 16 / img.width;
-                        const hRatio = 12 / img.height;
-                        const fitRatio = Math.min(wRatio, hRatio);
-                        
-                        const baseW = img.width * fitRatio;
-                        const baseH = img.height * fitRatio;
-                        
-                        const scale = (layer.imgScale || 100) / 100;
-                        const finalW = baseW * scale;
-                        const finalH = baseH * scale;
-                        
-                        const dx = (16 - finalW) / 2 + layer.offsetX;
-                        const dy = (12 - finalH) / 2 + layer.offsetY;
-
-                        ctxLayerTemp.imageSmoothingEnabled = true;
-                        ctxLayerTemp.imageSmoothingQuality = 'high';
-                        ctxLayerTemp.drawImage(layer.imageObj, dx, dy, finalW, finalH);
-                    } else {
-                        return; // Empty layer
-                    }
-
-                    const imgData = ctxLayerTemp.getImageData(0, 0, 16, 12);
-                    const data = imgData.data;
-                    
-                    // 이미지 레이어일 경우 원본의 완전 검정색(0,0,0)을 투명 픽셀로 변환
-                    if (layer.type === 'image') {
-                        for (let i = 0; i < data.length; i += 4) {
-                            if (data[i] === 0 && data[i+1] === 0 && data[i+2] === 0 && data[i+3] > 0) {
-                                data[i+3] = 0; // 알파 채널 투명화
-                            }
-                        }
-                    }
-                    
-                    for (let y = 0; y < 12; y++) {
-                        for (let x = 0; x < 16; x++) {
-                            const localX = x - (layer.offsetX || 0);
-                            const localY = y - (layer.offsetY || 0);
-                            const key = `${localX},${localY}`;
-                            const override = layer.pixelOverrides[key];
-                            
-                            if (override) {
-                                const i = (y * 16 + x) * 4;
-                                if (override.type === 'brush') {
-                                    const rgb = hexToRgb(override.color);
-                                    if(rgb) {
-                                        data[i] = rgb.r; data[i+1] = rgb.g; data[i+2] = rgb.b; data[i+3] = 255;
-                                    }
-                                } else if (override.type === 'erase') {
-                                    data[i] = 0; data[i+1] = 0; data[i+2] = 0; data[i+3] = 0; 
-                                }
-                            }
-                        }
-                    }
-
-                    const outData = new Uint8ClampedArray(data.length);
-                    const outlineRgb = hexToRgb(layer.outlineColor || '#050505');
-
-                    for (let y = 0; y < 12; y++) {
-                        for (let x = 0; x < 16; x++) {
-                            const i = (y * 16 + x) * 4;
-                            const alpha = data[i + 3];
-
-                            if (alpha > 128) {
-                                outData[i] = data[i]; outData[i+1] = data[i+1]; outData[i+2] = data[i+2]; outData[i+3] = 255; 
-                            } else if (layer.addOutline) {
-                                let hasNeighbor = false;
-                                const neighbors = [ [-1,-1], [0,-1], [1,-1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1] ];
-                                for (let [dx, dy] of neighbors) {
-                                    const nx = x + dx; const ny = y + dy;
-                                    if (nx >= 0 && nx < 16 && ny >= 0 && ny < 12) {
-                                        if (data[((ny * 16 + nx) * 4) + 3] > 128) { hasNeighbor = true; break; }
-                                    }
-                                }
-                                if (hasNeighbor) {
-                                    outData[i] = outlineRgb.r; outData[i+1] = outlineRgb.g; outData[i+2] = outlineRgb.b; outData[i+3] = 255;
-                                }
-                            }
-                        }
-                    }
-
-                    ctxLayerTemp.putImageData(new ImageData(outData, 16, 12), 0, 0);
-                    displayCtx.drawImage(canvasLayerTemp, 0, 0);
-                    
-                    // 편집기 배경색은 복사하지 않고, 투명한 픽셀 레이어만 인게임 미리보기에 중첩 복사
-                    inGameCtx.drawImage(canvasLayerTemp, 0, 0);
-                });
-            }
-
-            inShowGrid.addEventListener('change', (e) => {
-                gridOverlay.style.display = e.target.checked ? 'block' : 'none';
-            });
-
-            // BMP Export
-            document.getElementById('btnDownload').addEventListener('click', () => {
-                drawComposite('#000000');
-                
-                const imgData = displayCtx.getImageData(0, 0, 16, 12);
-                const data = imgData.data;
-                const width = 16, height = 12;
-                const padding = (4 - ((width * 3) % 4)) % 4;
-                const rowSize = (width * 3) + padding;
-                const pixelArraySize = rowSize * height;
-                const fileSize = 54 + pixelArraySize;
-
-                const buffer = new ArrayBuffer(fileSize);
-                const view = new DataView(buffer);
-
-                view.setUint8(0, 0x42); view.setUint8(1, 0x4D); view.setUint32(2, fileSize, true);
-                view.setUint32(6, 0, true); view.setUint32(10, 54, true);
-
-                view.setUint32(14, 40, true); view.setUint32(18, width, true); view.setInt32(22, height, true); 
-                view.setUint16(26, 1, true); view.setUint16(28, 24, true); view.setUint32(30, 0, true);
-                view.setUint32(34, pixelArraySize, true); view.setUint32(38, 2835, true); view.setUint32(42, 2835, true);
-                view.setUint32(46, 0, true); view.setUint32(50, 0, true);
-
-                let offset = 54;
-                for (let y = height - 1; y >= 0; y--) {
-                    for (let x = 0; x < width; x++) {
-                        const i = (y * width + x) * 4;
-                        view.setUint8(offset++, data[i + 2]); view.setUint8(offset++, data[i + 1]); view.setUint8(offset++, data[i]);     
-                    }
-                    for (let p = 0; p < padding; p++) view.setUint8(offset++, 0);
-                }
-
-                drawComposite();
-
-                const blob = new Blob([buffer], { type: 'image/bmp' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url; a.download = 'mark.bmp';
-                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            });
-
-            // 커스텀 모달 이벤트 연결
-            document.getElementById('btnResetApp').addEventListener('click', () => {
-                document.getElementById('confirmModal').classList.remove('hidden');
-            });
-
-            document.getElementById('btnCancelReset').addEventListener('click', () => {
-                document.getElementById('confirmModal').classList.add('hidden');
-            });
-
-            document.getElementById('btnConfirmReset').addEventListener('click', () => {
-                document.getElementById('confirmModal').classList.add('hidden');
-                
-                // 저장소 비우기
-                localStorage.removeItem('lineageMarkMakerState');
-                
-                // 상태 변수 초기화
-                layers = [];
-                layerCounter = 0;
-                undoHistory = [];
-                
-                // 공통 UI 및 배경색 기본값 복구
-                inBgColor.value = '#ffffff';
-                updateHexText('bgColor', 'txtHexBgColor');
-                // 🟢 수정 포인트: 초기화 시에도 격자 보기 활성화 유지
-                document.getElementById('showGrid').checked = true;
-                document.getElementById('gridOverlay').style.display = 'block';
-                
-                // 기본 텍스트 레이어 생성
-                layers.push(createDefaultTextLayer());
-                selectedLayerId = layers[0].id;
-                
-                // 펜 도구 초기화
-                activeDrawTool = 'brush';
-                activeDrawColor = '#ff0000';
-                syncDrawToolUI();
-
-                // 인게임 미리보기 고정된 URL로 초기화 및 혈마크 초기 위치 반영
-                const inGameBgImg = document.getElementById('inGameBgImg');
-                inGameBgImg.src = 'https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true';
-                inGameBgImg.onerror = function() {
-                    this.classList.add('hidden');
-                    document.getElementById('defaultBgPattern').classList.remove('hidden');
-                    document.getElementById('defaultAceText').classList.remove('hidden');
-                };
-                inGameBgImg.onload = function() {
-                    this.classList.remove('hidden');
-                    document.getElementById('defaultBgPattern').classList.add('hidden');
-                    document.getElementById('defaultAceText').classList.add('hidden');
-                };
-                // 다시 시작 시에도 위치를 동일하게 초기화
-                document.getElementById('dragMark').style.left = '20px';
-                document.getElementById('dragMark').style.top = '31px';
-
-                // UI 렌더링
-                renderLayerList();
+            layerListContainer.appendChild(item);
+          });
+        }
+
+        function updatePropertiesPanel() {
+          const layer = layers.find((l) => l.id === selectedLayerId);
+          if (!layer) {
+            propertiesPanel.classList.remove("flex");
+            propertiesPanel.classList.add("hidden");
+            noLayerMessage.classList.remove("hidden");
+            propTitle.textContent = "선택된 레이어 없음";
+            propTypeBadge.classList.add("hidden");
+            return;
+          }
+          propTitle.textContent = layer.name;
+          propTypeBadge.classList.remove("hidden");
+          propertiesPanel.classList.remove("hidden");
+          propertiesPanel.classList.add("flex");
+          noLayerMessage.classList.add("hidden");
+
+          if (layer.type === "text") {
+            propTypeBadge.textContent = "텍스트";
+            propTypeBadge.className = "text-[10px] px-2 py-0.5 rounded text-white bg-blue-500 font-medium";
+          } else if (layer.type === "image") {
+            propTypeBadge.textContent = "이미지";
+            propTypeBadge.className = "text-[10px] px-2 py-0.5 rounded text-white bg-green-500 font-medium";
+          }
+
+          propTextGroup.classList.add("hidden");
+          propImageGroup.classList.add("hidden");
+          if (layer.type === "text") {
+            propTextGroup.classList.remove("hidden");
+            document.getElementById("propFontSizeGroup").classList.remove("hidden");
+            document.getElementById("propScaleXGroup").classList.remove("hidden");
+            document.getElementById("propImgScaleGroup").classList.add("hidden");
+            inText.value = layer.text;
+            inFontFamily.value = layer.fontFamily;
+            inFontWeight.value = layer.fontWeight;
+            inFontStyle.checked = layer.fontStyle === "italic";
+            inFontSize.value = layer.fontSize;
+            document.getElementById("valFontSize").textContent = layer.fontSize;
+            document.querySelector(`input[name="colorType"][value="${layer.colorType}"]`).checked = true;
+            inGradientDir.value = layer.gradientDir || "vertical";
+            inColor1.value = layer.color1;
+            inColor2.value = layer.color2;
+            updateHexText("propColor1", "txtHexColor1");
+            updateHexText("propColor2", "txtHexColor2");
+            const isGrad = layer.colorType === "gradient";
+            color2Container.style.opacity = isGrad ? "1" : "0.3";
+            color2Container.style.pointerEvents = isGrad ? "auto" : "none";
+            if (isGrad) inGradientDir.classList.remove("hidden");
+            else inGradientDir.classList.add("hidden");
+          } else if (layer.type === "image") {
+            propImageGroup.classList.remove("hidden");
+            document.getElementById("propFontSizeGroup").classList.add("hidden");
+            document.getElementById("propScaleXGroup").classList.add("hidden");
+            document.getElementById("propImgScaleGroup").classList.remove("hidden");
+            inImgScale.value = layer.imgScale;
+            document.getElementById("valImgScale").textContent = layer.imgScale;
+            document.getElementById("propImageUpload").value = "";
+            if (layer.imageObj) btnRemoveBg.classList.remove("hidden");
+            else btnRemoveBg.classList.add("hidden");
+          }
+          inScaleX.value = layer.scaleX || 100;
+          document.getElementById("valScaleX").textContent = layer.scaleX || 100;
+          inOffsetX.value = layer.offsetX;
+          document.getElementById("valOffsetX").textContent = layer.offsetX;
+          inOffsetY.value = layer.offsetY;
+          document.getElementById("valOffsetY").textContent = layer.offsetY;
+          inAddOutline.checked = layer.addOutline;
+          inOutlineColor.value = layer.outlineColor || "#050505";
+          updateHexText("propOutlineColor", "txtHexOutline");
+          document.getElementById("outlineColorContainer").style.opacity = layer.addOutline ? "1" : "0.3";
+          document.getElementById("outlineColorContainer").style.pointerEvents = layer.addOutline ? "auto" : "none";
+          syncDrawToolUI();
+        }
+
+        function updateActiveLayer(key, value, doSave = true) {
+          const layer = layers.find((l) => l.id === selectedLayerId);
+          if (layer) {
+            layer[key] = value;
+            if (key === "text") renderLayerList();
+            drawComposite();
+            if (doSave) saveState();
+          }
+        }
+
+        inText.addEventListener("input", (e) => updateActiveLayer("text", e.target.value, false));
+        inText.addEventListener("change", () => saveState());
+        inFontFamily.addEventListener("input", (e) => updateActiveLayer("fontFamily", e.target.value, false));
+        inFontFamily.addEventListener("change", () => saveState());
+        inFontWeight.addEventListener("input", (e) => updateActiveLayer("fontWeight", e.target.value, false));
+        inFontWeight.addEventListener("change", () => saveState());
+        inFontStyle.addEventListener("change", (e) => updateActiveLayer("fontStyle", e.target.checked ? "italic" : "normal", true));
+        inFontSize.addEventListener("input", (e) => {
+          document.getElementById("valFontSize").textContent = e.target.value;
+          updateActiveLayer("fontSize", parseInt(e.target.value), false);
+        });
+        inFontSize.addEventListener("change", () => saveState());
+        Array.from(radiosColorType).forEach((radio) => {
+          radio.addEventListener("change", (e) => {
+            const isGrad = e.target.value === "gradient";
+            updateActiveLayer("colorType", e.target.value, true);
+            color2Container.style.opacity = isGrad ? "1" : "0.3";
+            color2Container.style.pointerEvents = isGrad ? "auto" : "none";
+            if (isGrad) inGradientDir.classList.remove("hidden");
+            else inGradientDir.classList.add("hidden");
+          });
+        });
+        inGradientDir.addEventListener("change", (e) => updateActiveLayer("gradientDir", e.target.value, true));
+        inColor1.addEventListener("input", (e) => {
+          updateHexText("propColor1", "txtHexColor1");
+          updateActiveLayer("color1", e.target.value, false);
+        });
+        inColor1.addEventListener("change", () => saveState());
+        inColor2.addEventListener("input", (e) => {
+          updateHexText("propColor2", "txtHexColor2");
+          updateActiveLayer("color2", e.target.value, false);
+        });
+        inColor2.addEventListener("change", () => saveState());
+        inScaleX.addEventListener("input", (e) => {
+          document.getElementById("valScaleX").textContent = e.target.value;
+          updateActiveLayer("scaleX", parseInt(e.target.value), false);
+        });
+        inScaleX.addEventListener("change", () => saveState());
+        inOffsetX.addEventListener("input", (e) => {
+          document.getElementById("valOffsetX").textContent = e.target.value;
+          updateActiveLayer("offsetX", parseInt(e.target.value), false);
+        });
+        inOffsetX.addEventListener("change", () => saveState());
+        inOffsetY.addEventListener("input", (e) => {
+          document.getElementById("valOffsetY").textContent = e.target.value;
+          updateActiveLayer("offsetY", parseInt(e.target.value), false);
+        });
+        inOffsetY.addEventListener("change", () => saveState());
+        inAddOutline.addEventListener("change", (e) => {
+          document.getElementById("outlineColorContainer").style.opacity = e.target.checked ? "1" : "0.3";
+          document.getElementById("outlineColorContainer").style.pointerEvents = e.target.checked ? "auto" : "none";
+          updateActiveLayer("addOutline", e.target.checked, true);
+        });
+        inOutlineColor.addEventListener("input", (e) => {
+          updateHexText("propOutlineColor", "txtHexOutline");
+          updateActiveLayer("outlineColor", e.target.value, false);
+        });
+        inOutlineColor.addEventListener("change", () => saveState());
+        inImgScale.addEventListener("input", (e) => {
+          document.getElementById("valImgScale").textContent = e.target.value;
+          updateActiveLayer("imgScale", parseInt(e.target.value), false);
+        });
+        inImgScale.addEventListener("change", () => saveState());
+
+        document.getElementById("propImageUpload").addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const img = new Image();
+            img.onload = function () {
+              const layer = layers.find((l) => l.id === selectedLayerId);
+              if (layer) {
+                layer.imageObj = img;
+                layer.imageDataUrl = event.target.result;
+                layer.imgScale = 100;
+                layer.offsetX = 0;
+                layer.offsetY = 0;
                 updatePropertiesPanel();
                 drawComposite();
                 saveState();
-            });
-
-            // Init App
-            document.fonts.ready.then(() => {
-                const savedState = localStorage.getItem('lineageMarkMakerState');
-                if (savedState) {
-                    deserializeApp(savedState, true);
-                } else {
-                    layers.push(createDefaultTextLayer());
-                    selectedLayerId = layers[0].id;
-                    inBgColor.value = '#ffffff';
-                    updateHexText('bgColor', 'txtHexBgColor');
-                    
-                    renderLayerList();
-                    updatePropertiesPanel();
-                    drawComposite();
-                    saveState();
-                }
-            });
+              }
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
         });
+
+        btnRemoveBg.addEventListener("click", () => {
+          const layer = layers.find((l) => l.id === selectedLayerId);
+          if (!layer || layer.type !== "image" || !layer.imageObj) return;
+          const img = layer.imageObj;
+          const cvs = document.createElement("canvas");
+          cvs.width = img.width;
+          cvs.height = img.height;
+          const ctx = cvs.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          const imgData = ctx.getImageData(0, 0, cvs.width, cvs.height);
+          const data = imgData.data;
+          const bgR = data[0];
+          const bgG = data[1];
+          const bgB = data[2];
+          const bgA = data[3];
+          if (bgA === 0) return;
+          const tolerance = 25;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            if (data[i + 3] > 0 && Math.abs(r - bgR) <= tolerance && Math.abs(g - bgG) <= tolerance && Math.abs(b - bgB) <= tolerance) data[i + 3] = 0;
+          }
+          ctx.putImageData(imgData, 0, 0);
+          const newImg = new Image();
+          newImg.onload = function () {
+            layer.imageObj = newImg;
+            layer.imageDataUrl = cvs.toDataURL("image/png");
+            drawComposite();
+            saveState();
+          };
+          newImg.src = cvs.toDataURL("image/png");
+        });
+
+        btnAddTextLayer.addEventListener("click", () => addLayer("text"));
+        btnAddImageLayer.addEventListener("click", () => addLayer("image"));
+
+        const colorPaletteContainer = document.getElementById("colorPalette");
+        const predefinedColors = ["#ffffff", "#000000", "#aaaaaa", "#050505", "#ff0000", "#00ff00", "#0000ff", "#ff00ff", "#ffff00", "#00ffff", "#ff8800", "#88ff00", "#0088ff", "#8b4513", "#ffd700"];
+        predefinedColors.forEach((color) => {
+          const swatch = document.createElement("div");
+          swatch.className = "color-swatch border border-zinc-400 dark:border-zinc-600";
+          swatch.style.backgroundColor = color;
+          swatch.title = color.toUpperCase();
+          swatch.onclick = () => {
+            activeDrawColor = color;
+            inDrawColor.value = color;
+            updateHexText("propDrawColor", "txtHexDrawColor");
+            activeDrawTool = "brush";
+            syncDrawToolUI();
+          };
+          colorPaletteContainer.appendChild(swatch);
+        });
+
+        function syncDrawToolUI() {
+          if (activeDrawTool === "brush") {
+            btnToolBrush.classList.remove("bg-amber-50", "dark:bg-zinc-700", "text-amber-600", "dark:text-zinc-300");
+            btnToolBrush.classList.add("bg-amber-500", "dark:bg-orange-600", "text-white");
+            btnToolEraser.classList.remove("bg-amber-500", "dark:bg-orange-600", "text-white");
+            btnToolEraser.classList.add("bg-zinc-100", "dark:bg-zinc-700", "text-zinc-600", "dark:text-zinc-300");
+          } else {
+            btnToolEraser.classList.remove("bg-zinc-100", "dark:bg-zinc-700", "text-zinc-600", "dark:text-zinc-300");
+            btnToolEraser.classList.add("bg-amber-500", "dark:bg-orange-600", "text-white");
+            btnToolBrush.classList.remove("bg-amber-500", "dark:bg-orange-600", "text-white");
+            btnToolBrush.classList.add("bg-zinc-100", "dark:bg-zinc-700", "text-zinc-600", "dark:text-zinc-300");
+          }
+          inDrawColor.value = activeDrawColor;
+        }
+
+        btnToolBrush.addEventListener("click", () => {
+          activeDrawTool = "brush";
+          syncDrawToolUI();
+        });
+        btnToolEraser.addEventListener("click", () => {
+          activeDrawTool = "eraser";
+          syncDrawToolUI();
+        });
+        inDrawColor.addEventListener("input", (e) => {
+          activeDrawColor = e.target.value;
+          updateHexText("propDrawColor", "txtHexDrawColor");
+        });
+        btnDrawClear.addEventListener("click", () => {
+          const layer = layers.find((l) => l.id === selectedLayerId);
+          if (layer) {
+            layer.pixelOverrides = {};
+            drawComposite();
+            saveState();
+          }
+        });
+
+        let isDrawing = false;
+        let strokeChanged = false;
+        function handleCanvasDraw(e) {
+          if (!isDrawing) return;
+          const layer = layers.find((l) => l.id === selectedLayerId);
+          if (!layer || !layer.visible) return;
+          let clientX, clientY;
+          if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+          } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+          }
+          const rect = displayCanvas.getBoundingClientRect();
+          const x = Math.floor(((clientX - rect.left) / rect.width) * 16);
+          const y = Math.floor(((clientY - rect.top) / rect.height) * 12);
+
+          if (x >= 0 && x < 16 && y >= 0 && y < 12) {
+            const localX = x - (layer.offsetX || 0);
+            const localY = y - (layer.offsetY || 0);
+            const key = `${localX},${localY}`;
+            const beforeVal = layer.pixelOverrides[key]?.color || layer.pixelOverrides[key]?.type;
+            if (activeDrawTool === "brush") layer.pixelOverrides[key] = { type: "brush", color: activeDrawColor };
+            else if (activeDrawTool === "eraser") layer.pixelOverrides[key] = { type: "erase" };
+            if (beforeVal !== (activeDrawTool === "brush" ? activeDrawColor : "erase")) {
+              strokeChanged = true;
+              drawComposite();
+            }
+          }
+        }
+        displayCanvas.addEventListener("mousedown", (e) => {
+          isDrawing = true;
+          strokeChanged = false;
+          handleCanvasDraw(e);
+        });
+        window.addEventListener("mouseup", () => {
+          if (isDrawing) {
+            isDrawing = false;
+            if (strokeChanged) saveState();
+          }
+        });
+        displayCanvas.addEventListener("mousemove", handleCanvasDraw);
+        displayCanvas.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.cancelable) e.preventDefault();
+            isDrawing = true;
+            strokeChanged = false;
+            handleCanvasDraw(e);
+          },
+          { passive: false },
+        );
+        window.addEventListener("touchend", () => {
+          if (isDrawing) {
+            isDrawing = false;
+            if (strokeChanged) saveState();
+          }
+        });
+        displayCanvas.addEventListener(
+          "touchmove",
+          (e) => {
+            if (isDrawing && e.cancelable) {
+              e.preventDefault();
+              handleCanvasDraw(e);
+            }
+          },
+          { passive: false },
+        );
+        displayCanvas.addEventListener("dragstart", (e) => e.preventDefault());
+
+        inBgColor.addEventListener("input", () => {
+          updateHexText("bgColor", "txtHexBgColor");
+          drawComposite();
+        });
+        inBgColor.addEventListener("change", () => saveState());
+
+        // 🟢 인게임 마크 드래그 컨트롤(터치 포함) 로직은 전혀 지워지지 않았습니다.
+        const dragMark = document.getElementById("dragMark");
+        const previewContainer = document.getElementById("previewContainer");
+        let isDraggingMark = false;
+        function startDragMark(e) {
+          isDraggingMark = true;
+          if (e.cancelable) e.preventDefault();
+        }
+        function stopDragMark() {
+          isDraggingMark = false;
+        }
+        function moveDragMark(e) {
+          if (!isDraggingMark) return;
+          if (e.cancelable) e.preventDefault();
+          let clientX, clientY;
+          if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+          } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+          }
+          const rect = previewContainer.getBoundingClientRect();
+          let x = clientX - rect.left - 8;
+          let y = clientY - rect.top - 6;
+          if (x < 0) x = 0;
+          if (x > rect.width - 16) x = rect.width - 16;
+          if (y < 0) y = 0;
+          if (y > rect.height - 12) y = rect.height - 12;
+          dragMark.style.left = `${x}px`;
+          dragMark.style.top = `${y}px`;
+        }
+        dragMark.addEventListener("mousedown", startDragMark);
+        window.addEventListener("mouseup", stopDragMark);
+        window.addEventListener("mousemove", moveDragMark);
+        dragMark.addEventListener("touchstart", startDragMark, { passive: false });
+        window.addEventListener("touchend", stopDragMark);
+        window.addEventListener("touchmove", moveDragMark, { passive: false });
+
+        const canvasLayerTemp = document.createElement("canvas");
+        canvasLayerTemp.width = 16;
+        canvasLayerTemp.height = 12;
+        const ctxLayerTemp = canvasLayerTemp.getContext("2d", { willReadFrequently: true });
+        function hexToRgb(hex) {
+          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) } : null;
+        }
+
+        function drawComposite(forceBgColor = null) {
+          displayCtx.clearRect(0, 0, 16, 12);
+          inGameCtx.clearRect(0, 0, 16, 12);
+          displayCtx.fillStyle = forceBgColor || inBgColor.value;
+          displayCtx.fillRect(0, 0, 16, 12);
+
+          layers.forEach((layer) => {
+            if (!layer.visible) return;
+            ctxLayerTemp.clearRect(0, 0, 16, 12);
+            if (layer.type === "text" && layer.text) {
+              ctxLayerTemp.save();
+              const scale = (layer.scaleX || 100) / 100;
+              ctxLayerTemp.scale(scale, 1);
+              const fontStyleStr = layer.fontStyle === "italic" ? "italic " : "";
+              ctxLayerTemp.font = `${fontStyleStr}${layer.fontWeight} ${layer.fontSize}px "${layer.fontFamily}"`;
+              ctxLayerTemp.textAlign = "center";
+              ctxLayerTemp.textBaseline = "middle";
+              const drawX = (8 + layer.offsetX) / scale;
+              const drawY = 6 + layer.offsetY + layer.fontSize * 0.05;
+              if (layer.colorType === "gradient") {
+                let gradient;
+                if (layer.gradientDir === "horizontal") {
+                  const halfW = ctxLayerTemp.measureText(layer.text).width / 2;
+                  gradient = ctxLayerTemp.createLinearGradient(drawX - halfW, 0, drawX + halfW, 0);
+                } else {
+                  gradient = ctxLayerTemp.createLinearGradient(0, drawY - layer.fontSize / 2, 0, drawY + layer.fontSize / 2);
+                }
+                gradient.addColorStop(0, layer.color1);
+                gradient.addColorStop(1, layer.color2);
+                ctxLayerTemp.fillStyle = gradient;
+              } else ctxLayerTemp.fillStyle = layer.color1;
+              ctxLayerTemp.fillText(layer.text, drawX, drawY);
+              ctxLayerTemp.fillText(layer.text, drawX, drawY);
+              ctxLayerTemp.fillText(layer.text, drawX, drawY);
+              ctxLayerTemp.restore();
+            } else if (layer.type === "image" && layer.imageObj) {
+              const img = layer.imageObj;
+              const fitRatio = Math.min(16 / img.width, 12 / img.height);
+              const scale = (layer.imgScale || 100) / 100;
+              const finalW = img.width * fitRatio * scale;
+              const finalH = img.height * fitRatio * scale;
+              const dx = (16 - finalW) / 2 + layer.offsetX;
+              const dy = (12 - finalH) / 2 + layer.offsetY;
+              ctxLayerTemp.imageSmoothingEnabled = true;
+              ctxLayerTemp.imageSmoothingQuality = "high";
+              ctxLayerTemp.drawImage(layer.imageObj, dx, dy, finalW, finalH);
+            } else return;
+
+            const imgData = ctxLayerTemp.getImageData(0, 0, 16, 12);
+            const data = imgData.data;
+            if (layer.type === "image") {
+              for (let i = 0; i < data.length; i += 4) {
+                if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0 && data[i + 3] > 0) data[i + 3] = 0;
+              }
+            }
+
+            for (let y = 0; y < 12; y++) {
+              for (let x = 0; x < 16; x++) {
+                const localX = x - (layer.offsetX || 0);
+                const localY = y - (layer.offsetY || 0);
+                const key = `${localX},${localY}`;
+                const override = layer.pixelOverrides[key];
+                if (override) {
+                  const i = (y * 16 + x) * 4;
+                  if (override.type === "brush") {
+                    const rgb = hexToRgb(override.color);
+                    if (rgb) {
+                      data[i] = rgb.r;
+                      data[i + 1] = rgb.g;
+                      data[i + 2] = rgb.b;
+                      data[i + 3] = 255;
+                    }
+                  } else if (override.type === "erase") {
+                    data[i] = 0;
+                    data[i + 1] = 0;
+                    data[i + 2] = 0;
+                    data[i + 3] = 0;
+                  }
+                }
+              }
+            }
+
+            const outData = new Uint8ClampedArray(data.length);
+            const outlineRgb = hexToRgb(layer.outlineColor || "#050505");
+            for (let y = 0; y < 12; y++) {
+              for (let x = 0; x < 16; x++) {
+                const i = (y * 16 + x) * 4;
+                const alpha = data[i + 3];
+                if (alpha > 128) {
+                  outData[i] = data[i];
+                  outData[i + 1] = data[i + 1];
+                  outData[i + 2] = data[i + 2];
+                  outData[i + 3] = 255;
+                } else if (layer.addOutline) {
+                  let hasNeighbor = false;
+                  const neighbors = [
+                    [-1, -1],
+                    [0, -1],
+                    [1, -1],
+                    [-1, 0],
+                    [1, 0],
+                    [-1, 1],
+                    [0, 1],
+                    [1, 1],
+                  ];
+                  for (let [dx, dy] of neighbors) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < 16 && ny >= 0 && ny < 12) {
+                      if (data[(ny * 16 + nx) * 4 + 3] > 128) {
+                        hasNeighbor = true;
+                        break;
+                      }
+                    }
+                  }
+                  if (hasNeighbor) {
+                    outData[i] = outlineRgb.r;
+                    outData[i + 1] = outlineRgb.g;
+                    outData[i + 2] = outlineRgb.b;
+                    outData[i + 3] = 255;
+                  }
+                }
+              }
+            }
+
+            ctxLayerTemp.putImageData(new ImageData(outData, 16, 12), 0, 0);
+            displayCtx.drawImage(canvasLayerTemp, 0, 0);
+            inGameCtx.drawImage(canvasLayerTemp, 0, 0);
+          });
+        }
+
+        inShowGrid.addEventListener("change", (e) => {
+          gridOverlay.style.display = e.target.checked ? "block" : "none";
+        });
+
+        // 🟢 다운로드 기능 및 배경 투명화 로직 역식 전혀 지워지지 않았습니다.
+        // drawComposite('#000000')를 통해 검정색으로 변환 후 다운로드 되며, 리니지 시스템 상 이는 곧 투명 처리를 의미합니다.
+        document.getElementById("btnDownload").addEventListener("click", () => {
+          drawComposite("#000000");
+          const data = displayCtx.getImageData(0, 0, 16, 12).data;
+          const width = 16,
+            height = 12;
+          const padding = (4 - ((width * 3) % 4)) % 4;
+          const rowSize = width * 3 + padding;
+          const pixelArraySize = rowSize * height;
+          const fileSize = 54 + pixelArraySize;
+          const buffer = new ArrayBuffer(fileSize);
+          const view = new DataView(buffer);
+          view.setUint8(0, 0x42);
+          view.setUint8(1, 0x4d);
+          view.setUint32(2, fileSize, true);
+          view.setUint32(6, 0, true);
+          view.setUint32(10, 54, true);
+          view.setUint32(14, 40, true);
+          view.setUint32(18, width, true);
+          view.setInt32(22, height, true);
+          view.setUint16(26, 1, true);
+          view.setUint16(28, 24, true);
+          view.setUint32(30, 0, true);
+          view.setUint32(34, pixelArraySize, true);
+          view.setUint32(38, 2835, true);
+          view.setUint32(42, 2835, true);
+          view.setUint32(46, 0, true);
+          view.setUint32(50, 0, true);
+          let offset = 54;
+          for (let y = height - 1; y >= 0; y--) {
+            for (let x = 0; x < width; x++) {
+              const i = (y * width + x) * 4;
+              view.setUint8(offset++, data[i + 2]);
+              view.setUint8(offset++, data[i + 1]);
+              view.setUint8(offset++, data[i]);
+            }
+            for (let p = 0; p < padding; p++) view.setUint8(offset++, 0);
+          }
+          drawComposite();
+          const blob = new Blob([buffer], { type: "image/bmp" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "mark.bmp";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+
+        document.getElementById("btnResetApp").addEventListener("click", () => {
+          document.getElementById("confirmModal").classList.remove("hidden");
+        });
+        document.getElementById("btnCancelReset").addEventListener("click", () => {
+          document.getElementById("confirmModal").classList.add("hidden");
+        });
+        document.getElementById("btnConfirmReset").addEventListener("click", () => {
+          document.getElementById("confirmModal").classList.add("hidden");
+          localStorage.removeItem("lineageMarkMakerState");
+          layers = [];
+          layerCounter = 0;
+          undoHistory = [];
+          inBgColor.value = "#ffffff";
+          updateHexText("bgColor", "txtHexBgColor");
+          document.getElementById("showGrid").checked = true;
+          document.getElementById("gridOverlay").style.display = "block";
+          layers.push(createDefaultTextLayer());
+          selectedLayerId = layers[0].id;
+          activeDrawTool = "brush";
+          activeDrawColor = "#ff0000";
+          syncDrawToolUI();
+          const inGameBgImg = document.getElementById("inGameBgImg");
+          inGameBgImg.src = "https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true";
+          document.getElementById("dragMark").style.left = "20px";
+          document.getElementById("dragMark").style.top = "31px";
+          renderLayerList();
+          updatePropertiesPanel();
+          drawComposite();
+          saveState();
+        });
+
+        document.fonts.ready.then(() => {
+          const savedState = localStorage.getItem("lineageMarkMakerState");
+          if (savedState) deserializeApp(savedState, true);
+          else {
+            layers.push(createDefaultTextLayer());
+            selectedLayerId = layers[0].id;
+            inBgColor.value = "#ffffff";
+            updateHexText("bgColor", "txtHexBgColor");
+            renderLayerList();
+            updatePropertiesPanel();
+            drawComposite();
+            saveState();
+          }
+        });
+      });
     </script>
-</body>
+  </body>
 </html>

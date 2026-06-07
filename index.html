@@ -1,60 +1,114 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="리니지 클래식 툴즈" />  
-    <meta property="og:image" content="https://kim-cheolho.github.io/lienageClassic/ace.png" /> 
+<!doctype html>
+<html lang="ko" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta property="og:title" content="리니지 클래식 툴즈" />
     <meta property="og:description" content="리니지 클래식 유틸리티 통합 모음" />
     <title>리니지 클래식 통합 툴즈</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #121212; }
-    </style>
-</head>
-<body class="h-screen flex flex-col">
-    <!-- 🟢 상단 통합 헤더 및 탭 메뉴 -->
-    <header class="bg-[#18181b] border-b border-zinc-800 px-4 py-3 flex items-center justify-between shadow-md shrink-0">
-        <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <i class="fa-solid fa-swords text-indigo-500"></i> 리니지 툴즈
-        </h1>
-        
-        <div class="flex bg-[#09090b] p-1.5 rounded-lg border border-zinc-800 shadow-inner">
-            <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-4 py-1.5 text-xs sm:text-sm font-bold rounded transition-all bg-[#27272a] text-indigo-400 shadow">
-                축/저주 판별기
-            </button>
-            <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-4 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-400 hover:text-zinc-200">
-                혈마크 제작기
-            </button>
+    <script>
+      tailwind.config = { darkMode: "class" };
+    </script>
+  </head>
+  <body class="h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between shadow-sm shrink-0 transition-colors duration-300 z-50">
+      <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">리니지 툴즈</h1>
+
+      <div class="flex items-center gap-4">
+        <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
+          <span id="theme-icon-container">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
+          </span>
+        </button>
+
+        <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-1">
+          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow">축/저주 판별기</button>
+          <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작 가이드</button>
+          <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크 제작기</button>
         </div>
+      </div>
     </header>
 
-    <!-- 🟢 하위 HTML 파일을 띄워주는 Iframe 영역 -->
-    <iframe id="tool-frame" src="html/stat.html" class="flex-1 w-full border-none bg-zinc-900 w-full h-full"></iframe>
+    <div class="relative flex-1 w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+      <iframe id="frame-stat" src="html/stat.html" class="absolute inset-0 w-full h-full border-none transition-opacity duration-300"></iframe>
+      <iframe id="frame-craft" src="html/craft.html" class="absolute inset-0 w-full h-full border-none opacity-0 pointer-events-none transition-opacity duration-300"></iframe>
+      <iframe id="frame-mark" src="html/mark.html" class="absolute inset-0 w-full h-full border-none opacity-0 pointer-events-none transition-opacity duration-300"></iframe>
+    </div>
 
     <script>
-        function switchTab(tabId) {
-            const frame = document.getElementById('tool-frame');
-            const statBtn = document.getElementById('tab-btn-stat');
-            const markBtn = document.getElementById('tab-btn-mark');
+      // 중앙 테마 제어 로직
+      let isGlobalDark = true; // 기본 다크모드
 
-            if (tabId === 'stat') {
-                // stat.html 호출
-                frame.src = 'html/stat.html';
-                statBtn.classList.add('bg-[#27272a]', 'text-indigo-400', 'shadow');
-                statBtn.classList.remove('text-zinc-400', 'hover:text-zinc-200');
-                markBtn.classList.remove('bg-[#27272a]', 'text-indigo-400', 'shadow');
-                markBtn.classList.add('text-zinc-400', 'hover:text-zinc-200');
-            } else {
-                // mark.html 호출
-                frame.src = 'html/mark.html';
-                markBtn.classList.add('bg-[#27272a]', 'text-indigo-400', 'shadow');
-                markBtn.classList.remove('text-zinc-400', 'hover:text-zinc-200');
-                statBtn.classList.remove('bg-[#27272a]', 'text-indigo-400', 'shadow');
-                statBtn.classList.add('text-zinc-400', 'hover:text-zinc-200');
-            }
+      function toggleGlobalTheme() {
+        isGlobalDark = !isGlobalDark;
+        applyTheme();
+        broadcastTheme();
+        localStorage.setItem("lineageGlobalTheme", isGlobalDark ? "dark" : "light");
+      }
+
+      function applyTheme() {
+        const html = document.documentElement;
+        const iconContainer = document.getElementById("theme-icon-container");
+
+        const sunSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        const moonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+
+        if (isGlobalDark) {
+          html.classList.add("dark");
+          iconContainer.innerHTML = sunSvg;
+        } else {
+          html.classList.remove("dark");
+          iconContainer.innerHTML = moonSvg;
         }
+      }
+
+      // 자식 Iframe들에게 테마 변경 메세지 전송
+      function broadcastTheme() {
+        const frames = ["frame-stat", "frame-mark", "frame-craft"];
+        frames.forEach((id) => {
+          const iframe = document.getElementById(id);
+          if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: "THEME_CHANGE", isDark: isGlobalDark }, "*");
+          }
+        });
+      }
+
+      // Iframe 디스플레이 스위칭
+      function switchTab(tabId) {
+        const tabs = ["stat", "mark", "craft"];
+
+        tabs.forEach((id) => {
+          const frame = document.getElementById(`frame-${id}`);
+          const btn = document.getElementById(`tab-btn-${id}`);
+
+          if (id === tabId) {
+            frame.classList.remove("opacity-0", "pointer-events-none");
+            frame.classList.add("opacity-100");
+            btn.classList.add("bg-white", "dark:bg-zinc-800", "text-indigo-600", "dark:text-indigo-400", "shadow");
+            btn.classList.remove("text-zinc-500", "dark:text-zinc-400", "hover:text-zinc-800", "dark:hover:text-zinc-200");
+          } else {
+            frame.classList.add("opacity-0", "pointer-events-none");
+            frame.classList.remove("opacity-100");
+            btn.classList.remove("bg-white", "dark:bg-zinc-800", "text-indigo-600", "dark:text-indigo-400", "shadow");
+            btn.classList.add("text-zinc-500", "dark:text-zinc-400", "hover:text-zinc-800", "dark:hover:text-zinc-200");
+          }
+        });
+
+        // 탭 이동 시 테마가 풀리지 않도록 한 번 더 브로드캐스트
+        setTimeout(broadcastTheme, 100);
+      }
+
+      // 초기화
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("lineageGlobalTheme");
+        if (savedTheme) {
+          isGlobalDark = savedTheme === "dark";
+        }
+        applyTheme();
+        // iframe들이 로드될 시간을 주고 초기 테마 전송
+        setTimeout(broadcastTheme, 500);
+      });
     </script>
-</body>
+  </body>
 </html>
