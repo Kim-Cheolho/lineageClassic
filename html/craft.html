@@ -1,269 +1,285 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L-Crafting Guide</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' }
-  </script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L-Crafting Guide</title>
 
-  <script src="../js/data.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: "class" };
+    </script>
 
-  <style>
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #52525b; border-radius: 20px; }
-    
-    /* 트리 노드 토글을 위한 유틸리티 */
-    .tree-children.hidden { display: none; }
-  </style>
-</head>
-<body class="transition-colors duration-200 dark" id="body-root">
-  <div class="h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 font-sans overflow-hidden">
-    
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex flex-col z-10">
-      <div class="min-h-[56px] py-2 px-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-lg font-bold flex items-center gap-2 text-zinc-900 dark:text-zinc-100 shrink-0">
-          <span id="icon-database" class="text-amber-500"></span>
-          L-Crafting
-        </h1>
-        
-        <div class="flex-1 min-w-[200px] max-w-sm bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded flex items-center px-3 py-1.5 focus-within:border-amber-500 transition-colors order-last md:order-none w-full md:w-auto">
-          <span id="icon-search" class="text-zinc-400 dark:text-zinc-500 mr-2"></span>
-          <input 
-            type="text" 
-            id="search-input"
-            placeholder="아이템/재료 검색" 
-            class="bg-transparent border-none outline-none w-full text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600"
-          />
+    <script src="../js/data.js"></script>
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #52525b;
+        border-radius: 20px;
+      }
+
+      .tree-children.hidden {
+        display: none;
+      }
+      .is-resizing * {
+        user-select: none !important;
+        cursor: col-resize !important;
+      }
+    </style>
+  </head>
+  <body class="transition-colors duration-200 dark" id="body-root">
+    <div class="md:h-[100dvh] min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 font-sans md:overflow-hidden">
+      <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex flex-col z-10">
+        <div class="min-h-[56px] py-2 px-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 class="text-lg font-bold flex items-center gap-2 text-zinc-900 dark:text-zinc-100 shrink-0">
+            <span id="icon-database" class="text-amber-500"></span>
+            L-Crafting
+          </h1>
+
+          <div class="flex-1 min-w-[200px] max-w-sm bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded flex items-center px-3 py-1.5 focus-within:border-amber-500 transition-colors order-last md:order-none w-full md:w-auto">
+            <span id="icon-search" class="text-zinc-400 dark:text-zinc-500 mr-2"></span>
+            <input type="text" id="search-input" placeholder="아이템/재료 검색" class="bg-transparent border-none outline-none w-full text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600" />
+          </div>
+
+          <div class="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
+            <span class="text-xs text-zinc-500" id="result-count">결과: 0건</span>
+            <button id="theme-toggle-btn" class="p-1.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:text-amber-500 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center justify-center"></button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-4 shrink-0 ml-auto md:ml-0">
-          <span class="text-xs text-zinc-500" id="result-count">결과: 0건</span>
-          <button 
-            id="theme-toggle-btn"
-            class="p-1.5 rounded bg-zinc-100 dark:bg-zinc-800 hover:text-amber-500 transition-colors text-zinc-600 dark:text-zinc-400 flex items-center justify-center"
-          ></button>
+        <div id="category-tabs" class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-800 flex gap-2 overflow-x-auto no-scrollbar"></div>
+      </header>
+
+      <div class="flex-1 flex flex-col md:flex-row h-auto md:h-full md:overflow-hidden">
+        <aside id="left-panel" class="w-full md:w-[256px] h-auto md:h-full flex flex-col bg-zinc-50 dark:bg-zinc-900/50 border-b md:border-b-0 shrink-0 md:overflow-y-auto">
+          <div id="sidebar-list" class="flex-1 custom-scrollbar p-2 flex flex-col gap-1"></div>
+        </aside>
+
+        <div id="resizer-left" class="hidden md:flex w-2 justify-center items-center cursor-col-resize bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500/50 transition-colors z-20 shrink-0 group">
+          <div class="w-[2px] h-8 bg-zinc-400 dark:bg-zinc-500 group-hover:bg-white rounded-full"></div>
         </div>
+
+        <main id="main-content" class="w-full md:flex-1 flex flex-col h-auto md:h-full md:overflow-y-auto bg-white dark:bg-zinc-950 shrink-0 md:shrink"></main>
+
+        <div id="resizer-right" class="hidden md:flex w-2 justify-center items-center cursor-col-resize bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500/50 transition-colors z-20 shrink-0 group">
+          <div class="w-[2px] h-8 bg-zinc-400 dark:bg-zinc-500 group-hover:bg-white rounded-full"></div>
+        </div>
+
+        <aside id="right-panel" class="w-full md:w-[340px] h-auto md:h-full flex flex-col bg-zinc-50 dark:bg-zinc-900 border-t md:border-t-0 shrink-0 md:overflow-y-auto"></aside>
       </div>
-
-      <div id="category-tabs" class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-800 flex gap-2 overflow-x-auto no-scrollbar">
-      </div>
-    </header>
-
-    <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar">
-      
-      <aside class="w-full md:w-64 h-[30vh] md:h-full flex flex-col bg-zinc-50 dark:bg-zinc-900/50 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-800 shrink-0">
-        <div id="sidebar-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
-        </div>
-      </aside>
-
-      <main id="main-content" class="w-full md:flex-1 flex flex-col min-h-[50vh] md:min-h-0 md:h-full md:overflow-y-auto no-scrollbar bg-white dark:bg-zinc-950">
-      </main>
-
-      <aside id="right-panel" class="w-full md:w-[340px] flex flex-col h-auto md:h-full bg-zinc-50 dark:bg-zinc-900 border-t md:border-t-0 md:border-l border-zinc-200 dark:border-zinc-800 shrink-0">
-      </aside>
     </div>
-  </div>
 
-  <script>
-    // ==========================================
-    // 0. SVG 아이콘 문자열 저장소
-    // ==========================================
-    const icons = {
-      search: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
-      chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
-      chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
-      sun: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
-      moon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
-      user: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-      mapPin: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
-      calculator: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>`,
-      database: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`,
-      shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`
-    };
+    <script>
+      const icons = {
+        search: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+        chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
+        chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
+        sun: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+        moon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+        user: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+        mapPin: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+        calculator: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>`,
+        database: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>`,
+        shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`,
+      };
 
-    document.getElementById('icon-database').innerHTML = icons.database;
-    document.getElementById('icon-search').innerHTML = icons.search;
+      document.getElementById("icon-database").innerHTML = icons.database;
+      document.getElementById("icon-search").innerHTML = icons.search;
 
-    // ==========================================
-    // 1. 상태 관리 (State)
-    // ==========================================
-    let state = {
-      isDarkMode: true,
-      searchTerm: '',
-      selectedCategory: 'weapon',
-      selectedItemId: '크로스보우', 
-      unitPrices: {}
-    };
+      let state = {
+        isDarkMode: true,
+        searchTerm: "",
+        selectedCategory: "weapon",
+        selectedItemId: "크로스보우",
+        unitPrices: {},
+      };
 
-    const categories = [
-      { id: 'all', name: '전체' },
-      { id: 'weapon', name: '무기' },
-      { id: 'armor', name: '방어구' },
-      { id: 'accessory', name: '장신구' },
-      { id: 'material', name: '재료' },
-    ];
+      const categories = [
+        { id: "all", name: "전체" },
+        { id: "weapon", name: "무기" },
+        { id: "armor", name: "방어구" },
+        { id: "accessory", name: "장신구" },
+        { id: "material", name: "재료" },
+      ];
 
-    // ==========================================
-    // 2. 비즈니스 로직 및 헬퍼 함수
-    // ==========================================
-    const calculateFinalMaterials = (itemId, currentCount = 1) => {
-      const recipe = recipes_db[itemId];
-      if (!recipe) return { [itemId]: currentCount };
+      const calculateFinalMaterials = (itemId, requiredCount = 1) => {
+        const recipe = recipes_db[itemId];
+        if (!recipe) return { [itemId]: requiredCount };
 
-      const finalMats = {};
-      for (const mat of recipe.materials) {
-        const childMats = calculateFinalMaterials(mat.id, mat.count * currentCount);
-        for (const [childId, childCount] of Object.entries(childMats)) {
-          finalMats[childId] = (finalMats[childId] || 0) + childCount;
-        }
-      }
-      return finalMats;
-    };
+        const finalMats = {};
+        const yieldAmount = recipe.yield || 1;
+        const craftTimes = Math.ceil(requiredCount / yieldAmount);
 
-    const checkSearchMatch = (itemId, keyword) => {
-      const lowerKeyword = keyword.toLowerCase();
-      if (items_db[itemId].name.toLowerCase().includes(lowerKeyword)) return true;
-
-      const recipe = recipes_db[itemId];
-      if (recipe) {
         for (const mat of recipe.materials) {
-          if (checkSearchMatch(mat.id, lowerKeyword)) return true;
+          const childMats = calculateFinalMaterials(mat.id, mat.count * craftTimes);
+          for (const [childId, childCount] of Object.entries(childMats)) {
+            finalMats[childId] = (finalMats[childId] || 0) + childCount;
+          }
+        }
+        return finalMats;
+      };
+
+      const checkSearchMatch = (itemId, keyword) => {
+        const lowerKeyword = keyword.toLowerCase();
+        if (items_db[itemId].name.toLowerCase().includes(lowerKeyword)) return true;
+
+        const recipe = recipes_db[itemId];
+        if (recipe) {
+          for (const mat of recipe.materials) {
+            if (checkSearchMatch(mat.id, lowerKeyword)) return true;
+          }
+        }
+        return false;
+      };
+
+      function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
+        if (item.image) {
+          return `<img src="${item.image}" alt="${item.name}" class="${sizeClass} object-cover rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" />`;
+        }
+        return `<div class="${sizeClass} bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded flex items-center justify-center">${item.icon || ""}</div>`;
+      }
+
+      function renderTheme() {
+        const body = document.getElementById("body-root");
+        const btn = document.getElementById("theme-toggle-btn");
+
+        if (state.isDarkMode) {
+          body.classList.add("dark");
+          btn.innerHTML = icons.sun;
+        } else {
+          body.classList.remove("dark");
+          btn.innerHTML = icons.moon;
         }
       }
-      return false;
-    };
 
-    function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
-      if (item.image) {
-        return `<img src="${item.image}" alt="${item.name}" class="${sizeClass} object-cover rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" />`;
+      function renderCategories() {
+        const container = document.getElementById("category-tabs");
+        container.innerHTML = categories
+          .map((cat) => {
+            const isSelected = state.selectedCategory === cat.id;
+            const classes = isSelected ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 shadow-sm" : "bg-transparent border-transparent text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800";
+
+            return `<button onclick="setCategory('${cat.id}')" class="px-5 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors border ${classes}">${cat.name}</button>`;
+          })
+          .join("");
       }
-      return `<div class="${sizeClass} bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded flex items-center justify-center">${item.icon || ''}</div>`;
-    }
 
-    // ==========================================
-    // 3. 렌더링 함수군 (Direct DOM Manipulation)
-    // ==========================================
-    function renderTheme() {
-      const body = document.getElementById('body-root');
-      const btn = document.getElementById('theme-toggle-btn');
-      
-      if (state.isDarkMode) {
-        body.classList.add('dark');
-        btn.innerHTML = icons.sun;
-      } else {
-        body.classList.remove('dark');
-        btn.innerHTML = icons.moon;
+      function getFilteredList() {
+        return Object.keys(items_db).filter((id) => {
+          if (!recipes_db[id]) return false;
+          const item = items_db[id];
+          if (state.selectedCategory !== "all" && item.category !== state.selectedCategory) return false;
+          if (state.searchTerm && !checkSearchMatch(id, state.searchTerm)) return false;
+          return true;
+        });
       }
-    }
 
-    function renderCategories() {
-      const container = document.getElementById('category-tabs');
-      container.innerHTML = categories.map(cat => {
-        const isSelected = state.selectedCategory === cat.id;
-        const classes = isSelected 
-          ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 shadow-sm' 
-          : 'bg-transparent border-transparent text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800';
-        
-        return `<button onclick="setCategory('${cat.id}')" class="px-5 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors border ${classes}">${cat.name}</button>`;
-      }).join('');
-    }
+      function renderSidebar() {
+        const filteredList = getFilteredList();
+        document.getElementById("result-count").textContent = `결과: ${filteredList.length}건`;
 
-    function getFilteredList() {
-      return Object.keys(items_db).filter(id => {
-        if (!recipes_db[id]) return false;
-        const item = items_db[id];
-        if (state.selectedCategory !== 'all' && item.category !== state.selectedCategory) return false;
-        if (state.searchTerm && !checkSearchMatch(id, state.searchTerm)) return false;
-        return true;
-      });
-    }
+        const container = document.getElementById("sidebar-list");
+        container.innerHTML = filteredList
+          .map((id) => {
+            const item = items_db[id];
+            const isSelected = id === state.selectedItemId;
+            const classes = isSelected ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300";
 
-    function renderSidebar() {
-      const filteredList = getFilteredList();
-      document.getElementById('result-count').textContent = `결과: ${filteredList.length}건`;
-      
-      const container = document.getElementById('sidebar-list');
-      container.innerHTML = filteredList.map(id => {
-        const item = items_db[id];
-        const isSelected = id === state.selectedItemId;
-        const classes = isSelected 
-          ? 'bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white' 
-          : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300';
-        
-        return `
+            return `
           <div onclick="selectItem('${id}')" class="flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${classes}">
             ${getItemIconHTML(item, "w-7 h-7 text-xs")}
             <span class="text-sm font-medium truncate">${item.name}</span>
           </div>
         `;
-      }).join('');
-    }
+          })
+          .join("");
+      }
 
-    function generateRecipeNodeHTML(itemId, count, depth = 0) {
-      const item = items_db[itemId];
-      const recipe = recipes_db[itemId];
-      const hasChildren = recipe && recipe.materials && recipe.materials.length > 0;
-      
-      let html = `<div class="recipe-node w-full text-sm font-sans">`;
-      
-      // 🟢 기본 상태를 닫힘(false) 및 우측 화살표로 변경
-      html += `
-        <div class="flex items-center py-1.5 px-2 rounded hover:bg-zinc-100 dark:bg-zinc-900 transition-colors group" style="padding-left: ${depth * 20 + 8}px">
-          <div class="flex items-center gap-2 w-full">
-            ${hasChildren 
-              ? `<button onclick="toggleTreeNode(this)" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 focus:outline-none flex items-center justify-center w-[14px] h-[14px]" data-open="false">${icons.chevronRight}</button>` 
-              : `<span class="w-[14px]"></span>`
-            }
+      function generateRecipeNodeHTML(itemId, requiredCount, depth = 0) {
+        const item = items_db[itemId];
+        const recipe = recipes_db[itemId];
+        const hasChildren = recipe && recipe.materials && recipe.materials.length > 0;
+
+        let yieldAmount = 1;
+        let craftTimes = requiredCount;
+
+        if (recipe) {
+          yieldAmount = recipe.yield || 1;
+          craftTimes = Math.ceil(requiredCount / yieldAmount);
+        }
+
+        let html = `<div class="recipe-node w-full text-sm font-sans">`;
+
+        /* 🟢 4. 아이템 전체 클릭: onclick 이벤트를 최상위 div로 올리고, 텍스트 선택 방지를 위해 select-none 추가 */
+        html += `
+        <div ${hasChildren ? `onclick="toggleTreeNode(this.querySelector('[data-open]'))"` : ""} class="flex items-center py-1.5 px-2 rounded hover:bg-zinc-100 dark:bg-zinc-900 transition-colors group ${hasChildren ? "cursor-pointer select-none" : ""}" style="padding-left: ${depth * 20 + 8}px">
+          
+          <div class="flex items-center gap-2 w-full pointer-events-none">
+            ${hasChildren ? `<span class="text-zinc-400 flex items-center justify-center w-[14px] h-[14px]" data-open="false">${icons.chevronRight}</span>` : `<span class="w-[14px]"></span>`}
+            
             ${getItemIconHTML(item, "w-5 h-5 text-[10px]")}
             <span class="text-zinc-800 dark:text-zinc-200 font-medium">${item.name}</span>
-            <span class="text-amber-600 dark:text-amber-500 text-xs font-bold ml-1">× ${count}</span>
-            ${recipe ? `<span class="ml-auto text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">${recipe.npc} (${recipe.location})</span>` : ''}
+            <span class="text-amber-600 dark:text-amber-500 text-xs font-bold ml-1 flex items-center gap-1">
+              × ${requiredCount.toLocaleString()}
+              ${yieldAmount > 1 ? `<span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded leading-none">(1회 제작 시 ${yieldAmount}개 획득)</span>` : ""}
+            </span>
+            
+            ${recipe ? `<span class="ml-auto text-[10px] text-zinc-400 dark:text-zinc-500 flex items-center gap-1">${recipe.npc} (${recipe.location})</span>` : ""}
           </div>
         </div>
       `;
 
-      // 🟢 하위 요소 컨테이너에 초기 hidden 속성 부여
-      if (hasChildren) {
-        html += `<div class="relative tree-children block hidden">`;
-        html += `<div class="absolute top-0 bottom-0 border-l border-zinc-200 dark:border-zinc-800" style="left: ${depth * 20 + 14}px"></div>`;
-        html += `<div class="flex flex-col">`;
-        recipe.materials.forEach(mat => {
-          html += generateRecipeNodeHTML(mat.id, mat.count * count, depth + 1);
-        });
-        html += `</div></div>`;
+        if (hasChildren) {
+          html += `<div class="relative tree-children block hidden">`;
+          html += `<div class="absolute top-0 bottom-0 border-l border-zinc-200 dark:border-zinc-800" style="left: ${depth * 20 + 14}px"></div>`;
+          html += `<div class="flex flex-col">`;
+          recipe.materials.forEach((mat) => {
+            html += generateRecipeNodeHTML(mat.id, mat.count * craftTimes, depth + 1);
+          });
+          html += `</div></div>`;
+        }
+
+        html += `</div>`;
+        return html;
       }
 
-      html += `</div>`;
-      return html;
-    }
+      function renderMain() {
+        const container = document.getElementById("main-content");
+        const item = items_db[state.selectedItemId];
+        const recipe = recipes_db[state.selectedItemId];
 
-    function renderMain() {
-      const container = document.getElementById('main-content');
-      const item = items_db[state.selectedItemId];
-      const recipe = recipes_db[state.selectedItemId];
+        if (!item || !recipe) {
+          container.innerHTML = `<div class="flex-1 flex items-center justify-center text-zinc-400 text-sm">항목을 선택해주세요.</div>`;
+          return;
+        }
 
-      if (!item || !recipe) {
-        container.innerHTML = `<div class="flex-1 flex items-center justify-center text-zinc-400 text-sm">항목을 선택해주세요.</div>`;
-        return;
-      }
-
-      let statsHTML = '';
-      if (item.stats && item.stats.length > 0) {
-        const statsList = item.stats.map(stat => `
-          <div class="${stat.label === '옵션' ? 'col-span-full' : ''}">
+        let statsHTML = "";
+        if (item.stats && item.stats.length > 0) {
+          const statsList = item.stats
+            .map(
+              (stat) => `
+          <div class="${stat.label === "옵션" ? "col-span-full" : ""}">
             <span class="text-zinc-500 text-xs block mb-0.5">${stat.label}</span>
             <span class="font-medium text-zinc-900 dark:text-zinc-200">${stat.value}</span>
           </div>
-        `).join('');
+        `,
+            )
+            .join("");
 
-        statsHTML = `
+          statsHTML = `
           <div class="mb-8 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-900/50">
             <div class="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
               <span class="text-zinc-500">${icons.shield}</span>
@@ -274,11 +290,12 @@
             </div>
           </div>
         `;
-      }
+        }
 
-      const treeHTML = recipe.materials.map(mat => generateRecipeNodeHTML(mat.id, mat.count)).join('');
+        const baseCraftTimes = 1;
+        const treeHTML = recipe.materials.map((mat) => generateRecipeNodeHTML(mat.id, mat.count * baseCraftTimes)).join("");
 
-      container.innerHTML = `
+        container.innerHTML = `
         <div class="p-6 max-w-4xl mx-auto md:mx-0 w-full">
           <div class="flex items-start gap-5 mb-8">
             ${getItemIconHTML(item, "w-16 h-16 text-3xl")}
@@ -286,8 +303,9 @@
               <div class="flex items-end gap-3 mb-1 flex-wrap">
                 <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">${item.name}</h2>
                 <span class="text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded border border-zinc-200 dark:border-zinc-700 mb-1 shrink-0">
-                  ${item.type || '제작 재료'}
+                  ${item.type || "제작 재료"}
                 </span>
+                ${recipe.yield > 1 ? `<span class="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded border border-emerald-200 dark:border-emerald-800 mb-1 shrink-0">1회 제작 시 ${recipe.yield}개 획득</span>` : ""}
               </div>
               <div class="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-zinc-600 dark:text-zinc-400 mt-3">
                 <div class="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 px-2 py-1 rounded">
@@ -303,7 +321,7 @@
           <div>
             <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
               <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                 제작 트리 구조
+                 제작 트리 구조 (1회 제작 기준)
               </h3>
               <div class="flex gap-2">
                 <button onclick="toggleAllTrees(true)" class="px-2.5 py-1 rounded bg-zinc-100 dark:bg-zinc-800/80 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors border border-zinc-200 dark:border-zinc-700">모두 펴기</button>
@@ -316,31 +334,30 @@
           </div>
         </div>
       `;
-    }
-
-    function renderRightPanel() {
-      const container = document.getElementById('right-panel');
-      const item = items_db[state.selectedItemId];
-      const recipe = recipes_db[state.selectedItemId];
-
-      if (!item || !recipe) {
-        container.innerHTML = '';
-        return;
       }
 
-      const finalMaterials = calculateFinalMaterials(state.selectedItemId);
-      
-      let matHTML = '';
-      let totalCost = 0;
+      function renderRightPanel() {
+        const container = document.getElementById("right-panel");
+        const item = items_db[state.selectedItemId];
+        const recipe = recipes_db[state.selectedItemId];
 
-      Object.entries(finalMaterials).forEach(([id, count]) => {
-        if (count === 0) return;
-        const mat = items_db[id];
-        const currentPrice = state.unitPrices[id] || '';
-        totalCost += count * (Number(currentPrice) || 0);
+        if (!item || !recipe) {
+          container.innerHTML = "";
+          return;
+        }
 
-        // 🟢 type="text"와 inputmode="numeric"를 통해 화살표 스피너를 제거하고 모바일 키보드를 숫자로 최적화
-        matHTML += `
+        const finalMaterials = calculateFinalMaterials(state.selectedItemId, 1);
+
+        let matHTML = "";
+        let totalCost = 0;
+
+        Object.entries(finalMaterials).forEach(([id, count]) => {
+          if (count === 0) return;
+          const mat = items_db[id];
+          const currentPrice = state.unitPrices[id] || "";
+          totalCost += count * (Number(currentPrice) || 0);
+
+          matHTML += `
           <div class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-3 rounded shadow-sm flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -358,25 +375,32 @@
                 inputmode="numeric"
                 class="w-24 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-right text-xs text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none"
                 placeholder="0"
-                value="${currentPrice ? currentPrice.toLocaleString() : ''}"
+                value="${currentPrice ? currentPrice.toLocaleString() : ""}"
                 oninput="handlePriceInput('${id}', this)"
               />
             </div>
+            <div class="flex items-center justify-between mt-1 pt-2 border-t border-zinc-100 dark:border-zinc-800/50">
+              <span class="text-[10px] text-zinc-500">재료 총액</span>
+              <div class="text-right">
+                <span id="mat-total-${id}" class="text-xs font-bold text-zinc-700 dark:text-zinc-300">${(count * (Number(currentPrice) || 0)).toLocaleString()}</span>
+                <span class="text-[10px] text-zinc-400">아데나</span>
+              </div>
+            </div>
           </div>
         `;
-      });
+        });
 
-      container.innerHTML = `
+        container.innerHTML = `
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-950 shrink-0">
           <span class="text-amber-500">${icons.calculator}</span>
-          <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">최종 필요 재료 및 단가</h3>
+          <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">1회 제작 필요 재료 및 단가</h3>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar min-h-[250px] md:min-h-0">
+        <div class="flex-1 p-4 flex flex-col gap-3">
           ${matHTML}
         </div>
-        <div class="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_10px_rgba(0,0,0,0.2)] z-10 shrink-0">
+        <div class="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_10px_rgba(0,0,0,0.2)] z-10 shrink-0 mt-auto">
           <div class="flex justify-between items-end">
-            <span class="text-xs font-bold text-zinc-500">총 제작 비용</span>
+            <span class="text-xs font-bold text-zinc-500">1회 총 제작 비용</span>
             <div class="text-right">
               <span id="total-cost-display" class="text-xl font-black text-amber-600 dark:text-amber-500">
                 ${totalCost.toLocaleString()}
@@ -386,128 +410,192 @@
           </div>
         </div>
       `;
-    }
-
-    // ==========================================
-    // 4. 이벤트 핸들러
-    // ==========================================
-    function toggleTheme() {
-      state.isDarkMode = !state.isDarkMode;
-      renderTheme();
-    }
-
-    function setCategory(catId) {
-      state.selectedCategory = catId;
-      renderCategories();
-      renderSidebar();
-    }
-
-    function selectItem(itemId) {
-      state.selectedItemId = itemId;
-      renderSidebar();
-      renderMain();
-      renderRightPanel();
-    }
-
-    function handleSearch(e) {
-      state.searchTerm = e.target.value;
-      renderSidebar();
-    }
-
-    // 🟢 단가 입력 시 정규식 기반 양수 검증 및 콤마 포맷팅 
-    function handlePriceInput(id, inputElem) {
-      let rawValue = inputElem.value.replace(/[^0-9]/g, '');
-      state.unitPrices[id] = rawValue === '' ? 0 : Number(rawValue);
-      
-      inputElem.value = rawValue === '' ? '' : Number(rawValue).toLocaleString();
-      
-      const finalMaterials = calculateFinalMaterials(state.selectedItemId);
-      let newTotal = 0;
-      Object.entries(finalMaterials).forEach(([matId, count]) => {
-        newTotal += count * (state.unitPrices[matId] || 0);
-      });
-      document.getElementById('total-cost-display').textContent = newTotal.toLocaleString();
-    }
-
-    function toggleTreeNode(btn) {
-      const isOpen = btn.getAttribute('data-open') === 'true';
-      const newOpenState = !isOpen;
-      
-      btn.setAttribute('data-open', newOpenState.toString());
-      btn.innerHTML = newOpenState ? icons.chevronDown : icons.chevronRight;
-      
-      const nodeContainer = btn.closest('.recipe-node'); 
-      const childrenContainer = nodeContainer.querySelector('.tree-children');
-      
-      if (childrenContainer) {
-        if (newOpenState) {
-          childrenContainer.classList.remove('hidden');
-        } else {
-          childrenContainer.classList.add('hidden');
-        }
       }
-    }
 
-    function toggleAllTrees(expand) {
-      const container = document.getElementById('main-content');
-      if (!container) return;
-      
-      const buttons = container.querySelectorAll('button[data-open]');
-      buttons.forEach(btn => {
-        const isOpen = btn.getAttribute('data-open') === 'true';
-        if ((expand && !isOpen) || (!expand && isOpen)) {
-          btn.setAttribute('data-open', expand.toString());
-          btn.innerHTML = expand ? icons.chevronDown : icons.chevronRight;
-          
-          const nodeContainer = btn.closest('.recipe-node');
-          const childrenContainer = nodeContainer.querySelector('.tree-children');
-          if (childrenContainer) {
-            if (expand) {
-              childrenContainer.classList.remove('hidden');
-            } else {
-              childrenContainer.classList.add('hidden');
-            }
+      function toggleTheme() {
+        state.isDarkMode = !state.isDarkMode;
+        renderTheme();
+      }
+
+      function setCategory(catId) {
+        state.selectedCategory = catId;
+        renderCategories();
+        renderSidebar();
+      }
+
+      function selectItem(itemId) {
+        state.selectedItemId = itemId;
+        renderSidebar();
+        renderMain();
+        renderRightPanel();
+      }
+
+      function handleSearch(e) {
+        state.searchTerm = e.target.value;
+        renderSidebar();
+      }
+
+      function handlePriceInput(id, inputElem) {
+        let rawValue = inputElem.value.replace(/[^0-9]/g, "");
+        state.unitPrices[id] = rawValue === "" ? 0 : Number(rawValue);
+
+        inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
+
+        const finalMaterials = calculateFinalMaterials(state.selectedItemId, 1);
+        let newTotal = 0;
+
+        Object.entries(finalMaterials).forEach(([matId, count]) => {
+          const matTotal = count * (state.unitPrices[matId] || 0);
+          newTotal += matTotal;
+
+          const matTotalElem = document.getElementById(`mat-total-${matId}`);
+          if (matTotalElem) {
+            matTotalElem.textContent = matTotal.toLocaleString();
+          }
+        });
+
+        document.getElementById("total-cost-display").textContent = newTotal.toLocaleString();
+      }
+
+      function toggleTreeNode(btn) {
+        if (!btn) return;
+
+        const isOpen = btn.getAttribute("data-open") === "true";
+        const newOpenState = !isOpen;
+
+        btn.setAttribute("data-open", newOpenState.toString());
+        btn.innerHTML = newOpenState ? icons.chevronDown : icons.chevronRight;
+
+        const nodeContainer = btn.closest(".recipe-node");
+        const childrenContainer = nodeContainer.querySelector(".tree-children");
+
+        if (childrenContainer) {
+          if (newOpenState) {
+            childrenContainer.classList.remove("hidden");
+          } else {
+            childrenContainer.classList.add("hidden");
           }
         }
-      });
-    }
-
-    // ==========================================
-    // 5. 무결성 검증 및 초기화
-    // ==========================================
-    function validateDatabase() {
-      let hasError = false;
-      for (const [recipeId, recipeData] of Object.entries(recipes_db)) {
-        if (!items_db[recipeId]) {
-          console.error(`🚨 [데이터 누락 오류] 레시피에는 지정되어 있으나, items_db에 [${recipeId}] 아이템이 없습니다.`);
-          hasError = true;
-        }
-        if (recipeData.materials && Array.isArray(recipeData.materials)) {
-          recipeData.materials.forEach(mat => {
-            if (!items_db[mat.id]) {
-              console.error(`🚨 [재료 참조 오류] [${recipeId}] 제작에 필요한 재료인 [${mat.id}] 아이템이 items_db에 없습니다.`);
-              hasError = true;
-            }
-          });
-        }
       }
-      if (hasError) console.warn("⚠️ 데이터베이스에 누락된 항목이 있습니다. 콘솔 에러를 확인하세요.");
-      return !hasError;
-    }
 
-    document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
-    document.getElementById('search-input').addEventListener('input', handleSearch);
+      function toggleAllTrees(expand) {
+        const container = document.getElementById("main-content");
+        if (!container) return;
 
-    function init() {
-      validateDatabase(); 
-      renderTheme();
-      renderCategories();
-      renderSidebar();
-      renderMain();
-      renderRightPanel();
-    }
+        /* 🟢 4. 범용 선택자로 변경하여 모두 펴기/접기 완벽 작동 */
+        const elements = container.querySelectorAll("[data-open]");
+        elements.forEach((btn) => {
+          const isOpen = btn.getAttribute("data-open") === "true";
+          if ((expand && !isOpen) || (!expand && isOpen)) {
+            btn.setAttribute("data-open", expand.toString());
+            btn.innerHTML = expand ? icons.chevronDown : icons.chevronRight;
 
-    init();
-  </script>
-</body>
+            const nodeContainer = btn.closest(".recipe-node");
+            const childrenContainer = nodeContainer.querySelector(".tree-children");
+            if (childrenContainer) {
+              if (expand) {
+                childrenContainer.classList.remove("hidden");
+              } else {
+                childrenContainer.classList.add("hidden");
+              }
+            }
+          }
+        });
+      }
+
+      function initResizers() {
+        const leftPanel = document.getElementById("left-panel");
+        const rightPanel = document.getElementById("right-panel");
+
+        /* 🟢 2. PC 리사이징 개선: flex 환경에서도 width가 절대 무시되지 않도록 4중 강제 제어 */
+        const updatePanelWidths = (panel, width) => {
+          panel.style.width = width + "px";
+          panel.style.minWidth = width + "px";
+          panel.style.maxWidth = width + "px";
+          panel.style.flexBasis = width + "px";
+        };
+
+        const savedWidths = JSON.parse(localStorage.getItem("lcraft_panel_widths")) || {};
+        if (savedWidths.left && window.innerWidth >= 768) updatePanelWidths(leftPanel, savedWidths.left);
+        if (savedWidths.right && window.innerWidth >= 768) updatePanelWidths(rightPanel, savedWidths.right);
+
+        let isResizingLeft = false;
+        let isResizingRight = false;
+
+        document.getElementById("resizer-left").addEventListener("mousedown", () => {
+          isResizingLeft = true;
+          document.body.classList.add("is-resizing");
+        });
+        document.getElementById("resizer-right").addEventListener("mousedown", () => {
+          isResizingRight = true;
+          document.body.classList.add("is-resizing");
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isResizingLeft && !isResizingRight) return;
+
+          if (isResizingLeft) {
+            const newWidth = Math.max(200, Math.min(e.clientX, window.innerWidth / 2.5));
+            updatePanelWidths(leftPanel, newWidth);
+          }
+
+          if (isResizingRight) {
+            const newWidth = Math.max(250, Math.min(window.innerWidth - e.clientX, window.innerWidth / 2.5));
+            updatePanelWidths(rightPanel, newWidth);
+          }
+        });
+
+        document.addEventListener("mouseup", () => {
+          if (isResizingLeft || isResizingRight) {
+            isResizingLeft = false;
+            isResizingRight = false;
+            document.body.classList.remove("is-resizing");
+
+            localStorage.setItem(
+              "lcraft_panel_widths",
+              JSON.stringify({
+                left: parseInt(leftPanel.style.width) || 256,
+                right: parseInt(rightPanel.style.width) || 340,
+              }),
+            );
+          }
+        });
+      }
+
+      function validateDatabase() {
+        let hasError = false;
+        for (const [recipeId, recipeData] of Object.entries(recipes_db)) {
+          if (!items_db[recipeId]) {
+            console.error(`🚨 [데이터 누락 오류] 레시피에는 지정되어 있으나, items_db에 [${recipeId}] 아이템이 없습니다.`);
+            hasError = true;
+          }
+          if (recipeData.materials && Array.isArray(recipeData.materials)) {
+            recipeData.materials.forEach((mat) => {
+              if (!items_db[mat.id]) {
+                console.error(`🚨 [재료 참조 오류] [${recipeId}] 제작에 필요한 재료인 [${mat.id}] 아이템이 items_db에 없습니다.`);
+                hasError = true;
+              }
+            });
+          }
+        }
+        if (hasError) console.warn("⚠️ 데이터베이스에 누락된 항목이 있습니다. 콘솔 에러를 확인하세요.");
+        return !hasError;
+      }
+
+      document.getElementById("theme-toggle-btn").addEventListener("click", toggleTheme);
+      document.getElementById("search-input").addEventListener("input", handleSearch);
+
+      function init() {
+        validateDatabase();
+        renderTheme();
+        renderCategories();
+        renderSidebar();
+        renderMain();
+        renderRightPanel();
+        initResizers();
+      }
+
+      init();
+    </script>
+  </body>
 </html>
