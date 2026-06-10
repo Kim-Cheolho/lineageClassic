@@ -170,8 +170,12 @@
         const list = Object.keys(items_db).filter((id) => {
           if (!recipes_db[id]) return false;
           const item = items_db[id];
-          if (state.selectedCategory !== "all" && item.category !== state.selectedCategory) return false;
-          if (state.searchTerm && !checkSearchMatch(id, state.searchTerm)) return false;
+
+          if (state.searchTerm) {
+            if (!checkSearchMatch(id, state.searchTerm)) return false;
+          } else {
+            if (state.selectedCategory !== "all" && item.category !== state.selectedCategory) return false;
+          }
           return true;
         });
 
@@ -437,6 +441,12 @@
       }
       function handleSearch(e) {
         state.searchTerm = e.target.value;
+
+        if (state.searchTerm !== "") {
+          state.selectedCategory = "all";
+          renderCategories();
+        }
+
         renderSidebar();
       }
 
