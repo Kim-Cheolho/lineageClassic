@@ -13,7 +13,7 @@ const CSV_LINKS = {
   material:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQG1PEgePbi1Lz8J5dH8uGhj2bOI6Ty7fZiT2t0Gs6QhttJy8PGCm7CtqeH5o4ZF59EhMwBhJoL5VZX/pub?output=csv",
   recipe:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv", // // 🟢 레시피 전용 시트 링크 추가
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv",
 };
 
 // // 🟢 2. 화면에 출력될 스탯의 '표준 순서'를 지정합니다.
@@ -132,11 +132,6 @@ async function processItemSheet(url, categoryName) {
 async function processRecipeSheet(url) {
   if (!url || url.includes("CSV_링크를_넣어주세요")) return;
 
-  // 🔴 삭제: 기존 우회 프록시 통신 코드 제거
-  // const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-  // const response = await fetch(proxyUrl);
-
-  // 🟢 추가: 다이렉트 통신으로 수정 (로컬 서버 환경 최적화)
   const response = await fetch(url);
   const csvText = await response.text();
 
@@ -149,7 +144,7 @@ async function processRecipeSheet(url) {
     const rowData = {};
     headers.forEach((h, i) => (rowData[h.trim()] = values[i] || ""));
 
-    const id = rowData["ID"]; // 제작 결과물 ID
+    const id = rowData["ID"];
     if (!id) return;
 
     const materialsStr = rowData["재료"];
@@ -167,7 +162,6 @@ async function processRecipeSheet(url) {
   });
 }
 
-// // 🟢 6. 총 5개의 시트를 Promise.all을 통해 동시 다발적으로 로드합니다.
 async function loadDatabaseFromSheet() {
   try {
     const itemPromises = Object.entries(CSV_LINKS)
@@ -176,7 +170,6 @@ async function loadDatabaseFromSheet() {
 
     const recipePromise = processRecipeSheet(CSV_LINKS.recipe);
 
-    // 모든 다운로드와 파싱이 완료될 때까지 대기
     await Promise.all([...itemPromises, recipePromise]);
 
     console.log("✅ 5개 탭 분리 데이터베이스 정규화 로드 완료:", items_db, recipes_db);
@@ -187,3 +180,185 @@ async function loadDatabaseFromSheet() {
     return false;
   }
 }
+
+// ============================================================================
+// 🟢 [AI 컨텍스트 및 지시문]
+// 아래는 '초성 검색', '영타->한글 오타 교정', '겹자음 분해', '줄임말(별칭) 매칭'을
+// 모두 지원하는 하이엔드 공용 검색 및 UI 강조 엔진입니다.
+//
+// [!] 향후 새로운 HTML(예: 아이템 정보 페이지)을 작성할 때, 검색이나 필터링이 필요하다면
+// 반드시 아래의 `checkSearchMatch`와 `getHighlightedName` 함수를 재사용하여 아키텍처를 구성하세요.
+// ============================================================================
+
+// 🟢 겹자음 분해 매핑
+const decomposeChosung = (str) => {
+  const map = {
+    ㄳ: "ㄱㅅ",
+    ㄵ: "ㄴㅈ",
+    ㄶ: "ㄴㅎ",
+    ㄺ: "ㄹㄱ",
+    ㄻ: "ㄹㅁ",
+    ㄼ: "ㄹㅂ",
+    ㄽ: "ㄹㅅ",
+    ㄾ: "ㄹㅌ",
+    ㄿ: "ㄹㅍ",
+    ㅀ: "ㄹㅎ",
+    ㅄ: "ㅂㅅ",
+  };
+  return str
+    .split("")
+    .map((c) => map[c] || c)
+    .join("");
+};
+
+// 🟢 초성 유니코드 범위
+const CHOSUNG_RANGES = {
+  ㄱ: "[가-깋]",
+  ㄲ: "[까-낗]",
+  ㄴ: "[나-닣]",
+  ㄷ: "[다-딯]",
+  ㄸ: "[따-띻]",
+  ㄹ: "[라-맇]",
+  ㅁ: "[마-밓]",
+  ㅂ: "[바-빟]",
+  ㅃ: "[빠-삫]",
+  ㅅ: "[사-싷]",
+  ㅆ: "[싸-앃]",
+  ㅇ: "[아-잏]",
+  ㅈ: "[자-짛]",
+  ㅉ: "[짜-찧]",
+  ㅊ: "[차-칳]",
+  ㅋ: "[카-킿]",
+  ㅌ: "[타-탛]",
+  ㅍ: "[파-핗]",
+  ㅎ: "[하-힣]",
+};
+
+// 🟢 혼합 검색용 정규식 생성기 (강조 처리용 띄어쓰기 무시 기능 포함)
+const getHybridRegex = (keyword, forHighlight = false) => {
+  let pattern = "";
+  for (let i = 0; i < keyword.length; i++) {
+    const char = keyword[i];
+    if (CHOSUNG_RANGES[char]) {
+      pattern += CHOSUNG_RANGES[char];
+    } else {
+      pattern += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    if (forHighlight && i < keyword.length - 1) {
+      pattern += "\\s*";
+    }
+  }
+  return new RegExp(pattern, forHighlight ? "gi" : "i");
+};
+
+// 🟢 QWERTY 영타 -> 한글 자모 변환
+const QWERTY_TO_KOR = {
+  q: "ㅂ",
+  w: "ㅈ",
+  e: "ㄷ",
+  r: "ㄱ",
+  t: "ㅅ",
+  y: "ㅛ",
+  u: "ㅕ",
+  i: "ㅑ",
+  o: "ㅐ",
+  p: "ㅔ",
+  a: "ㅁ",
+  s: "ㄴ",
+  d: "ㅇ",
+  f: "ㄹ",
+  g: "ㅎ",
+  h: "ㅗ",
+  j: "ㅓ",
+  k: "ㅏ",
+  l: "ㅣ",
+  z: "ㅋ",
+  x: "ㅌ",
+  c: "ㅊ",
+  v: "ㅍ",
+  b: "ㅠ",
+  n: "ㅜ",
+  m: "ㅡ",
+  Q: "ㅃ",
+  W: "ㅉ",
+  E: "ㄸ",
+  R: "ㄲ",
+  T: "ㅆ",
+  O: "ㅒ",
+  P: "ㅖ",
+};
+
+const convertEngToKorJamo = (str) => {
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    result += QWERTY_TO_KOR[char] || char;
+  }
+  return result;
+};
+
+// 🟢 [핵심] 공용 검색 매칭 엔진
+const checkSearchMatch = (itemId, keyword) => {
+  let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
+  let cleanKeyword = rawKeyword.toLowerCase();
+  let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
+
+  const item = items_db[itemId];
+  const itemName = item.name;
+  const cleanItemName = itemName.replace(/\s+/g, "").toLowerCase();
+
+  const regexNormal = getHybridRegex(cleanKeyword);
+  const regexKor = getHybridRegex(korKeyword);
+
+  if (item.aliases && item.aliases.length > 0) {
+    for (const alias of item.aliases) {
+      if (regexNormal.test(alias) || regexKor.test(alias)) return true;
+    }
+  }
+
+  if (regexNormal.test(cleanItemName) || regexKor.test(cleanItemName)) return true;
+
+  const recipe = recipes_db[itemId];
+  if (recipe && recipe.materials) {
+    for (const mat of recipe.materials) {
+      if (checkSearchMatch(mat.id, keyword)) return true;
+    }
+  }
+  return false;
+};
+
+// 🟢 [핵심] 공용 텍스트 강조 렌더링 함수
+const getHighlightedName = (itemId, itemName, keyword) => {
+  if (!keyword) return itemName;
+
+  const rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
+  const cleanKeyword = rawKeyword.toLowerCase();
+  const korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
+  const item = items_db[itemId];
+
+  const aliasStyle =
+    "bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+  const partialStyle =
+    "bg-rose-500 text-white dark:bg-rose-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+
+  if (item.aliases && item.aliases.length > 0) {
+    const regexAliasNormal = getHybridRegex(cleanKeyword, false);
+    const regexAliasKor = getHybridRegex(korKeyword, false);
+    for (const alias of item.aliases) {
+      if (regexAliasNormal.test(alias) || regexAliasKor.test(alias)) {
+        return `<span class="${aliasStyle}">${itemName}</span>`;
+      }
+    }
+  }
+
+  const regexHighlightNormal = getHybridRegex(cleanKeyword, true);
+  const regexHighlightKor = getHybridRegex(korKeyword, true);
+
+  if (itemName.match(regexHighlightNormal)) {
+    return itemName.replace(regexHighlightNormal, (match) => `<span class="${partialStyle}">${match}</span>`);
+  } else if (itemName.match(regexHighlightKor)) {
+    return itemName.replace(regexHighlightKor, (match) => `<span class="${partialStyle}">${match}</span>`);
+  }
+
+  return itemName;
+};
