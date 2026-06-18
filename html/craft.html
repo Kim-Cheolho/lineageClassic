@@ -151,8 +151,8 @@
 
       // 검색 매칭 로직 수정 (구글 시트 '줄임말' 연동, 공백 무시, 메인 이름 초성 검색)
       const checkSearchMatch = (itemId, keyword) => {
-        // 공백 제거 및 소문자화
-        let rawKeyword = keyword.replace(/\s+/g, "");
+        // 🟢 검색어 처리 전 겹자음을 강제로 분해
+        let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
         let cleanKeyword = rawKeyword.toLowerCase();
         let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
 
@@ -160,22 +160,17 @@
         const itemName = item.name;
         const cleanItemName = itemName.replace(/\s+/g, "").toLowerCase();
 
-        // 🟢 일반 검색어와 영타 변환 검색어에 대해 각각 정규식 패턴 생성
-        // 예: "콘ㅇ" -> /콘[아-잏]/ 생성
         const regexNormal = getHybridRegex(cleanKeyword);
         const regexKor = getHybridRegex(korKeyword);
 
-        // 1차 검사: 구글 시트 '줄임말' (정규식 매칭)
         if (item.aliases && item.aliases.length > 0) {
           for (const alias of item.aliases) {
             if (regexNormal.test(alias) || regexKor.test(alias)) return true;
           }
         }
 
-        // 2차 검사: 본래 이름에 정규식 매칭 (완성형 + 초성 혼합 완벽 검색)
         if (regexNormal.test(cleanItemName) || regexKor.test(cleanItemName)) return true;
 
-        // 3차 검사: 하위 재료 검색 (재귀 호출)
         const recipe = recipes_db[itemId];
         if (recipe && recipe.materials) {
           for (const mat of recipe.materials) {
@@ -207,20 +202,43 @@
         ㅎ: "[하-힣]",
       };
 
+      const decomposeChosung = (str) => {
+        const map = {
+          ㄳ: "ㄱㅅ",
+          ㄵ: "ㄴㅈ",
+          ㄶ: "ㄴㅎ",
+          ㄺ: "ㄹㄱ",
+          ㄻ: "ㄹㅁ",
+          ㄼ: "ㄹㅂ",
+          ㄽ: "ㄹㅅ",
+          ㄾ: "ㄹㅌ",
+          ㄿ: "ㄹㅍ",
+          ㅀ: "ㄹㅎ",
+          ㅄ: "ㅂㅅ",
+        };
+        return str
+          .split("")
+          .map((c) => map[c] || c)
+          .join("");
+      };
+
       // 🟢 2. 혼합 검색(완성형+초성)을 위한 정규표현식 생성기
-      const getHybridRegex = (keyword) => {
+      const getHybridRegex = (keyword, forHighlight = false) => {
         let pattern = "";
         for (let i = 0; i < keyword.length; i++) {
           const char = keyword[i];
           if (CHOSUNG_RANGES[char]) {
-            // 초성이면 해당 초성의 유니코드 정규식 범위로 변환
             pattern += CHOSUNG_RANGES[char];
           } else {
-            // 완성형 한글이나 특수문자, 영어는 그대로 일치하도록 정규식 이스케이프 처리
             pattern += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           }
+          // 🟢 강조 모드일 때, 대상 문자열의 띄어쓰기를 무시하고 매칭되도록 글자 사이에 \s* 삽입
+          if (forHighlight && i < keyword.length - 1) {
+            pattern += "\\s*";
+          }
         }
-        return new RegExp(pattern);
+        // 강조용일 경우 글로벌(g) 플래그를 추가하여 원본 치환 기능 활성화
+        return new RegExp(pattern, forHighlight ? "gi" : "i");
       };
 
       const QWERTY_TO_KOR = {
@@ -267,6 +285,43 @@
           result += QWERTY_TO_KOR[char] || char;
         }
         return result;
+      };
+
+      // 🟢 2. 텍스트 강조 전용 렌더링 함수 추가
+      // 🟢 2. 텍스트 강조 전용 렌더링 함수 수정 (확 눈에 띄는 박스 형태로 변경)
+      const getHighlightedName = (itemId, itemName, keyword) => {
+        if (!keyword) return itemName;
+
+        // 🟢 검색어 처리 전 겹자음을 강제로 분해
+        const rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
+        const cleanKeyword = rawKeyword.toLowerCase();
+        const korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
+        const item = items_db[itemId];
+
+        // 🟢 부분 매칭과 동일한 꽉 찬 박스 디자인으로 통일 (줄임말은 인디고, 부분매칭은 로즈)
+        const aliasStyle = "bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+        const partialStyle = "bg-rose-500 text-white dark:bg-rose-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+
+        if (item.aliases && item.aliases.length > 0) {
+          const regexAliasNormal = getHybridRegex(cleanKeyword, false);
+          const regexAliasKor = getHybridRegex(korKeyword, false);
+          for (const alias of item.aliases) {
+            if (regexAliasNormal.test(alias) || regexAliasKor.test(alias)) {
+              return `<span class="${aliasStyle}">${itemName}</span>`;
+            }
+          }
+        }
+
+        const regexHighlightNormal = getHybridRegex(cleanKeyword, true);
+        const regexHighlightKor = getHybridRegex(korKeyword, true);
+
+        if (itemName.match(regexHighlightNormal)) {
+          return itemName.replace(regexHighlightNormal, (match) => `<span class="${partialStyle}">${match}</span>`);
+        } else if (itemName.match(regexHighlightKor)) {
+          return itemName.replace(regexHighlightKor, (match) => `<span class="${partialStyle}">${match}</span>`);
+        }
+
+        return itemName;
       };
 
       function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
@@ -351,10 +406,12 @@
             }
             const currentBadgeClass = badgeThemes[currentThemeIndex];
 
+            const displayName = getHighlightedName(id, item.name, state.searchTerm);
+
             return `
           <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
-            <span class="text-sm font-medium truncate flex-1">${item.name}</span>
+            <span class="text-sm font-medium truncate flex-1 leading-relaxed">${displayName}</span>
             ${recipe && recipe.npc ? `<span class="text-[10px] font-bold shrink-0 truncate max-w-[70px] px-1.5 py-0.5 rounded border ${currentBadgeClass}">${recipe.npc}</span>` : ""}
           </div>
         `;
@@ -371,18 +428,29 @@
         renderRightPanel();
       }
 
+      // 🟢 3. 트리 렌더링 로직 교체 (자동 펼침 상태 관리 및 강조 텍스트 적용)
       function generateRecipeNodeHTML(itemId, requiredCount, depth = 0) {
         const item = items_db[itemId];
         const recipe = recipes_db[itemId];
         const hasChildren = recipe && recipe.materials && recipe.materials.length > 0;
-
         const isBuyMode = !!state.buyMode[itemId];
+
+        // 🟢 핵심 로직: 현재 노드 혹은 하위 트리 중 하나라도 검색어에 매칭되면 자동 펼침 상태로 만듦
+        const isMatchedKeyword = state.searchTerm && checkSearchMatch(itemId, state.searchTerm);
+        const shouldAutoExpand = isMatchedKeyword && hasChildren && !isBuyMode;
+
+        // 자동 펼침 상태에 따른 속성값 정의
+        const displayDataOpen = shouldAutoExpand ? "true" : "false";
+        const displayIcon = shouldAutoExpand ? icons.chevronDown : icons.chevronRight;
+        const displayHiddenClass = shouldAutoExpand ? "" : "hidden";
+
+        // 🟢 아이템 이름 텍스트 강조 처리
+        const displayName = getHighlightedName(itemId, item.name, state.searchTerm);
 
         let yieldAmount = 1;
         let craftTimes = requiredCount;
         if (recipe) {
           yieldAmount = recipe.yield || 1;
-          // 🟢 화면 표기는 무조건 정수(올림) 개수로 보이게 합니다. (예: 0.25 -> 1)
           craftTimes = Math.ceil(requiredCount / yieldAmount);
         }
 
@@ -398,9 +466,9 @@
         <div ${hasChildren && !isBuyMode ? `onclick="toggleTreeNode(this.querySelector('[data-open]'))"` : ""} class="flex flex-wrap items-center gap-x-2 gap-y-1.5 py-1.5 px-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group ${hasChildren && !isBuyMode ? "cursor-pointer select-none" : ""}" style="padding-left: ${depth * 20 + 8}px">
           
           <div class="flex items-center gap-2 pointer-events-none ${isBuyMode ? "opacity-50 grayscale-[50%]" : ""}">
-            ${hasChildren ? `<span class="text-zinc-400 flex items-center justify-center w-[14px] h-[14px]" data-open="false">${icons.chevronRight}</span>` : `<span class="w-[14px]"></span>`}
+            ${hasChildren ? `<span class="text-zinc-400 flex items-center justify-center w-[14px] h-[14px]" data-open="${displayDataOpen}">${displayIcon}</span>` : `<span class="w-[14px]"></span>`}
             ${getItemIconHTML(item, "w-5 h-5 text-[10px] shrink-0")}
-            <span class="text-zinc-800 dark:text-zinc-200 font-medium break-keep">${item.name}</span>
+            <span class="text-zinc-800 dark:text-zinc-200 font-medium break-keep">${displayName}</span>
             <span class="text-amber-600 dark:text-amber-500 text-xs font-bold shrink-0 whitespace-nowrap">× ${requiredCount.toLocaleString()}</span>
             ${yieldAmount > 1 ? `<span class="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded leading-none shrink-0 whitespace-nowrap">(1회 제작 시 ${yieldAmount}개 획득)</span>` : ""}
           </div>
@@ -428,7 +496,7 @@
       `;
 
         if (hasChildren && !isBuyMode) {
-          html += `<div class="relative tree-children block hidden">`;
+          html += `<div class="relative tree-children block ${displayHiddenClass}">`;
           html += `<div class="absolute top-0 bottom-0 border-l border-zinc-200 dark:border-zinc-800" style="left: ${depth * 20 + 14}px"></div>`;
           html += `<div class="flex flex-col">`;
           recipe.materials.forEach((mat) => {
@@ -450,6 +518,9 @@
           container.innerHTML = `<div class="flex-1 flex items-center justify-center text-zinc-400 text-sm">항목을 선택해주세요.</div>`;
           return;
         }
+
+        // 🟢 수정: 메인 상단 타이틀용 강조 텍스트 생성 적용
+        const displayMainName = getHighlightedName(state.selectedItemId, item.name, state.searchTerm);
 
         let statsHTML = "";
         if (item.stats && item.stats.length > 0) {
@@ -541,7 +612,7 @@
             ${getItemIconHTML(item, "w-16 h-16 text-3xl")}
             <div class="flex-1">
               <div class="flex items-end gap-3 mb-1 flex-wrap">
-                <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">${item.name}</h2>
+                <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">${displayMainName}</h2>
                 <span class="text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded border border-zinc-200 dark:border-zinc-700 mb-1 shrink-0">
                   ${item.type || "제작 재료"}
                 </span>
