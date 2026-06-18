@@ -31,7 +31,7 @@ const STAT_ORDER = [
 ];
 
 // // 🟢 3. 아이템 탭에서 스탯으로 취급하지 않을 고정 시스템 컬럼들
-const ITEM_SYSTEM_COLS = ["ID", "이름", "아이콘", "이미지", "분류", "설명", "세트 효과", "세트 아이템"];
+const ITEM_SYSTEM_COLS = ["ID", "이름", "아이콘", "이미지", "분류", "설명", "세트 효과", "세트 아이템", "줄임말"];
 
 function parseCSVRow(str) {
   const result = [];
@@ -53,8 +53,6 @@ function parseCSVRow(str) {
   return result.map((s) => s.replace(/(^"|"$)/g, ""));
 }
 
-// // 🟢 4. 아이템 시트(무기, 방어구, 장신구, 재료 4개) 전용 처리 엔진
-// 🟢 아이템 시트(무기, 방어구, 장신구, 재료 4개) 전용 처리 엔진
 async function processItemSheet(url, categoryName) {
   if (!url || url.includes("CSV_링크를_넣어주세요")) return;
   const response = await fetch(url);
@@ -104,11 +102,11 @@ async function processItemSheet(url, categoryName) {
       return indexA - indexB;
     });
 
-    // 🟢 2. 세트 효과 전용 데이터 추출 로직을 추가합니다.
     const setEffectDesc = rowData["세트 효과"];
     const setItemsStr = rowData["세트 아이템"];
-    let setEffect = undefined;
+    const aliasStr = rowData["줄임말"];
 
+    let setEffect = undefined;
     if (setEffectDesc || setItemsStr) {
       setEffect = {
         description: setEffectDesc || "",
@@ -125,7 +123,8 @@ async function processItemSheet(url, categoryName) {
       icon: rowData["아이콘"] || "",
       image: rowData["이미지"] || "",
       stats: stats.length > 0 ? stats : undefined,
-      setEffect: setEffect, // 🟢 아이템 객체에 세트 정보 탑재
+      setEffect: setEffect,
+      aliases: aliasStr ? aliasStr.split(",").map((s) => s.trim().replace(/\s+/g, "").toLowerCase()) : [],
     };
   });
 }

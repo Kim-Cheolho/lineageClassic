@@ -149,16 +149,124 @@
         return finalMats;
       };
 
+      // 검색 매칭 로직 수정 (구글 시트 '줄임말' 연동, 공백 무시, 메인 이름 초성 검색)
       const checkSearchMatch = (itemId, keyword) => {
-        const lowerKeyword = keyword.toLowerCase();
-        if (items_db[itemId].name.toLowerCase().includes(lowerKeyword)) return true;
+        // 공백 제거 및 소문자화
+        let rawKeyword = keyword.replace(/\s+/g, "");
+        let cleanKeyword = rawKeyword.toLowerCase();
+        let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
+
+        const item = items_db[itemId];
+        const itemName = item.name;
+        const cleanItemName = itemName.replace(/\s+/g, "").toLowerCase();
+
+        // 🟢 일반 검색어와 영타 변환 검색어에 대해 각각 정규식 패턴 생성
+        // 예: "콘ㅇ" -> /콘[아-잏]/ 생성
+        const regexNormal = getHybridRegex(cleanKeyword);
+        const regexKor = getHybridRegex(korKeyword);
+
+        // 1차 검사: 구글 시트 '줄임말' (정규식 매칭)
+        if (item.aliases && item.aliases.length > 0) {
+          for (const alias of item.aliases) {
+            if (regexNormal.test(alias) || regexKor.test(alias)) return true;
+          }
+        }
+
+        // 2차 검사: 본래 이름에 정규식 매칭 (완성형 + 초성 혼합 완벽 검색)
+        if (regexNormal.test(cleanItemName) || regexKor.test(cleanItemName)) return true;
+
+        // 3차 검사: 하위 재료 검색 (재귀 호출)
         const recipe = recipes_db[itemId];
         if (recipe && recipe.materials) {
           for (const mat of recipe.materials) {
-            if (checkSearchMatch(mat.id, lowerKeyword)) return true;
+            if (checkSearchMatch(mat.id, keyword)) return true;
           }
         }
         return false;
+      };
+
+      const CHOSUNG_RANGES = {
+        ㄱ: "[가-깋]",
+        ㄲ: "[까-낗]",
+        ㄴ: "[나-닣]",
+        ㄷ: "[다-딯]",
+        ㄸ: "[따-띻]",
+        ㄹ: "[라-맇]",
+        ㅁ: "[마-밓]",
+        ㅂ: "[바-빟]",
+        ㅃ: "[빠-삫]",
+        ㅅ: "[사-싷]",
+        ㅆ: "[싸-앃]",
+        ㅇ: "[아-잏]",
+        ㅈ: "[자-짛]",
+        ㅉ: "[짜-찧]",
+        ㅊ: "[차-칳]",
+        ㅋ: "[카-킿]",
+        ㅌ: "[타-탛]",
+        ㅍ: "[파-핗]",
+        ㅎ: "[하-힣]",
+      };
+
+      // 🟢 2. 혼합 검색(완성형+초성)을 위한 정규표현식 생성기
+      const getHybridRegex = (keyword) => {
+        let pattern = "";
+        for (let i = 0; i < keyword.length; i++) {
+          const char = keyword[i];
+          if (CHOSUNG_RANGES[char]) {
+            // 초성이면 해당 초성의 유니코드 정규식 범위로 변환
+            pattern += CHOSUNG_RANGES[char];
+          } else {
+            // 완성형 한글이나 특수문자, 영어는 그대로 일치하도록 정규식 이스케이프 처리
+            pattern += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          }
+        }
+        return new RegExp(pattern);
+      };
+
+      const QWERTY_TO_KOR = {
+        q: "ㅂ",
+        w: "ㅈ",
+        e: "ㄷ",
+        r: "ㄱ",
+        t: "ㅅ",
+        y: "ㅛ",
+        u: "ㅕ",
+        i: "ㅑ",
+        o: "ㅐ",
+        p: "ㅔ",
+        a: "ㅁ",
+        s: "ㄴ",
+        d: "ㅇ",
+        f: "ㄹ",
+        g: "ㅎ",
+        h: "ㅗ",
+        j: "ㅓ",
+        k: "ㅏ",
+        l: "ㅣ",
+        z: "ㅋ",
+        x: "ㅌ",
+        c: "ㅊ",
+        v: "ㅍ",
+        b: "ㅠ",
+        n: "ㅜ",
+        m: "ㅡ",
+        Q: "ㅃ",
+        W: "ㅉ",
+        E: "ㄸ",
+        R: "ㄲ",
+        T: "ㅆ",
+        O: "ㅒ",
+        P: "ㅖ",
+      };
+
+      const convertEngToKorJamo = (str) => {
+        let result = "";
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          // 🟢 사전에 있는 영문자면 한글 자모로 변환, 없으면(이미 한글이거나 숫자 등) 그대로 유지
+          result += QWERTY_TO_KOR[char] || char;
+        }
+        return result;
       };
 
       function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
