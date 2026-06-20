@@ -11,34 +11,35 @@
       tailwind.config = { darkMode: "class" };
     </script>
   </head>
-  <body class="h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between shadow-sm shrink-0 transition-colors duration-300 z-50">
-      <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">리니지 툴즈</h1>
+  <body class="h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 overflow-hidden">
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex flex-wrap items-center justify-between shadow-sm shrink-0 transition-colors duration-300 z-50 gap-3">
+      <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2 shrink-0">리니지 툴즈</h1>
 
-      <div class="flex items-center gap-4">
-        <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors">
+      <div class="flex items-center gap-3 sm:gap-4 ml-auto">
+        <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors shrink-0">
           <span id="theme-icon-container">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
           </span>
         </button>
 
-        <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-1">
-          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow">축/저주 판별기</button>
-          <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작 가이드</button>
-          <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크 제작기</button>
+        <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-0.5 overflow-x-auto no-scrollbar">
+          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow">축/저주</button>
+          <button onclick="switchTab('info')" id="tab-btn-info" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">아이템</button>
+          <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작</button>
+          <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크</button>
         </div>
       </div>
     </header>
 
     <div class="relative flex-1 w-full overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       <iframe id="frame-stat" src="html/stat.html" class="absolute inset-0 w-full h-full border-none transition-opacity duration-300"></iframe>
+      <iframe id="frame-info" src="html/item_info.html" class="absolute inset-0 w-full h-full border-none opacity-0 pointer-events-none transition-opacity duration-300"></iframe>
       <iframe id="frame-craft" src="html/craft.html" class="absolute inset-0 w-full h-full border-none opacity-0 pointer-events-none transition-opacity duration-300"></iframe>
       <iframe id="frame-mark" src="html/mark.html" class="absolute inset-0 w-full h-full border-none opacity-0 pointer-events-none transition-opacity duration-300"></iframe>
     </div>
 
     <script>
-      // 중앙 테마 제어 로직
-      let isGlobalDark = true; // 기본 다크모드
+      let isGlobalDark = true;
 
       function toggleGlobalTheme() {
         isGlobalDark = !isGlobalDark;
@@ -63,20 +64,18 @@
         }
       }
 
-      // 자식 Iframe들에게 테마 변경 메세지 전송
       function broadcastTheme() {
-        const frames = ["frame-stat", "frame-mark", "frame-craft"];
+        const frames = ["info", "stat", "mark", "craft"];
         frames.forEach((id) => {
-          const iframe = document.getElementById(id);
+          const iframe = document.getElementById(`frame-${id}`);
           if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: "THEME_CHANGE", isDark: isGlobalDark }, "*");
           }
         });
       }
 
-      // Iframe 디스플레이 스위칭
       function switchTab(tabId) {
-        const tabs = ["stat", "mark", "craft"];
+        const tabs = ["info", "stat", "mark", "craft"];
 
         tabs.forEach((id) => {
           const frame = document.getElementById(`frame-${id}`);
@@ -95,19 +94,31 @@
           }
         });
 
-        // 탭 이동 시 테마가 풀리지 않도록 한 번 더 브로드캐스트
-        setTimeout(broadcastTheme, 100);
+        // 🟢 사용자가 누른 마지막 탭 위치를 로컬 스토리지에 저장
+        localStorage.setItem("lineageLastTab", tabId);
+
+        setTimeout(broadcastTheme, 150);
       }
 
-      // 초기화
       window.addEventListener("DOMContentLoaded", () => {
         const savedTheme = localStorage.getItem("lineageGlobalTheme");
         if (savedTheme) {
           isGlobalDark = savedTheme === "dark";
         }
         applyTheme();
-        // iframe들이 로드될 시간을 주고 초기 테마 전송
-        setTimeout(broadcastTheme, 500);
+
+        // 🟢 저장된 탭이 있으면 불러오고, 최초 접속이면 'stat(축/저주)'을 기본 탭으로 띄움
+        const savedTab = localStorage.getItem("lineageLastTab") || "stat";
+        switchTab(savedTab);
+
+        setTimeout(broadcastTheme, 800);
+      });
+
+      // 자식으로부터의 테마 요청 대기
+      window.addEventListener("message", (e) => {
+        if (e.data.type === "REQUEST_THEME") {
+          broadcastTheme();
+        }
       });
     </script>
   </body>

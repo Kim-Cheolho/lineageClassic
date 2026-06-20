@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>L-Item Info</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+            animation: {
+              "fade-in": "fadeIn 0.2s ease-out forwards",
+              "slide-up": "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            },
+            keyframes: {
+              fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+              slideUp: { "0%": { opacity: "0", transform: "translateY(20px) scale(0.98)" }, "100%": { opacity: "1", transform: "translateY(0) scale(1)" } },
+            },
+          },
+        },
+      };
+    </script>
+
+    <script src="../js/data.js"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background-color: #3f3f46;
+      }
+      .custom-checkbox:checked + div {
+        background-color: #6366f1;
+        border-color: #6366f1;
+      }
+      .custom-checkbox:checked + div svg {
+        display: block;
+      }
+      .card-hover-fx {
+        transition: all 0.2s ease-in-out;
+      }
+      .card-hover-fx:hover {
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans min-h-screen transition-colors duration-300 overflow-x-hidden" id="body-root">
+    <div id="loading-overlay" class="fixed inset-0 z-[200] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center transition-opacity duration-500">
+      <div class="relative w-16 h-16 flex items-center justify-center mb-5">
+        <div class="absolute inset-0 border-4 border-indigo-200 dark:border-indigo-900/50 rounded-full"></div>
+        <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+        <i data-lucide="database" class="w-6 h-6 text-indigo-500 animate-pulse"></i>
+      </div>
+      <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400 animate-pulse">데이터베이스 동기화 중...</span>
+    </div>
+
+    <header id="main-header" class="sticky top-0 z-40 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shadow-sm transition-colors duration-300">
+      <div class="max-w-[1400px] mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 shrink-0">아이템 정보</h1>
+
+        <div class="w-full md:max-w-md flex items-center px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+          <i data-lucide="search" class="w-5 h-5 text-zinc-400 dark:text-zinc-500 mr-2 shrink-0"></i>
+          <input type="text" id="search-input" placeholder="아이템명, 옵션, 줄임말, 초성 검색" class="bg-transparent border-none outline-none w-full text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600" autocomplete="off" />
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-[1400px] mx-auto p-4 md:p-6 lg:py-6 h-full flex flex-col">
+      <div class="flex flex-col lg:flex-row gap-5 md:gap-6 items-start flex-1">
+        <aside id="sticky-sidebar" class="w-full lg:w-[280px] shrink-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl p-4 sm:p-6 lg:sticky transition-colors duration-300 flex flex-col gap-6 z-10">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-bold text-zinc-500 dark:text-zinc-400 tracking-wider uppercase flex items-center"><i data-lucide="filter" class="w-4 h-4 mr-1.5 text-indigo-500"></i> 조건 검색</h2>
+            <button onclick="resetFilters()" class="text-[11px] font-bold text-zinc-400 hover:text-indigo-500 dark:hover:text-indigo-400 flex items-center gap-1 transition-colors bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-lg"><i data-lucide="rotate-ccw" class="w-3 h-3"></i> 초기화</button>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-3">클래스</label>
+            <div class="grid grid-cols-2 gap-y-3 gap-x-2" id="filter-classes"></div>
+          </div>
+
+          <div class="h-px w-full bg-zinc-100 dark:bg-zinc-800/80"></div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">카테고리</label>
+            <div class="flex flex-col gap-1" id="filter-categories"></div>
+          </div>
+        </aside>
+
+        <main class="relative flex-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl pt-0 p-4 sm:p-6 transition-colors duration-300 min-h-[600px] flex flex-col z-0">
+          <div id="sticky-toolbar" class="sticky z-20 bg-white dark:bg-zinc-900 py-3 sm:py-4 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 mb-4 rounded-t-3xl sm:-mx-6 sm:px-6 -mx-4 px-4 transition-colors">
+            <div class="flex items-center gap-2">
+              <div class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 w-8 h-8 rounded-xl flex items-center justify-center shrink-0">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i>
+              </div>
+              <span class="text-sm font-bold text-zinc-700 dark:text-zinc-300">검색결과 <strong id="result-count" class="text-indigo-600 dark:text-indigo-400 text-base ml-0.5">0</strong>건</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <select
+                id="sort-select"
+                onchange="handleSortChange(this.value)"
+                class="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 outline-none focus:border-indigo-500 cursor-pointer transition-colors">
+                <option value="name" selected>가나다순</option>
+                <option value="group">연관 묶음순 (추천)</option>
+              </select>
+
+              <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
+
+              <label class="flex items-center cursor-pointer group" title="즐겨찾기 보기">
+                <input type="checkbox" id="toggle-favorites" class="hidden" onchange="toggleFavoritesOnly(this)" />
+                <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-500/10 transition-colors border border-zinc-200 dark:border-zinc-700 group-hover:border-amber-200 dark:group-hover:border-amber-500/30">
+                  <i data-lucide="star" id="icon-star-filter" class="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors"></i>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div id="item-list" class="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch"></div>
+
+          <div id="empty-state" class="hidden flex-col items-center justify-center flex-1 min-h-[300px] text-center">
+            <div class="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mb-4 border border-zinc-200 dark:border-zinc-700">
+              <i data-lucide="package-search" class="w-8 h-8 text-zinc-400 dark:text-zinc-500"></i>
+            </div>
+            <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mb-1">결과가 없습니다</h3>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">다른 검색어나 필터 조건을 선택해보세요.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="item-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 sm:p-6" onclick="closeModal(event)">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"></div>
+
+      <div class="relative w-full max-w-2xl max-h-[90vh] bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl flex flex-col animate-slide-up overflow-hidden" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0 z-10">
+          <div class="flex items-center gap-3">
+            <span id="modal-category-badge" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">분류</span>
+            <h2 id="modal-title" class="text-xl font-extrabold text-zinc-900 dark:text-white">아이템 이름</h2>
+          </div>
+          <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
+          <div class="flex flex-col sm:flex-row gap-6">
+            <div class="shrink-0 mx-auto sm:mx-0 flex flex-col gap-3">
+              <div id="modal-icon" class="w-28 h-28 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl flex items-center justify-center overflow-hidden"></div>
+
+              <div id="modal-trade-info" class="flex flex-col gap-1.5"></div>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-4">
+              <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                <h3 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 mb-3 flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-4 h-4 text-amber-500"></i> 상세 스탯</h3>
+                <div id="modal-stats-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-2 text-sm"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-4">
+            <div id="modal-options-container" class="hidden flex-col gap-2">
+              <h3 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 ml-1"><i data-lucide="sparkles" class="w-4 h-4 text-emerald-500"></i> 옵션</h3>
+              <div id="modal-options-content" class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 p-4 rounded-2xl text-sm font-medium text-emerald-800 dark:text-emerald-300 leading-relaxed shadow-sm"></div>
+            </div>
+
+            <div id="modal-desc-container" class="hidden flex-col gap-2">
+              <h3 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 ml-1"><i data-lucide="file-text" class="w-4 h-4 text-blue-500"></i> 아이템 설명</h3>
+              <div id="modal-desc-content" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed shadow-sm"></div>
+            </div>
+
+            <div id="modal-set-container" class="hidden flex-col gap-2 mt-2">
+              <h3 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5 ml-1"><i data-lucide="layers" class="w-4 h-4 text-fuchsia-500"></i> 세트 효과</h3>
+              <div class="bg-fuchsia-50 dark:bg-fuchsia-950/20 border border-fuchsia-200 dark:border-fuchsia-900/50 p-4 rounded-2xl shadow-sm">
+                <div id="modal-set-desc" class="text-sm font-bold text-fuchsia-700 dark:text-fuchsia-400 mb-4 pb-3 border-b border-fuchsia-200 dark:border-fuchsia-900/50"></div>
+                <div id="modal-set-items" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 🟢 화면 크기 변화 및 스크롤 시 헤더 높이를 동기화하여 겹침 방지
+      function syncHeaderHeight() {
+        const header = document.getElementById("main-header");
+        const toolbar = document.getElementById("sticky-toolbar");
+        const sidebar = document.getElementById("sticky-sidebar");
+
+        if (header) {
+          const h = header.offsetHeight;
+          if (toolbar) {
+            // -1을 주어 경계선(border) 사이의 미세한 1px 빈틈을 완벽하게 덮습니다.
+            toolbar.style.top = h - 1 + "px";
+          }
+          if (sidebar) {
+            sidebar.style.top = h + 24 + "px";
+          }
+        }
+      }
+      window.addEventListener("resize", syncHeaderHeight);
+      window.addEventListener("load", syncHeaderHeight);
+
+      window.addEventListener("message", (event) => {
+        if (event.data.type === "THEME_CHANGE") {
+          const html = document.documentElement;
+          const body = document.getElementById("body-root");
+          if (event.data.isDark) {
+            html.classList.add("dark");
+            body.classList.add("dark");
+          } else {
+            html.classList.remove("dark");
+            body.classList.remove("dark");
+          }
+        }
+      });
+
+      let state = {
+        searchTerm: "",
+        classes: [],
+        category: "all",
+        subType: "all",
+        expandedCats: [],
+        favoritesOnly: false,
+        sortBy: "name",
+        favorites: JSON.parse(localStorage.getItem("lcraft_favorites") || "[]"),
+      };
+
+      const FILTER_CLASSES = ["전체", "군주", "기사", "요정", "마법사"];
+      let FILTER_CATEGORIES = [
+        { id: "all", name: "전체", subs: [] },
+        { id: "weapon", name: "무기", subs: [] },
+        { id: "armor", name: "방어구", subs: [] },
+        { id: "accessory", name: "악세서리", subs: [] },
+        { id: "material", name: "기타(재료)", subs: [] },
+      ];
+
+      function getSubType(item) {
+        if (item.stats) {
+          const stat = item.stats.find((s) => s.label === "종류");
+          if (stat) return stat.value;
+        }
+        return "";
+      }
+
+      function updateDynamicSubCategories() {
+        FILTER_CATEGORIES.forEach((cat) => {
+          if (cat.id === "all") return;
+          const subTypes = new Set();
+          Object.values(items_db).forEach((item) => {
+            if (item.category === cat.id) {
+              const typeVal = getSubType(item);
+              if (typeVal) subTypes.add(typeVal);
+            }
+          });
+          cat.subs = Array.from(subTypes).sort((a, b) => a.localeCompare(b, "ko-KR"));
+        });
+      }
+
+      const checkItemOnlyMatch = (itemId, keyword) => {
+        let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
+        let cleanKeyword = rawKeyword.toLowerCase();
+        let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
+
+        const item = items_db[itemId];
+        const cleanItemName = item.name.replace(/\s+/g, "").toLowerCase();
+
+        const regexNormal = getHybridRegex(cleanKeyword);
+        const regexKor = getHybridRegex(korKeyword);
+
+        if (item.aliases && item.aliases.length > 0) {
+          for (const alias of item.aliases) {
+            if (regexNormal.test(alias) || regexKor.test(alias)) return true;
+          }
+        }
+
+        if (regexNormal.test(cleanItemName) || regexKor.test(cleanItemName)) return true;
+
+        if (item.stats) {
+          for (const stat of item.stats) {
+            const cleanStat = stat.value.replace(/\s+/g, "").toLowerCase();
+            if (regexNormal.test(cleanStat) || regexKor.test(cleanStat)) return true;
+          }
+        }
+        return false;
+      };
+
+      function getItemIconHTML(item, sizeClass = "w-14 h-14 text-sm", disableBg = false) {
+        if (item.image) {
+          const cleanFileName = item.image.replace(/^(\.\.\/img\/)/, "").trim();
+          const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/${cleanFileName}`;
+          const bgClass = disableBg ? "" : "bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 shadow-sm";
+          return `<img src="${imgPath}" alt="${item.name}" class="${sizeClass} object-cover rounded-xl shrink-0 ${bgClass}" />`;
+        }
+        const bgClass = disableBg ? "" : "bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 shadow-sm";
+        return `<div class="${sizeClass} rounded-xl flex items-center justify-center shrink-0 font-bold text-zinc-500 ${bgClass}">${item.icon || ""}</div>`;
+      }
+
+      function toggleFavorite(itemId, e) {
+        if (e) e.stopPropagation();
+        const idx = state.favorites.indexOf(itemId);
+        if (idx > -1) state.favorites.splice(idx, 1);
+        else state.favorites.push(itemId);
+        localStorage.setItem("lcraft_favorites", JSON.stringify(state.favorites));
+        renderList();
+      }
+
+      function toggleFavoritesOnly(checkbox) {
+        state.favoritesOnly = checkbox.checked;
+        const icon = document.getElementById("icon-star-filter");
+        if (state.favoritesOnly) {
+          icon.setAttribute("fill", "currentColor");
+          icon.classList.add("text-amber-500");
+          icon.classList.remove("text-zinc-400");
+        } else {
+          icon.setAttribute("fill", "none");
+          icon.classList.remove("text-amber-500");
+          icon.classList.add("text-zinc-400");
+        }
+        renderList();
+      }
+
+      function handleSortChange(val) {
+        state.sortBy = val;
+        renderList();
+      }
+
+      function handleClassFilter(className, isChecked) {
+        if (className === "전체") {
+          state.classes = [];
+          document.querySelectorAll(".class-cb").forEach((cb) => {
+            if (cb.value !== "전체") cb.checked = false;
+          });
+        } else {
+          const allCb = document.querySelector('.class-cb[value="전체"]');
+          if (allCb) allCb.checked = false;
+
+          if (isChecked) {
+            if (!state.classes.includes(className)) state.classes.push(className);
+          } else {
+            state.classes = state.classes.filter((c) => c !== className);
+          }
+          if (state.classes.length === 0) {
+            if (allCb) allCb.checked = true;
+          }
+        }
+        renderList();
+      }
+
+      function toggleCatExpand(catId, e) {
+        e.stopPropagation();
+        const idx = state.expandedCats.indexOf(catId);
+        if (idx > -1) state.expandedCats.splice(idx, 1);
+        else state.expandedCats.push(catId);
+        renderCategoryUI();
+      }
+
+      function setCategoryFilter(categoryId, subType = "all") {
+        if (state.category === categoryId && state.subType === subType && categoryId !== "all") {
+          const idx = state.expandedCats.indexOf(categoryId);
+          if (idx > -1) state.expandedCats.splice(idx, 1);
+          else state.expandedCats.push(categoryId);
+        } else {
+          state.category = categoryId;
+          state.subType = subType;
+          if (categoryId !== "all" && !state.expandedCats.includes(categoryId)) {
+            state.expandedCats.push(categoryId);
+          }
+        }
+
+        renderCategoryUI();
+        renderList();
+      }
+
+      function resetFilters() {
+        state.searchTerm = "";
+        document.getElementById("search-input").value = "";
+        state.classes = [];
+        state.category = "all";
+        state.subType = "all";
+
+        document.querySelectorAll(".class-cb").forEach((cb) => {
+          cb.checked = cb.value === "전체";
+        });
+
+        renderCategoryUI();
+        renderList();
+      }
+
+      function renderClassUI() {
+        const container = document.getElementById("filter-classes");
+        container.innerHTML = FILTER_CLASSES.map((cls) => {
+          const isChecked = (state.classes.length === 0 && cls === "전체") || state.classes.includes(cls);
+          return `
+            <label class="flex items-center gap-2.5 cursor-pointer group">
+              <div class="relative flex items-center justify-center shrink-0">
+                <input type="checkbox" value="${cls}" class="custom-checkbox peer hidden class-cb" onchange="handleClassFilter('${cls}', this.checked)" ${isChecked ? "checked" : ""} />
+                <div class="w-4 h-4 rounded-md border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 group-hover:border-indigo-500 transition-colors flex items-center justify-center">
+                  <i data-lucide="check" class="hidden w-3 h-3 text-white pointer-events-none stroke-[3]"></i>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">${cls}</span>
+            </label>
+          `;
+        }).join("");
+        lucide.createIcons();
+      }
+
+      function renderCategoryUI() {
+        const container = document.getElementById("filter-categories");
+        container.innerHTML = FILTER_CATEGORIES.map((cat) => {
+          const isCatSelected = state.category === cat.id && state.subType === "all";
+          const isExpanded = state.expandedCats.includes(cat.id);
+          const catClass = isCatSelected ? "text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-500/10 rounded-lg" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 font-bold rounded-lg";
+
+          let html = `
+            <div class="flex items-center w-full transition-colors ${catClass}">
+              <button onclick="setCategoryFilter('${cat.id}')" class="flex-1 text-left py-2 px-3 text-[13px] transition-colors">
+                ${cat.name}
+              </button>
+              ${
+                cat.subs.length > 0
+                  ? `<button onclick="toggleCatExpand('${cat.id}', event)" class="p-2 shrink-0 flex items-center justify-center text-zinc-400 hover:text-indigo-500 transition-colors">
+                  <i data-lucide="chevron-right" class="w-4 h-4 transition-transform ${isExpanded ? "rotate-90 text-indigo-500" : ""}"></i>
+                 </button>`
+                  : `<span class="w-8"></span>`
+              }
+            </div>
+          `;
+
+          if (isExpanded && cat.subs.length > 0) {
+            html += `<div class="flex flex-col ml-3 pl-3 border-l-2 border-zinc-100 dark:border-zinc-800 mt-1 mb-2 gap-0.5">`;
+            html += cat.subs
+              .map((sub) => {
+                const isSubSelected = state.category === cat.id && state.subType === sub;
+                const subClass = isSubSelected ? "text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50/50 dark:bg-indigo-500/10" : "text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/50";
+                return `
+                <button onclick="setCategoryFilter('${cat.id}', '${sub}')" class="w-full flex items-center px-3 py-1.5 text-[12px] rounded-lg transition-colors text-left ${subClass}">
+                  ${sub}
+                </button>
+              `;
+              })
+              .join("");
+            html += `</div>`;
+          }
+          return html;
+        }).join("");
+        lucide.createIcons();
+      }
+
+      function getFilteredItems() {
+        const filtered = Object.keys(items_db).filter((id) => {
+          const item = items_db[id];
+          if (state.favoritesOnly && !state.favorites.includes(id)) return false;
+          if (state.searchTerm && !checkItemOnlyMatch(id, state.searchTerm)) return false;
+          if (state.category !== "all" && item.category !== state.category) return false;
+          if (state.subType !== "all" && getSubType(item) !== state.subType) return false;
+
+          if (state.classes.length > 0) {
+            const classStat = item.stats ? item.stats.find((s) => s.label === "클래스") : null;
+            if (classStat) {
+              const itemClasses = classStat.value;
+              if (itemClasses !== "전체") {
+                const hasMatchingClass = state.classes.some((cls) => itemClasses.includes(cls));
+                if (!hasMatchingClass) return false;
+              }
+            } else {
+              return false;
+            }
+          }
+          return true;
+        });
+
+        return filtered.sort((a, b) => {
+          const nameA = items_db[a].name;
+          const nameB = items_db[b].name;
+
+          if (state.sortBy === "group") {
+            const keyA = nameA.split(" ").reverse().join(" ");
+            const keyB = nameB.split(" ").reverse().join(" ");
+            const cmp = keyA.localeCompare(keyB, "ko-KR");
+            if (cmp !== 0) return cmp;
+            return nameA.localeCompare(nameB, "ko-KR");
+          } else {
+            return nameA.localeCompare(nameB, "ko-KR");
+          }
+        });
+      }
+
+      function getStatValue(item, label) {
+        if (!item.stats) return null;
+        const stat = item.stats.find((s) => s.label === label);
+        return stat ? stat.value : null;
+      }
+
+      // 🟢 모달 오픈 함수
+      function openModal(itemId) {
+        const item = items_db[itemId];
+        if (!item) return;
+
+        let catText = item.category === "weapon" ? "무기" : item.category === "armor" ? "방어구" : item.category === "accessory" ? "악세서리" : "재료";
+        const subTypeVal = getSubType(item);
+        if (subTypeVal) catText = subTypeVal;
+
+        document.getElementById("modal-category-badge").textContent = catText;
+        document.getElementById("modal-title").textContent = item.name;
+        document.getElementById("modal-icon").innerHTML = getItemIconHTML(item, "w-20 h-20 text-3xl", true);
+
+        const tradeDiv = document.getElementById("modal-trade-info");
+        tradeDiv.innerHTML = "";
+        if (item.tradeInfo) {
+          // 🟢 1 & 2. 텍스트 간소화 및 O, X 텍스트로 처리
+          const makeBadge = (label, val) => {
+            const isO = val === "O" || val === "가능";
+            const colorClass = isO ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20";
+            const displayVal = isO ? "O" : "X";
+            return `<div class="flex items-center justify-between px-3 py-1.5 border rounded-lg text-[11px] font-bold ${colorClass}">
+                      <span>${label}</span>
+                      <span class="text-[13px] leading-none">${displayVal}</span>
+                    </div>`;
+          };
+          tradeDiv.innerHTML += makeBadge("창고", item.tradeInfo.storage);
+          tradeDiv.innerHTML += makeBadge("사망", item.tradeInfo.drop);
+          tradeDiv.innerHTML += makeBadge("교환", item.tradeInfo.trade);
+          tradeDiv.innerHTML += makeBadge("삭제", item.tradeInfo.delete);
+        }
+
+        const statsGrid = document.getElementById("modal-stats-grid");
+        statsGrid.innerHTML = "";
+        let optionHtml = "";
+
+        if (item.stats) {
+          item.stats.forEach((stat) => {
+            if (stat.label === "옵션") {
+              optionHtml = stat.value;
+            } else {
+              statsGrid.innerHTML += `
+                <div class="flex flex-col gap-1 p-2 bg-zinc-50 dark:bg-zinc-950/50 rounded-lg">
+                  <span class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">${stat.label}</span>
+                  <span class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 break-keep">${stat.value}</span>
+                </div>
+              `;
+            }
+          });
+        }
+
+        const optContainer = document.getElementById("modal-options-container");
+        if (optionHtml) {
+          optContainer.classList.remove("hidden");
+          optContainer.classList.add("flex");
+          document.getElementById("modal-options-content").innerHTML = optionHtml;
+        } else {
+          optContainer.classList.add("hidden");
+          optContainer.classList.remove("flex");
+        }
+
+        const descContainer = document.getElementById("modal-desc-container");
+        if (item.desc) {
+          descContainer.classList.remove("hidden");
+          descContainer.classList.add("flex");
+          document.getElementById("modal-desc-content").textContent = item.desc;
+        } else {
+          descContainer.classList.add("hidden");
+          descContainer.classList.remove("flex");
+        }
+
+        const setContainer = document.getElementById("modal-set-container");
+        if (item.setEffect) {
+          setContainer.classList.remove("hidden");
+          setContainer.classList.add("flex");
+          document.getElementById("modal-set-desc").innerHTML = item.setEffect.description.replace(/\n/g, "<br>");
+
+          const setList = document.getElementById("modal-set-items");
+          setList.innerHTML = item.setEffect.items
+            .map((setName) => {
+              const setItem = items_db[setName];
+              if (setItem) {
+                return `
+              <div class="flex items-center gap-2.5 p-2 bg-white dark:bg-zinc-900/50 rounded-xl border border-fuchsia-200 dark:border-fuchsia-900/50 shadow-sm cursor-pointer hover:border-fuchsia-400 transition-colors" onclick="openModal('${setName}')">
+                ${getItemIconHTML(setItem, "w-8 h-8 text-[10px]")}
+                <span class="text-xs font-bold text-fuchsia-700 dark:text-fuchsia-300 truncate">${setItem.name}</span>
+              </div>`;
+              }
+              return `<div class="flex items-center gap-2 p-2 opacity-50"><span class="text-xs font-medium text-zinc-500">${setName} (미등록)</span></div>`;
+            })
+            .join("");
+        } else {
+          setContainer.classList.add("hidden");
+          setContainer.classList.remove("flex");
+        }
+
+        lucide.createIcons();
+        const modal = document.getElementById("item-modal");
+        modal.classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal(e) {
+        if (e && e.target.id !== "item-modal" && !e.target.closest("button[onclick='closeModal()']")) return;
+        const modal = document.getElementById("item-modal");
+        modal.classList.add("hidden");
+        document.body.style.overflow = "auto";
+      }
+
+      function renderList() {
+        const listIds = getFilteredItems();
+        document.getElementById("result-count").textContent = listIds.length.toLocaleString();
+
+        const listContainer = document.getElementById("item-list");
+        const emptyState = document.getElementById("empty-state");
+
+        if (listIds.length === 0) {
+          listContainer.innerHTML = "";
+          emptyState.classList.remove("hidden");
+          emptyState.classList.add("flex");
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+        emptyState.classList.remove("flex");
+
+        listContainer.innerHTML = listIds
+          .map((id) => {
+            const item = items_db[id];
+            const isFav = state.favorites.includes(id);
+            const favIconColor = isFav ? "text-amber-500 fill-amber-500" : "text-zinc-300 dark:text-zinc-600 hover:text-amber-500";
+            const displayName = getHighlightedName(id, item.name, state.searchTerm);
+
+            let catText = item.category === "weapon" ? "무기" : item.category === "armor" ? "방어구" : item.category === "accessory" ? "악세서리" : "재료";
+            const subTypeVal = getSubType(item);
+            if (subTypeVal) catText = subTypeVal;
+
+            const atk = getStatValue(item, "공격력(작은/큰)");
+            const def = getStatValue(item, "방어력");
+            const dmg = getStatValue(item, "손상 여부");
+            const ench = getStatValue(item, "안전인챈트") || getStatValue(item, "인챈트");
+            const cls = getStatValue(item, "클래스");
+            const weight = getStatValue(item, "무게");
+            const mat = getStatValue(item, "재질");
+            const opt = getStatValue(item, "옵션");
+
+            const storage = getStatValue(item, "창고") || "O";
+            const drop = getStatValue(item, "사망 시 드롭") || "O";
+            const trade = getStatValue(item, "교환") || "O";
+            const del = getStatValue(item, "삭제") || "O";
+
+            const colorClass = (val) => (val === "O" || val === "가능" ? "text-zinc-800 dark:text-zinc-200" : "text-red-500 dark:text-red-400");
+
+            const hasLeftStats = atk || def || dmg || ench;
+            const hasRightStats = cls || weight || mat;
+
+            let leftStatsHTML = "";
+            if (hasLeftStats) {
+              leftStatsHTML = `
+                <div class="flex flex-col gap-0.5 flex-1 justify-center pr-2 sm:pr-3">
+                  ${atk ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">작은/큰:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200">${atk}</span></div>` : ""}
+                  ${def ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">방어력:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200">${def}</span></div>` : ""}
+                  ${dmg ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">손상여부:</span> <span class="font-bold ${dmg === "X" ? "text-red-500 dark:text-red-400" : "text-zinc-800 dark:text-zinc-200"}">${dmg}</span></div>` : ""}
+                  ${ench ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">안전인챈:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200">${ench}</span></div>` : ""}
+                </div>
+              `;
+            }
+
+            let rightStatsHTML = "";
+            if (hasRightStats) {
+              rightStatsHTML = `
+                <div class="flex flex-col gap-0.5 flex-1 justify-center pl-2 sm:pl-3 ${hasLeftStats ? "border-l border-zinc-100 dark:border-zinc-800/80" : ""}">
+                  ${cls ? `<div class="flex justify-between w-full gap-1"><span class="shrink-0 font-medium">클래스:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200 text-right break-keep" style="word-break: keep-all;">${cls}</span></div>` : ""}
+                  ${weight ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">무게:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200">${weight}</span></div>` : ""}
+                  ${mat ? `<div class="flex justify-between w-full"><span class="shrink-0 font-medium">재질:</span> <span class="font-bold text-zinc-800 dark:text-zinc-200">${mat}</span></div>` : ""}
+                </div>
+              `;
+            }
+
+            return `
+            <div onclick="openModal('${id}')" class="relative bg-white dark:bg-[#1c1c1f] border border-zinc-200 dark:border-[#2c2c35] rounded-2xl p-4 sm:p-5 flex flex-col group shadow-sm dark:shadow-none transition-all h-full card-hover-fx cursor-pointer select-none hover:border-indigo-400 dark:hover:border-indigo-500/60 hover:shadow-md dark:hover:bg-zinc-900/80">
+              
+              <div class="flex justify-between items-center mb-2 shrink-0">
+                <button onclick="toggleFavorite('${id}', event)" class="flex items-center gap-1 ${favIconColor} hover:opacity-80 transition-opacity">
+                  <i data-lucide="star" class="w-5 h-5"></i>
+                </button>
+                ${item.setEffect ? `<span class="text-[10px] font-bold text-fuchsia-500 dark:text-fuchsia-400 flex items-center gap-1 bg-fuchsia-50 dark:bg-fuchsia-500/10 px-1.5 py-0.5 rounded border border-fuchsia-200 dark:border-fuchsia-500/20"><i data-lucide="layers" class="w-3 h-3"></i> 세트효과 보유</span>` : ""}
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-3">
+                
+                <div class="flex items-center gap-3 sm:w-[45%] xl:w-[45%] shrink-0 pr-2">
+                  ${getItemIconHTML(item, "w-14 h-14 text-sm")}
+                  <div class="flex flex-col min-w-0 pt-0.5">
+                    <span class="text-[10px] sm:text-[11px] font-bold text-zinc-500 dark:text-zinc-400 leading-none mb-0.5">${catText}</span>
+                    <span class="text-[16px] sm:text-[17px] font-extrabold text-zinc-900 dark:text-zinc-100 leading-tight break-keep" style="word-break: keep-all;">${displayName}</span>
+                  </div>
+                </div>
+
+                <div class="flex-1 flex flex-row text-[11px] sm:text-[12px] text-zinc-500 dark:text-zinc-400 shrink-0 mt-2 sm:mt-0">
+                   ${leftStatsHTML}
+                   ${rightStatsHTML}
+                </div>
+
+              </div>
+
+              <div class="flex-1 min-h-[4px]"></div>
+              
+              <div class="w-full h-px bg-zinc-100 dark:bg-[#2c2c35] my-3"></div>
+
+              <div class="flex flex-col lg:flex-row items-stretch justify-between gap-3 shrink-0">
+                
+                <div class="flex-1 flex flex-col gap-1.5 text-[11.5px] sm:text-[12px] text-zinc-600 dark:text-zinc-400">
+                   <div class="flex gap-1.5">
+                     <span class="font-bold text-zinc-500 shrink-0 w-8">옵션:</span>
+                     <span class="leading-snug break-keep text-zinc-800 dark:text-zinc-300">${opt ? opt.replace(/<br>/g, ", ") : "-"}</span>
+                   </div>
+                   <div class="flex gap-1.5">
+                     <span class="font-bold text-zinc-500 shrink-0 w-8">설명:</span>
+                     <span class="leading-snug break-keep line-clamp-2 text-zinc-800 dark:text-zinc-300">${item.desc ? item.desc : "-"}</span>
+                   </div>
+                </div>
+
+                <div class="flex flex-row lg:flex-col flex-wrap lg:flex-nowrap gap-x-3 gap-y-0.5 text-[10px] sm:text-[11px] lg:border-l border-zinc-100 dark:border-zinc-800/80 lg:pl-3 shrink-0 lg:justify-center border-t lg:border-t-0 pt-2 lg:pt-0 min-w-[90px]">
+                   <span class="flex justify-between gap-2 text-zinc-500"><span>창고:</span> <span class="font-bold ${colorClass(storage)}">${storage}</span></span>
+                   <span class="flex justify-between gap-2 text-zinc-500"><span>사망드랍:</span> <span class="font-bold ${colorClass(drop)}">${drop}</span></span>
+                   <span class="flex justify-between gap-2 text-zinc-500"><span>교환:</span> <span class="font-bold ${colorClass(trade)}">${trade}</span></span>
+                   <span class="flex justify-between gap-2 text-zinc-500"><span>삭제:</span> <span class="font-bold ${colorClass(del)}">${del}</span></span>
+                </div>
+                
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        lucide.createIcons();
+        syncHeaderHeight(); // 🟢 렌더링 직후 높이 재동기화
+      }
+
+      document.getElementById("search-input").addEventListener("input", (e) => {
+        state.searchTerm = e.target.value;
+        if (state.searchTerm !== "") {
+          state.category = "all";
+          state.subType = "all";
+          state.classes = [];
+
+          document.querySelectorAll(".class-cb").forEach((cb) => {
+            cb.checked = cb.value === "전체";
+          });
+          renderClassUI();
+          renderCategoryUI();
+        }
+        renderList();
+      });
+
+      async function init() {
+        const isLoaded = await loadDatabaseFromSheet();
+        if (!isLoaded) return;
+
+        updateDynamicSubCategories();
+        renderClassUI();
+        renderCategoryUI();
+        renderList();
+
+        lucide.createIcons();
+        window.parent.postMessage({ type: "REQUEST_THEME" }, "*");
+
+        // 🟢 수정: 렌더링 직후 높이 동기화
+        syncHeaderHeight();
+
+        // 🟢 수정: 의도적으로 넣었던 0.3초 대기 시간을 제거하여, 데이터 로드 즉시 로딩창이 사라지게 속도 개선
+        const loader = document.getElementById("loading-overlay");
+        if (loader) {
+          loader.classList.add("opacity-0", "pointer-events-none");
+          setTimeout(() => loader.remove(), 300); // 부드럽게 사라지는 페이드아웃 애니메이션 시간만 유지
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

@@ -388,6 +388,7 @@
 
       function initApp() {
         loadState();
+        updateClassicToggleUI();
         renderClassSelector();
         if (state.charClass) {
           Object.keys(CLASS_INFO).forEach((id) => {
@@ -404,6 +405,7 @@
           setCharClass("knight", true);
         }
         renderIcons();
+        window.parent.postMessage({ type: "REQUEST_THEME" }, "*");
       }
 
       function renderClassSelector() {

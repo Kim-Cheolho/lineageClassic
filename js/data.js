@@ -3,6 +3,7 @@ let items_db = {};
 let recipes_db = {};
 
 // // 🟢 1. 구글 시트에서 5개의 탭(무기, 방어구, 장신구, 재료, 레시피)별로 발급받은 CSV 링크를 각각 넣어주세요.
+// 🟢 유저님의 링크가 완벽하게 잘 들어가 있습니다! 수정하실 필요 없습니다.
 const CSV_LINKS = {
   weapon:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWs-z11xovyh5nZXXYjI-bsbl2PosmBM3SQPQrQDZefquGCW8hF_UAraVl6arynMAAd9npzE1Zk5v4/pub?output=csv",
@@ -31,7 +32,21 @@ const STAT_ORDER = [
 ];
 
 // // 🟢 3. 아이템 탭에서 스탯으로 취급하지 않을 고정 시스템 컬럼들
-const ITEM_SYSTEM_COLS = ["ID", "이름", "아이콘", "이미지", "분류", "설명", "세트 효과", "세트 아이템", "줄임말"];
+const ITEM_SYSTEM_COLS = [
+  "ID",
+  "이름",
+  "아이콘",
+  "이미지",
+  "분류",
+  "설명",
+  "세트 효과",
+  "세트 아이템",
+  "줄임말",
+  "창고",
+  "사망 시 드롭",
+  "교환",
+  "삭제",
+];
 
 function parseCSVRow(str) {
   const result = [];
@@ -54,9 +69,18 @@ function parseCSVRow(str) {
 }
 
 async function processItemSheet(url, categoryName) {
+  // 이 부분은 방어 코드이므로 신경 쓰지 않으셔도 됩니다.
   if (!url || url.includes("CSV_링크를_넣어주세요")) return;
-  const response = await fetch(url);
-  const csvText = await response.text();
+
+  // 🟢 [수정] 브라우저 세션 메모리를 확인하여 데이터가 있으면 즉시 반환 (네트워크 중복 호출 완벽 방지)
+  const cacheKey = `lcraft_csv_${categoryName}`;
+  let csvText = sessionStorage.getItem(cacheKey);
+
+  if (!csvText) {
+    const response = await fetch(url);
+    csvText = await response.text();
+    sessionStorage.setItem(cacheKey, csvText);
+  }
 
   const rows = csvText.split("\n");
   const headers = parseCSVRow(rows[0]);
@@ -114,6 +138,13 @@ async function processItemSheet(url, categoryName) {
       };
     }
 
+    const tradeInfo = {
+      storage: rowData["창고"] || "O",
+      drop: rowData["사망 시 드롭"] || "O",
+      trade: rowData["교환"] || "O",
+      delete: rowData["삭제"] || "O",
+    };
+
     items_db[id] = {
       id: id,
       name: rowData["이름"] || id,
@@ -125,15 +156,23 @@ async function processItemSheet(url, categoryName) {
       stats: stats.length > 0 ? stats : undefined,
       setEffect: setEffect,
       aliases: aliasStr ? aliasStr.split(",").map((s) => s.trim().replace(/\s+/g, "").toLowerCase()) : [],
+      tradeInfo: tradeInfo,
     };
   });
 }
 
 async function processRecipeSheet(url) {
-  if (!url || url.includes("CSV_링크를_넣어주세요")) return;
+  if (!url) return;
 
-  const response = await fetch(url);
-  const csvText = await response.text();
+  // 🟢 [수정] 레시피 시트에도 동일하게 캐싱 적용
+  const cacheKey = `lcraft_csv_recipe`;
+  let csvText = sessionStorage.getItem(cacheKey);
+
+  if (!csvText) {
+    const response = await fetch(url);
+    csvText = await response.text();
+    sessionStorage.setItem(cacheKey, csvText);
+  }
 
   const rows = csvText.split("\n");
   const headers = parseCSVRow(rows[0]);
@@ -190,7 +229,6 @@ async function loadDatabaseFromSheet() {
 // 반드시 아래의 `checkSearchMatch`와 `getHighlightedName` 함수를 재사용하여 아키텍처를 구성하세요.
 // ============================================================================
 
-// 🟢 겹자음 분해 매핑
 const decomposeChosung = (str) => {
   const map = {
     ㄳ: "ㄱㅅ",
@@ -211,7 +249,6 @@ const decomposeChosung = (str) => {
     .join("");
 };
 
-// 🟢 초성 유니코드 범위
 const CHOSUNG_RANGES = {
   ㄱ: "[가-깋]",
   ㄲ: "[까-낗]",
@@ -234,7 +271,6 @@ const CHOSUNG_RANGES = {
   ㅎ: "[하-힣]",
 };
 
-// 🟢 혼합 검색용 정규식 생성기 (강조 처리용 띄어쓰기 무시 기능 포함)
 const getHybridRegex = (keyword, forHighlight = false) => {
   let pattern = "";
   for (let i = 0; i < keyword.length; i++) {
@@ -251,7 +287,6 @@ const getHybridRegex = (keyword, forHighlight = false) => {
   return new RegExp(pattern, forHighlight ? "gi" : "i");
 };
 
-// 🟢 QWERTY 영타 -> 한글 자모 변환
 const QWERTY_TO_KOR = {
   q: "ㅂ",
   w: "ㅈ",
@@ -297,7 +332,6 @@ const convertEngToKorJamo = (str) => {
   return result;
 };
 
-// 🟢 [핵심] 공용 검색 매칭 엔진
 const checkSearchMatch = (itemId, keyword) => {
   let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
   let cleanKeyword = rawKeyword.toLowerCase();
@@ -327,7 +361,6 @@ const checkSearchMatch = (itemId, keyword) => {
   return false;
 };
 
-// 🟢 [핵심] 공용 텍스트 강조 렌더링 함수
 const getHighlightedName = (itemId, itemName, keyword) => {
   if (!keyword) return itemName;
 
