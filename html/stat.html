@@ -629,28 +629,35 @@
       function getMpGrowth(classId, wis) {
         switch (classId) {
           case "knight":
-            if (wis <= 9) return { min: 0, max: 2, avg: 1 };
-            return { min: 0, max: 3, avg: 1.5 };
+            if (wis <= 9) return { min: 0, max: 2, avg: 0.5 };
+            if (wis <= 12) return { min: 0, max: 3, avg: 1 };
+            if (wis <= 14) return { min: 1, max: 4, avg: 2.5 };
+            return { min: 2, max: 4, avg: 1.5 };
           case "elf":
             if (wis <= 11) return { min: 3, max: 4, avg: 3.5 };
-            if (wis <= 14) return { min: 3, max: 6, avg: 4.5 };
-            if (wis <= 17) return { min: 4, max: 7, avg: 17 / 3 };
-            if (wis <= 20) return { min: 4, max: 9, avg: 26 / 4 };
+            if (wis <= 12) return { min: 3, max: 6, avg: 4.5 };
+            if (wis <= 14) return { min: 3, max: 7, avg: 5 };
+            if (wis <= 16) return { min: 4, max: 8, avg: 6 };
+            if (wis <= 18) return { min: 5, max: 8, avg: 6.5 };
+            if (wis <= 20) return { min: 5, max: 9, avg: 7 };
             return { min: 6, max: 10, avg: 32 / 4 };
           case "wizard":
-            if (wis <= 14) return { min: 4, max: 8, avg: 6 };
+            if (wis <= 12) return { min: 4, max: 9, avg: 5.5 };
+            if (wis === 13) return { min: 5, max: 9, avg: 7 };
+            if (wis === 14) return { min: 5, max: 10, avg: 7.5 };
             if (wis === 15) return { min: 6, max: 10, avg: 8 };
             if (wis === 16) return { min: 6, max: 11, avg: 8.5 };
             if (wis === 17) return { min: 7, max: 11, avg: 9 };
             if (wis === 18) return { min: 7, max: 12, avg: 9.5 };
-            if (wis <= 20) return { min: 6, max: 12, avg: 9 };
-            if (wis <= 23) return { min: 8, max: 14, avg: 11 };
-            if (wis === 24) return { min: 8, max: 16, avg: 12 };
+            if (wis <= 20) return { min: 8, max: 12, avg: 10 };
+            if (wis <= 23) return { min: 8, max: 13, avg: 10.5 };
+            if (wis === 24) return { min: 9, max: 13, avg: 11.5 };
             return { min: 10, max: 16, avg: 13 };
           case "royal":
-            if (wis <= 10) return { min: 2, max: 3, avg: 2.5 };
-            if (wis <= 14) return { min: 2, max: 4, avg: 3 };
-            if (wis <= 17) return { min: 3, max: 5, avg: 4 };
+            if (wis <= 11) return { min: 2, max: 4, avg: 3 };
+            if (wis <= 14) return { min: 2, max: 5, avg: 3.5 };
+            if (wis <= 15) return { min: 3, max: 5, avg: 4 };
+            if (wis <= 18) return { min: 3, max: 6, avg: 4.5 };
             return { min: 3, max: 6, avg: 4.5 };
           default:
             return { min: 0, max: 0, avg: 0 };
