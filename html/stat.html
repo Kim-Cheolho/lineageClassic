@@ -605,60 +605,61 @@
         return con <= threshold ? base : base + (con - threshold);
       }
       function getHpGrowth(classId, con) {
-        switch (classId) {
-          case "knight":
-            if (con <= 15) return { min: 6, max: 12, avg: 9 };
-            if (con <= 24) return { min: 6 + (con - 15), max: 12 + (con - 15), avg: 9 + (con - 15) };
-            return { min: 16, max: 22, avg: 19 };
-          case "elf":
-            if (con <= 15) return { min: 5, max: 10, avg: 7.5 };
-            if (con <= 17) return { min: 5 + (con - 15), max: 10 + (con - 15), avg: 7.5 + (con - 15) };
-            return { min: 8, max: 13, avg: 10.5 };
-          case "wizard":
-            if (con <= 15) return { min: 3, max: 6, avg: 4.5 };
-            if (con <= 20) return { min: 3 + (con - 15), max: 6 + (con - 15), avg: 4.5 + (con - 15) };
-            return { min: 9, max: 12, avg: 10.5 };
-          case "royal":
-            if (con <= 15) return { min: 5, max: 10, avg: 7.5 };
-            if (con <= 20) return { min: 5 + (con - 15), max: 10 + (con - 15), avg: 7.5 + (con - 15) };
-            return { min: 11, max: 16, avg: 13.5 };
-          default:
-            return { min: 0, max: 0, avg: 0 };
-        }
+        // 각 클래스별 [기본 최소치, 기본 최대치] (CON 15 이하 기준)
+        const growthData = {
+          knight: [6, 12],
+          elf: [5, 10],
+          wizard: [3, 6],
+          royal: [5, 10],
+        };
+
+        if (!growthData[classId]) return { min: 0, max: 0, avg: 0 };
+
+        const [baseMin, baseMax] = growthData[classId];
+
+        // CON 15 이하는 보너스 0, 16부터는 상한선(Cap) 없이 CON 1당 무한 증가
+        const bonus = Math.max(0, con - 15);
+
+        const finalMin = baseMin + bonus;
+        const finalMax = baseMax + bonus;
+
+        return {
+          min: finalMin,
+          max: finalMax,
+          avg: (finalMin + finalMax) / 2,
+        };
       }
+
       function getMpGrowth(classId, wis) {
         switch (classId) {
           case "knight":
-            if (wis <= 9) return { min: 0, max: 2, avg: 0.5 };
-            if (wis <= 12) return { min: 0, max: 3, avg: 1 };
-            if (wis <= 14) return { min: 1, max: 4, avg: 2.5 };
-            return { min: 2, max: 4, avg: 1.5 };
+            // 기사: WIS 9 이하는 고정, 10 이상부터 5단위(13, 18, 23...)로 최소치 증가, 최대치는 항상 최소치+3
+            if (wis <= 9) return { min: 0, max: 2, avg: 1 };
+            const kWis = Math.max(10, wis);
+            const kMin = Math.floor((kWis - 8) / 5);
+            return { min: kMin, max: kMin + 3, avg: kMin + 1.5 };
+
           case "elf":
+            // 요정: WIS 11 이하는 고정, 12부터 5단위마다 2씩 상승하는 계단식 패턴 적용
             if (wis <= 11) return { min: 3, max: 4, avg: 3.5 };
-            if (wis <= 12) return { min: 3, max: 6, avg: 4.5 };
-            if (wis <= 14) return { min: 3, max: 7, avg: 5 };
-            if (wis <= 16) return { min: 4, max: 8, avg: 6 };
-            if (wis <= 18) return { min: 5, max: 8, avg: 6.5 };
-            if (wis <= 20) return { min: 5, max: 9, avg: 7 };
-            return { min: 6, max: 10, avg: 32 / 4 };
+            const eMin = Math.floor((wis * 2 - 9) / 5);
+            const eMax = Math.floor((wis * 2) / 5) + 2;
+            return { min: eMin, max: eMax, avg: (eMin + eMax) / 2 };
+
           case "wizard":
-            if (wis <= 12) return { min: 4, max: 9, avg: 5.5 };
-            if (wis === 13) return { min: 5, max: 9, avg: 7 };
-            if (wis === 14) return { min: 5, max: 10, avg: 7.5 };
-            if (wis === 15) return { min: 6, max: 10, avg: 8 };
-            if (wis === 16) return { min: 6, max: 11, avg: 8.5 };
-            if (wis === 17) return { min: 7, max: 11, avg: 9 };
-            if (wis === 18) return { min: 7, max: 12, avg: 9.5 };
-            if (wis <= 20) return { min: 8, max: 12, avg: 10 };
-            if (wis <= 23) return { min: 8, max: 13, avg: 10.5 };
-            if (wis === 24) return { min: 9, max: 13, avg: 11.5 };
-            return { min: 10, max: 16, avg: 13 };
+            // 마법사: WIS 2 오를 때마다 정확히 최소/최대치가 1씩 규칙적으로 상승
+            const wWis = Math.max(12, wis);
+            const wMin = Math.floor((wWis - 3) / 2);
+            const wMax = Math.floor(wWis / 2) + 3;
+            return { min: wMin, max: wMax, avg: (wMin + wMax) / 2 };
+
           case "royal":
-            if (wis <= 11) return { min: 2, max: 4, avg: 3 };
-            if (wis <= 14) return { min: 2, max: 5, avg: 3.5 };
-            if (wis <= 15) return { min: 3, max: 5, avg: 4 };
-            if (wis <= 18) return { min: 3, max: 6, avg: 4.5 };
-            return { min: 3, max: 6, avg: 4.5 };
+            // 군주: WIS 11 이하는 고정, 이후 4주기 패턴으로 교차 상승
+            const rWis = Math.max(11, wis);
+            const rMin = Math.floor((rWis + 1) / 4) - 1;
+            const rMax = Math.floor(rWis / 4) + 2;
+            return { min: rMin, max: rMax, avg: (rMin + rMax) / 2 };
+
           default:
             return { min: 0, max: 0, avg: 0 };
         }
