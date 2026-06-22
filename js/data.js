@@ -2,8 +2,6 @@
 let items_db = {};
 let recipes_db = {};
 
-// // 🟢 1. 구글 시트에서 5개의 탭(무기, 방어구, 장신구, 재료, 레시피)별로 발급받은 CSV 링크를 각각 넣어주세요.
-// 🟢 유저님의 링크가 완벽하게 잘 들어가 있습니다! 수정하실 필요 없습니다.
 const CSV_LINKS = {
   weapon:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWs-z11xovyh5nZXXYjI-bsbl2PosmBM3SQPQrQDZefquGCW8hF_UAraVl6arynMAAd9npzE1Zk5v4/pub?output=csv",
@@ -17,7 +15,6 @@ const CSV_LINKS = {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv",
 };
 
-// // 🟢 2. 화면에 출력될 스탯의 '표준 순서'를 지정합니다.
 const STAT_ORDER = [
   "종류",
   "공격력(작은/큰)",
@@ -31,7 +28,6 @@ const STAT_ORDER = [
   "손상 여부",
 ];
 
-// // 🟢 3. 아이템 탭에서 스탯으로 취급하지 않을 고정 시스템 컬럼들
 const ITEM_SYSTEM_COLS = [
   "ID",
   "이름",
@@ -48,11 +44,19 @@ const ITEM_SYSTEM_COLS = [
   "삭제",
 ];
 
+// 🟢 [보안] XSS 취약점 방어를 위한 HTML 이스케이프 함수
+function escapeHTML(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(
+    /[&<>'"]/g,
+    (tag) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[tag],
+  );
+}
+
 function parseCSVRow(str) {
   const result = [];
   let current = "";
   let inQuotes = false;
-
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
     if (char === '"') {
@@ -69,10 +73,8 @@ function parseCSVRow(str) {
 }
 
 async function processItemSheet(url, categoryName) {
-  // 이 부분은 방어 코드이므로 신경 쓰지 않으셔도 됩니다.
   if (!url || url.includes("CSV_링크를_넣어주세요")) return;
 
-  // 🟢 [수정] 브라우저 세션 메모리를 확인하여 데이터가 있으면 즉시 반환 (네트워크 중복 호출 완벽 방지)
   const cacheKey = `lcraft_csv_${categoryName}`;
   let csvText = sessionStorage.getItem(cacheKey);
 
@@ -89,7 +91,8 @@ async function processItemSheet(url, categoryName) {
     if (!row.trim()) return;
     const values = parseCSVRow(row);
     const rowData = {};
-    headers.forEach((h, i) => (rowData[h.trim()] = values[i] || ""));
+    // 🟢 [보안] 파싱된 모든 데이터를 안전하게 이스케이프 처리
+    headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
 
     const id = rowData["ID"];
     if (!id) return;
@@ -100,9 +103,7 @@ async function processItemSheet(url, categoryName) {
       let val = rowData[key];
 
       if (key === "클래스" && val === "") {
-        if (categoryName === "weapon" || categoryName === "armor" || categoryName === "accessory") {
-          val = "전체";
-        }
+        if (categoryName === "weapon" || categoryName === "armor" || categoryName === "accessory") val = "전체";
       }
 
       if (!ITEM_SYSTEM_COLS.includes(key) && val !== "") {
@@ -163,8 +164,6 @@ async function processItemSheet(url, categoryName) {
 
 async function processRecipeSheet(url) {
   if (!url) return;
-
-  // 🟢 [수정] 레시피 시트에도 동일하게 캐싱 적용
   const cacheKey = `lcraft_csv_recipe`;
   let csvText = sessionStorage.getItem(cacheKey);
 
@@ -181,7 +180,7 @@ async function processRecipeSheet(url) {
     if (!row.trim()) return;
     const values = parseCSVRow(row);
     const rowData = {};
-    headers.forEach((h, i) => (rowData[h.trim()] = values[i] || ""));
+    headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
 
     const id = rowData["ID"];
     if (!id) return;
@@ -208,14 +207,11 @@ async function loadDatabaseFromSheet() {
       .map(([cat, url]) => processItemSheet(url, cat));
 
     const recipePromise = processRecipeSheet(CSV_LINKS.recipe);
-
     await Promise.all([...itemPromises, recipePromise]);
-
-    console.log("✅ 5개 탭 분리 데이터베이스 정규화 로드 완료:", items_db, recipes_db);
     return true;
   } catch (error) {
     console.error("🚨 데이터베이스 로드 중 오류 발생:", error);
-    alert("데이터베이스를 불러올 수 없습니다. 인터넷 연결이나 5개의 탭 주소를 확인하세요.");
+    alert("데이터베이스를 불러올 수 없습니다. 인터넷 연결을 확인하세요.");
     return false;
   }
 }
@@ -275,14 +271,9 @@ const getHybridRegex = (keyword, forHighlight = false) => {
   let pattern = "";
   for (let i = 0; i < keyword.length; i++) {
     const char = keyword[i];
-    if (CHOSUNG_RANGES[char]) {
-      pattern += CHOSUNG_RANGES[char];
-    } else {
-      pattern += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    }
-    if (forHighlight && i < keyword.length - 1) {
-      pattern += "\\s*";
-    }
+    if (CHOSUNG_RANGES[char]) pattern += CHOSUNG_RANGES[char];
+    else pattern += char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (forHighlight && i < keyword.length - 1) pattern += "\\s*";
   }
   return new RegExp(pattern, forHighlight ? "gi" : "i");
 };

@@ -1,11 +1,22 @@
 <!doctype html>
-<html lang="ko" class="dark">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta property="og:title" content="리니지 클래식 툴즈" />
     <meta property="og:description" content="리니지 클래식 유틸리티 통합 모음" />
     <title>리니지 클래식 통합 툴즈</title>
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("lineageGlobalTheme") === "light") {
+            document.documentElement.classList.remove("dark");
+          } else {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = { darkMode: "class" };
@@ -23,7 +34,7 @@
         </button>
 
         <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-0.5 overflow-x-auto no-scrollbar">
-          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow">축/저주</button>
+          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">축/저주</button>
           <button onclick="switchTab('info')" id="tab-btn-info" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">아이템</button>
           <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작</button>
           <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크</button>
@@ -65,9 +76,9 @@
       }
 
       function broadcastTheme() {
-        const frames = ["info", "stat", "mark", "craft"];
+        const frames = ["frame-info", "frame-stat", "frame-mark", "frame-craft"];
         frames.forEach((id) => {
-          const iframe = document.getElementById(`frame-${id}`);
+          const iframe = document.getElementById(id);
           if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: "THEME_CHANGE", isDark: isGlobalDark }, "*");
           }
@@ -94,9 +105,7 @@
           }
         });
 
-        // 🟢 사용자가 누른 마지막 탭 위치를 로컬 스토리지에 저장
         localStorage.setItem("lineageLastTab", tabId);
-
         setTimeout(broadcastTheme, 150);
       }
 
@@ -107,14 +116,12 @@
         }
         applyTheme();
 
-        // 🟢 저장된 탭이 있으면 불러오고, 최초 접속이면 'stat(축/저주)'을 기본 탭으로 띄움
         const savedTab = localStorage.getItem("lineageLastTab") || "stat";
         switchTab(savedTab);
 
         setTimeout(broadcastTheme, 800);
       });
 
-      // 자식으로부터의 테마 요청 대기
       window.addEventListener("message", (e) => {
         if (e.data.type === "REQUEST_THEME") {
           broadcastTheme();
