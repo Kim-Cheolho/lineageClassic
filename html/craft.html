@@ -69,7 +69,15 @@
             <span id="icon-search" class="text-zinc-400 dark:text-zinc-500 mr-2"></span>
             <input type="text" id="search-input" placeholder="아이템/재료 검색" class="bg-transparent border-none outline-none w-full text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600" />
           </div>
-          <span class="text-xs text-zinc-500 shrink-0" id="result-count">결과: 0건</span>
+          <div class="flex items-center gap-2 shrink-0">
+            <label class="flex items-center cursor-pointer group" title="즐겨찾기 보기">
+              <input type="checkbox" id="toggle-favorites" class="hidden" onchange="toggleFavoritesOnly(this)" />
+              <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-500/10 transition-colors border border-zinc-200 dark:border-zinc-700 group-hover:border-amber-200 dark:group-hover:border-amber-500/30">
+                <span id="icon-star-filter" class="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors block"></span>
+              </div>
+            </label>
+            <span class="text-xs text-zinc-500" id="result-count">결과: 0건</span>
+          </div>
         </div>
         <div id="category-tabs" class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-800 flex gap-2 overflow-x-auto no-scrollbar"></div>
       </header>
@@ -178,9 +186,11 @@
         cart: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
         hammer: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16 4.6V3.86a3.18 3.18 0 0 0-.93-2.25L13.82.36l-4.26 4.26"/><path d="m7.44 10.2 4.14-4.14"/></svg>`,
         refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
+        star: `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
       };
 
       document.getElementById("icon-search").innerHTML = icons.search;
+      document.getElementById("icon-star-filter").innerHTML = icons.star;
 
       let state = {
         isDarkMode: true,
@@ -191,6 +201,8 @@
         previousCategory: "weapon",
         buyMode: {},
         craftQuantity: 1,
+        favorites: JSON.parse(localStorage.getItem("lcraft_favorites") || "[]"),
+        favoritesOnly: false,
       };
 
       const categories = [
@@ -248,6 +260,8 @@
           if (!recipes_db[id]) return false;
           const item = items_db[id];
 
+          if (state.favoritesOnly && !state.favorites.includes(id)) return false;
+
           if (state.searchTerm) {
             if (!checkSearchMatch(id, state.searchTerm)) return false;
           } else {
@@ -267,6 +281,30 @@
         });
       }
 
+      function toggleFavorite(itemId, e) {
+        if (e) e.stopPropagation();
+        const idx = state.favorites.indexOf(itemId);
+        if (idx > -1) state.favorites.splice(idx, 1);
+        else state.favorites.push(itemId);
+
+        localStorage.setItem("lcraft_favorites", JSON.stringify(state.favorites));
+        renderSidebar();
+        if (state.selectedItemId === itemId) renderMain();
+      }
+
+      function toggleFavoritesOnly(checkbox) {
+        state.favoritesOnly = checkbox.checked;
+        const iconContainer = document.getElementById("icon-star-filter");
+        if (state.favoritesOnly) {
+          iconContainer.classList.add("text-amber-500", "fill-amber-500");
+          iconContainer.classList.remove("text-zinc-400");
+        } else {
+          iconContainer.classList.remove("text-amber-500", "fill-amber-500");
+          iconContainer.classList.add("text-zinc-400");
+        }
+        renderSidebar();
+      }
+
       function checkSidebarScroll(elem) {
         const indicator = document.getElementById("scroll-indicator");
         if (!indicator) return;
@@ -278,6 +316,7 @@
       }
 
       // 🟢 [수정] 식별자(data-item-id) 추가
+      // 🟢 [수정] renderSidebar 내부에 즐겨찾기 별(Star) 표시 아이콘 추가
       function renderSidebar() {
         const filteredList = getFilteredList();
         document.getElementById("result-count").textContent = `결과: ${filteredList.length}건`;
@@ -296,6 +335,8 @@
             const item = items_db[id];
             const recipe = recipes_db[id];
             const isSelected = id === state.selectedItemId;
+            // 🟢 즐겨찾기 포함 여부 확인
+            const isFav = state.favorites.includes(id);
             const classes = isSelected ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 shadow-sm" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300 border-transparent";
 
             const currentNpc = recipe && recipe.npc ? recipe.npc : "";
@@ -307,10 +348,14 @@
 
             const displayName = getHighlightedName(id, item.name, state.searchTerm);
 
+            // 🟢 [수정] 아이템명 앞에 별 아이콘 렌더링 포함
             return `
-          <div onclick="selectItem('${id}')" data-item-id="${id}" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
+          <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
-            <span class="text-sm font-medium truncate flex-1 leading-relaxed">${displayName}</span>
+            <span class="text-sm font-medium truncate flex-1 leading-relaxed flex items-center gap-1.5">
+              ${isFav ? `<span class="text-amber-500 fill-amber-500 shrink-0 w-3 h-3">${icons.star}</span>` : ""}
+              ${displayName}
+            </span>
             ${recipe && recipe.npc ? `<span class="text-[10px] font-bold shrink-0 truncate max-w-[70px] px-1.5 py-0.5 rounded border ${currentBadgeClass}">${recipe.npc}</span>` : ""}
           </div>
         `;
@@ -415,6 +460,8 @@
         }
 
         const displayMainName = getHighlightedName(state.selectedItemId, item.name, state.searchTerm);
+        const isFav = state.favorites.includes(state.selectedItemId);
+        const favIconColor = isFav ? "text-amber-500 fill-amber-500" : "text-zinc-300 dark:text-zinc-600 hover:text-amber-500";
 
         let statsHTML = "";
         if (item.stats && item.stats.length > 0) {
@@ -500,13 +547,19 @@
         const treeMaterials = recipe.materials || [];
         const treeHTML = treeMaterials.map((mat) => generateRecipeNodeHTML(mat.id, mat.count * 1)).join("");
 
+        // 🟢 [수정] h2 타이틀 영역 옆에 즐겨찾기 토글 버튼 추가
         container.innerHTML = `
         <div class="p-6 w-full">
           <div class="flex items-start gap-5 mb-8">
             ${getItemIconHTML(item, "w-16 h-16 text-3xl")}
             <div class="flex-1">
               <div class="flex items-end gap-3 mb-1 flex-wrap">
-                <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100">${displayMainName}</h2>
+                <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                  ${displayMainName}
+                  <button onclick="toggleFavorite('${state.selectedItemId}', event)" class="w-6 h-6 flex items-center justify-center outline-none ${favIconColor} transition-colors">
+                    ${icons.star}
+                  </button>
+                </h2>
                 <span class="text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded border border-zinc-200 dark:border-zinc-700 mb-1 shrink-0">
                   ${item.type || "제작 재료"}
                 </span>
