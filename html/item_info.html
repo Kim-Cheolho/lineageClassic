@@ -127,16 +127,6 @@
             </div>
 
             <div class="flex items-center gap-3">
-              <select
-                id="sort-select"
-                onchange="handleSortChange(this.value)"
-                class="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold px-2.5 py-1.5 text-zinc-700 dark:text-zinc-300 outline-none focus:border-indigo-500 cursor-pointer transition-colors">
-                <option value="name" selected>가나다순</option>
-                <option value="group">연관 묶음순 (추천)</option>
-              </select>
-
-              <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
-
               <label class="flex items-center cursor-pointer group" title="즐겨찾기 보기">
                 <input type="checkbox" id="toggle-favorites" class="hidden" onchange="toggleFavoritesOnly(this)" />
                 <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-500/10 transition-colors border border-zinc-200 dark:border-zinc-700 group-hover:border-amber-200 dark:group-hover:border-amber-500/30">
@@ -294,7 +284,6 @@
         subType: "all",
         expandedCats: [],
         favoritesOnly: false,
-        sortBy: "name",
         favorites: JSON.parse(localStorage.getItem("lcraft_favorites") || "[]"),
       };
 
@@ -389,11 +378,6 @@
           icon.classList.remove("text-amber-500");
           icon.classList.add("text-zinc-400");
         }
-        renderList();
-      }
-
-      function handleSortChange(val) {
-        state.sortBy = val;
         renderList();
       }
 
@@ -543,19 +527,20 @@
           return true;
         });
 
-        return filtered.sort((a, b) => {
-          const nameA = items_db[a].name;
-          const nameB = items_db[b].name;
+        // 🟢 [추가] 카테고리 우선순위 지정 (무기 -> 방어구 -> 장신구 -> 재료)
+        const catOrder = { weapon: 1, armor: 2, accessory: 3, material: 4 };
 
-          if (state.sortBy === "group") {
-            const keyA = nameA.split(" ").reverse().join(" ");
-            const keyB = nameB.split(" ").reverse().join(" ");
-            const cmp = keyA.localeCompare(keyB, "ko-KR");
-            if (cmp !== 0) return cmp;
-            return nameA.localeCompare(nameB, "ko-KR");
-          } else {
-            return nameA.localeCompare(nameB, "ko-KR");
+        return filtered.sort((a, b) => {
+          const itemA = items_db[a];
+          const itemB = items_db[b];
+
+          // 1. 카테고리가 다르면 지정된 카테고리 순서대로 정렬
+          if (itemA.category !== itemB.category) {
+            return (catOrder[itemA.category] || 99) - (catOrder[itemB.category] || 99);
           }
+
+          // 2. 같은 카테고리 내에서는 구글 시트 원본(오브젝트 삽입) 순서를 그대로 보존 (0 반환)
+          return 0;
         });
       }
 
