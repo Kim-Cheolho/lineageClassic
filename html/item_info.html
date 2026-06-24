@@ -213,7 +213,6 @@
     </div>
 
     <script>
-      // 🟢 화면 크기 변화 및 스크롤 시 헤더 높이를 동기화하여 겹침 방지
       function syncHeaderHeight() {
         const header = document.getElementById("main-header");
         const toolbar = document.getElementById("sticky-toolbar");
@@ -222,7 +221,6 @@
         if (header) {
           const h = header.offsetHeight;
           if (toolbar) {
-            // -1을 주어 경계선(border) 사이의 미세한 1px 빈틈을 완벽하게 덮습니다.
             toolbar.style.top = h - 1 + "px";
           }
           if (sidebar) {
@@ -233,6 +231,7 @@
       window.addEventListener("resize", syncHeaderHeight);
       window.addEventListener("load", syncHeaderHeight);
 
+      // 🟢 [수정] 수신 메시지에 따른 부분 교체 렌더링 로직 적용
       window.addEventListener("message", (event) => {
         if (event.data.type === "THEME_CHANGE") {
           const html = document.documentElement;
@@ -243,6 +242,47 @@
           } else {
             html.classList.remove("dark");
             body.classList.remove("dark");
+          }
+        }
+
+        if (event.data.type === "DATA_BACKGROUND_UPDATED") {
+          const parentWin = window.parent || window;
+          if (parentWin.__SHARED_ITEMS_DB__) {
+            items_db = parentWin.__SHARED_ITEMS_DB__;
+            recipes_db = parentWin.__SHARED_RECIPES_DB__;
+
+            const changedIds = event.data.changedIds || [];
+            const isTyping = document.activeElement && document.activeElement.tagName === "INPUT";
+
+            if (!isTyping && changedIds.length > 0) {
+              // 1. 리스트 카드 부분 교체
+              changedIds.forEach((id) => {
+                const cardElem = document.querySelector(`[data-info-id="${id}"]`);
+                if (cardElem) {
+                  const item = items_db[id];
+                  const displayName = getHighlightedName(id, item.name, state.searchTerm);
+                  const opt = getStatValue(item, "옵션");
+
+                  const optSpan = cardElem.querySelector("span.text-zinc-800.dark\\:text-zinc-300");
+                  if (optSpan) optSpan.innerHTML = opt ? opt.replace(/<br>/g, ", ") : "-";
+
+                  const titleSpan = cardElem.querySelector("span.font-extrabold");
+                  if (titleSpan) titleSpan.innerHTML = displayName;
+                }
+              });
+
+              // 2. 모달 팝업 부분 교체
+              const modal = document.getElementById("item-modal");
+              if (modal && !modal.classList.contains("hidden")) {
+                const modalTitleEl = document.getElementById("modal-title");
+                if (modalTitleEl) {
+                  const matchedItem = Object.values(items_db).find((i) => i.name === modalTitleEl.textContent);
+                  if (matchedItem && changedIds.includes(matchedItem.id)) {
+                    openModal(matchedItem.id);
+                  }
+                }
+              }
+            }
           }
         }
       });
@@ -525,7 +565,6 @@
         return stat ? stat.value : null;
       }
 
-      // 🟢 모달 오픈 함수
       function openModal(itemId) {
         const item = items_db[itemId];
         if (!item) return;
@@ -541,7 +580,6 @@
         const tradeDiv = document.getElementById("modal-trade-info");
         tradeDiv.innerHTML = "";
         if (item.tradeInfo) {
-          // 🟢 1 & 2. 텍스트 간소화 및 O, X 텍스트로 처리
           const makeBadge = (label, val) => {
             const isO = val === "O" || val === "가능";
             const colorClass = isO ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20" : "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20";
@@ -634,6 +672,7 @@
         document.body.style.overflow = "auto";
       }
 
+      // 🟢 [수정] 식별자(data-info-id) 추가
       function renderList() {
         const listIds = getFilteredItems();
         document.getElementById("result-count").textContent = listIds.length.toLocaleString();
@@ -705,7 +744,7 @@
             }
 
             return `
-            <div onclick="openModal('${id}')" class="relative bg-white dark:bg-[#1c1c1f] border border-zinc-200 dark:border-[#2c2c35] rounded-2xl p-4 sm:p-5 flex flex-col group shadow-sm dark:shadow-none transition-all h-full card-hover-fx cursor-pointer select-none hover:border-indigo-400 dark:hover:border-indigo-500/60 hover:shadow-md dark:hover:bg-zinc-900/80">
+            <div onclick="openModal('${id}')" data-info-id="${id}" class="relative bg-white dark:bg-[#1c1c1f] border border-zinc-200 dark:border-[#2c2c35] rounded-2xl p-4 sm:p-5 flex flex-col group shadow-sm dark:shadow-none transition-all h-full card-hover-fx cursor-pointer select-none hover:border-indigo-400 dark:hover:border-indigo-500/60 hover:shadow-md dark:hover:bg-zinc-900/80">
               
               <div class="flex justify-between items-center mb-2 shrink-0">
                 <button onclick="toggleFavorite('${id}', event)" class="flex items-center gap-1 ${favIconColor} hover:opacity-80 transition-opacity">
@@ -762,7 +801,7 @@
           .join("");
 
         lucide.createIcons();
-        syncHeaderHeight(); // 🟢 렌더링 직후 높이 재동기화
+        syncHeaderHeight();
       }
 
       document.getElementById("search-input").addEventListener("input", (e) => {
@@ -793,14 +832,12 @@
         lucide.createIcons();
         window.parent.postMessage({ type: "REQUEST_THEME" }, "*");
 
-        // 🟢 수정: 렌더링 직후 높이 동기화
         syncHeaderHeight();
 
-        // 🟢 수정: 의도적으로 넣었던 0.3초 대기 시간을 제거하여, 데이터 로드 즉시 로딩창이 사라지게 속도 개선
         const loader = document.getElementById("loading-overlay");
         if (loader) {
           loader.classList.add("opacity-0", "pointer-events-none");
-          setTimeout(() => loader.remove(), 300); // 부드럽게 사라지는 페이드아웃 애니메이션 시간만 유지
+          setTimeout(() => loader.remove(), 300);
         }
       }
 

@@ -97,6 +97,7 @@
     </div>
 
     <script>
+      // 🟢 [수정] 수신 메시지에 따른 부분 교체 렌더링 로직 적용
       window.addEventListener("message", (event) => {
         if (event.data.type === "THEME_CHANGE") {
           const html = document.documentElement;
@@ -109,6 +110,59 @@
             html.classList.remove("dark");
             body.classList.remove("dark");
             state.isDarkMode = false;
+          }
+        }
+
+        if (event.data.type === "DATA_BACKGROUND_UPDATED") {
+          const parentWin = window.parent || window;
+          if (parentWin.__SHARED_ITEMS_DB__) {
+            items_db = parentWin.__SHARED_ITEMS_DB__;
+            recipes_db = parentWin.__SHARED_RECIPES_DB__;
+
+            const changedIds = event.data.changedIds || [];
+            if (changedIds.length === 0) return;
+
+            // 1. 사이드바 항목만 부분 갱신
+            changedIds.forEach((id) => {
+              const sidebarItem = document.querySelector(`#sidebar-list [data-item-id="${id}"]`);
+              if (sidebarItem) {
+                const item = items_db[id];
+                const recipe = recipes_db[id];
+                const nameSpan = sidebarItem.querySelector("span.truncate.flex-1");
+                if (nameSpan) nameSpan.innerHTML = getHighlightedName(id, item.name, state.searchTerm);
+
+                const badgeSpan = sidebarItem.querySelector("span.text-\\[10px\\].font-bold.shrink-0");
+                if (badgeSpan && recipe && recipe.npc) badgeSpan.textContent = recipe.npc;
+              }
+            });
+
+            // 2. 입력 중이 아닐 때만 메인 화면 보존 갱신
+            const isTyping = document.activeElement && document.activeElement.tagName === "INPUT";
+            if (!isTyping) {
+              if (changedIds.includes(state.selectedItemId)) {
+                // 현재 열린 트리 백업
+                const openNodes = Array.from(document.querySelectorAll('#main-content [data-open="true"]')).map((el) => el.closest(".recipe-node").querySelector(".font-medium")?.textContent);
+
+                renderMain();
+                renderRightPanel();
+
+                // 트리 복구
+                document.querySelectorAll("#main-content .recipe-node").forEach((node) => {
+                  const name = node.querySelector(".font-medium")?.textContent;
+                  if (openNodes.includes(name)) {
+                    const btn = node.querySelector("[data-open]");
+                    if (btn) {
+                      btn.setAttribute("data-open", "true");
+                      btn.innerHTML = icons.chevronDown;
+                      const children = node.querySelector(".tree-children");
+                      if (children) children.classList.remove("hidden");
+                    }
+                  }
+                });
+              } else {
+                renderRightPanel();
+              }
+            }
           }
         }
       });
@@ -223,6 +277,7 @@
         }
       }
 
+      // 🟢 [수정] 식별자(data-item-id) 추가
       function renderSidebar() {
         const filteredList = getFilteredList();
         document.getElementById("result-count").textContent = `결과: ${filteredList.length}건`;
@@ -253,7 +308,7 @@
             const displayName = getHighlightedName(id, item.name, state.searchTerm);
 
             return `
-          <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
+          <div onclick="selectItem('${id}')" data-item-id="${id}" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
             <span class="text-sm font-medium truncate flex-1 leading-relaxed">${displayName}</span>
             ${recipe && recipe.npc ? `<span class="text-[10px] font-bold shrink-0 truncate max-w-[70px] px-1.5 py-0.5 rounded border ${currentBadgeClass}">${recipe.npc}</span>` : ""}
