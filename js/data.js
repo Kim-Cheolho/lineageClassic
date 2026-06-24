@@ -1,56 +1,22 @@
-// // 🟢 전역 데이터베이스 객체
+// 🟢 전역 데이터베이스 객체
 let items_db = {};
 let recipes_db = {};
 
 const CSV_LINKS = {
-  weapon:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWs-z11xovyh5nZXXYjI-bsbl2PosmBM3SQPQrQDZefquGCW8hF_UAraVl6arynMAAd9npzE1Zk5v4/pub?output=csv",
-  armor:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTD1PGa-37lEOkLalru3wz74OFXtYb1OGrN2cXVbN0ARU4jJXoYKLVG-TXX7sr_2uYShyHKLnn-zXl5/pub?output=csv",
-  accessory:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPQ2pDBMWZxedMQzI6zCztAPg7A0BiThJsLnT3KpBMILzWAglSxjFcjaj6_msNiurJUvUYbqCeOIAy/pub?output=csv",
-  material:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQG1PEgePbi1Lz8J5dH8uGhj2bOI6Ty7fZiT2t0Gs6QhttJy8PGCm7CtqeH5o4ZF59EhMwBhJoL5VZX/pub?output=csv",
-  recipe:
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv",
+  weapon: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWs-z11xovyh5nZXXYjI-bsbl2PosmBM3SQPQrQDZefquGCW8hF_UAraVl6arynMAAd9npzE1Zk5v4/pub?output=csv",
+  armor: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTD1PGa-37lEOkLalru3wz74OFXtYb1OGrN2cXVbN0ARU4jJXoYKLVG-TXX7sr_2uYShyHKLnn-zXl5/pub?output=csv",
+  accessory: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTPQ2pDBMWZxedMQzI6zCztAPg7A0BiThJsLnT3KpBMILzWAglSxjFcjaj6_msNiurJUvUYbqCeOIAy/pub?output=csv",
+  material: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQG1PEgePbi1Lz8J5dH8uGhj2bOI6Ty7fZiT2t0Gs6QhttJy8PGCm7CtqeH5o4ZF59EhMwBhJoL5VZX/pub?output=csv",
+  recipe: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv",
 };
 
-const STAT_ORDER = [
-  "종류",
-  "공격력(작은/큰)",
-  "방어력",
-  "한손/양손",
-  "클래스",
-  "무게",
-  "재질",
-  "인챈트",
-  "레벨 제한",
-  "손상 여부",
-];
-
-const ITEM_SYSTEM_COLS = [
-  "ID",
-  "이름",
-  "아이콘",
-  "이미지",
-  "분류",
-  "설명",
-  "세트 효과",
-  "세트 아이템",
-  "줄임말",
-  "창고",
-  "사망 시 드롭",
-  "교환",
-  "삭제",
-];
+const STAT_ORDER = ["종류", "공격력(작은/큰)", "방어력", "한손/양손", "클래스", "무게", "재질", "인챈트", "레벨 제한", "손상 여부"];
+const ITEM_SYSTEM_COLS = ["ID", "이름", "아이콘", "이미지", "분류", "설명", "세트 효과", "세트 아이템", "줄임말", "창고", "사망 시 드롭", "교환", "삭제"];
 
 // 🟢 [보안] XSS 취약점 방어를 위한 HTML 이스케이프 함수
 function escapeHTML(str) {
   if (typeof str !== "string") return str;
-  return str.replace(
-    /[&<>'"]/g,
-    (tag) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[tag],
-  );
+  return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
 }
 
 function parseCSVRow(str) {
@@ -59,30 +25,18 @@ function parseCSVRow(str) {
   let inQuotes = false;
   for (let i = 0; i < str.length; i++) {
     const char = str[i];
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
+    if (char === '"') { inQuotes = !inQuotes; } 
+    else if (char === "," && !inQuotes) { result.push(current.trim()); current = ""; } 
+    else { current += char; }
   }
   result.push(current.trim());
   return result.map((s) => s.replace(/(^"|"$)/g, ""));
 }
 
 async function processItemSheet(url, categoryName) {
-  if (!url || url.includes("CSV_링크를_넣어주세요")) return;
-
-  const cacheKey = `lcraft_csv_${categoryName}`;
-  let csvText = sessionStorage.getItem(cacheKey);
-
-  if (!csvText) {
-    const response = await fetch(url);
-    csvText = await response.text();
-    sessionStorage.setItem(cacheKey, csvText);
-  }
+  if (!url) return;
+  const response = await fetch(url);
+  const csvText = await response.text();
 
   const rows = csvText.split("\n");
   const headers = parseCSVRow(rows[0]);
@@ -91,7 +45,6 @@ async function processItemSheet(url, categoryName) {
     if (!row.trim()) return;
     const values = parseCSVRow(row);
     const rowData = {};
-    // 🟢 [보안] 파싱된 모든 데이터를 안전하게 이스케이프 처리
     headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
 
     const id = rowData["ID"];
@@ -108,10 +61,7 @@ async function processItemSheet(url, categoryName) {
 
       if (!ITEM_SYSTEM_COLS.includes(key) && val !== "") {
         if (key === "옵션") {
-          const mergedOptions = val
-            .split(",")
-            .map((opt) => opt.trim())
-            .join("<br>");
+          const mergedOptions = val.split(",").map((opt) => opt.trim()).join("<br>");
           stats.push({ label: "옵션", value: mergedOptions });
         } else {
           stats.push({ label: key, value: val });
@@ -164,14 +114,8 @@ async function processItemSheet(url, categoryName) {
 
 async function processRecipeSheet(url) {
   if (!url) return;
-  const cacheKey = `lcraft_csv_recipe`;
-  let csvText = sessionStorage.getItem(cacheKey);
-
-  if (!csvText) {
-    const response = await fetch(url);
-    csvText = await response.text();
-    sessionStorage.setItem(cacheKey, csvText);
-  }
+  const response = await fetch(url);
+  const csvText = await response.text();
 
   const rows = csvText.split("\n");
   const headers = parseCSVRow(rows[0]);
@@ -200,14 +144,44 @@ async function processRecipeSheet(url) {
   });
 }
 
+// 🟢 [핵심] 캐싱(Storage) 완전 제거 + 부모 창을 통한 Promise 공유 (네트워크 중복 호출 방지)
 async function loadDatabaseFromSheet() {
   try {
-    const itemPromises = Object.entries(CSV_LINKS)
-      .filter(([cat]) => cat !== "recipe")
-      .map(([cat, url]) => processItemSheet(url, cat));
+    const parentWin = window.parent || window;
 
-    const recipePromise = processRecipeSheet(CSV_LINKS.recipe);
-    await Promise.all([...itemPromises, recipePromise]);
+    // 1. 이미 다운로드되어 부모 창에 저장된 데이터가 있다면 즉시 복사 후 종료 (0초 컷, 네트워크 호출 안 함)
+    if (parentWin.__SHARED_ITEMS_DB__) {
+      items_db = parentWin.__SHARED_ITEMS_DB__;
+      recipes_db = parentWin.__SHARED_RECIPES_DB__;
+      return true;
+    }
+
+    // 2. 다른 탭(Iframe)이 이미 다운로드를 시작했다면, 그 탭이 끝날 때까지 대기
+    if (parentWin.__DB_FETCH_PROMISE__) {
+      await parentWin.__DB_FETCH_PROMISE__;
+      items_db = parentWin.__SHARED_ITEMS_DB__;
+      recipes_db = parentWin.__SHARED_RECIPES_DB__;
+      return true;
+    }
+
+    // 3. 내가 최초 호출자라면 다운로드 시작 (Promise를 부모 창에 등록하여 다른 탭과 공유)
+    parentWin.__DB_FETCH_PROMISE__ = (async () => {
+      const itemPromises = Object.entries(CSV_LINKS)
+        .filter(([cat]) => cat !== "recipe")
+        .map(([cat, url]) => processItemSheet(url, cat));
+
+      const recipePromise = processRecipeSheet(CSV_LINKS.recipe);
+
+      // 5개 시트 1회 단일 호출
+      await Promise.all([...itemPromises, recipePromise]);
+
+      // 다운로드가 끝나면 완성된 DB 객체를 부모 창 메모리에 공유 (다른 탭들이 쓸 수 있게 함)
+      parentWin.__SHARED_ITEMS_DB__ = items_db;
+      parentWin.__SHARED_RECIPES_DB__ = recipes_db;
+    })();
+
+    // 4. 다운로드 완료 대기
+    await parentWin.__DB_FETCH_PROMISE__;
     return true;
   } catch (error) {
     console.error("🚨 데이터베이스 로드 중 오류 발생:", error);
@@ -216,55 +190,13 @@ async function loadDatabaseFromSheet() {
   }
 }
 
-// ============================================================================
-// 🟢 [AI 컨텍스트 및 지시문]
-// 아래는 '초성 검색', '영타->한글 오타 교정', '겹자음 분해', '줄임말(별칭) 매칭'을
-// 모두 지원하는 하이엔드 공용 검색 및 UI 강조 엔진입니다.
-//
-// [!] 향후 새로운 HTML(예: 아이템 정보 페이지)을 작성할 때, 검색이나 필터링이 필요하다면
-// 반드시 아래의 `checkSearchMatch`와 `getHighlightedName` 함수를 재사용하여 아키텍처를 구성하세요.
-// ============================================================================
-
 const decomposeChosung = (str) => {
-  const map = {
-    ㄳ: "ㄱㅅ",
-    ㄵ: "ㄴㅈ",
-    ㄶ: "ㄴㅎ",
-    ㄺ: "ㄹㄱ",
-    ㄻ: "ㄹㅁ",
-    ㄼ: "ㄹㅂ",
-    ㄽ: "ㄹㅅ",
-    ㄾ: "ㄹㅌ",
-    ㄿ: "ㄹㅍ",
-    ㅀ: "ㄹㅎ",
-    ㅄ: "ㅂㅅ",
-  };
-  return str
-    .split("")
-    .map((c) => map[c] || c)
-    .join("");
+  const map = { ㄳ: "ㄱㅅ", ㄵ: "ㄴㅈ", ㄶ: "ㄴㅎ", ㄺ: "ㄹㄱ", ㄻ: "ㄹㅁ", ㄼ: "ㄹㅂ", ㄽ: "ㄹㅅ", ㄾ: "ㄹㅌ", ㄿ: "ㄹㅍ", ㅀ: "ㄹㅎ", ㅄ: "ㅂㅅ" };
+  return str.split("").map((c) => map[c] || c).join("");
 };
 
 const CHOSUNG_RANGES = {
-  ㄱ: "[가-깋]",
-  ㄲ: "[까-낗]",
-  ㄴ: "[나-닣]",
-  ㄷ: "[다-딯]",
-  ㄸ: "[따-띻]",
-  ㄹ: "[라-맇]",
-  ㅁ: "[마-밓]",
-  ㅂ: "[바-빟]",
-  ㅃ: "[빠-삫]",
-  ㅅ: "[사-싷]",
-  ㅆ: "[싸-앃]",
-  ㅇ: "[아-잏]",
-  ㅈ: "[자-짛]",
-  ㅉ: "[짜-찧]",
-  ㅊ: "[차-칳]",
-  ㅋ: "[카-킿]",
-  ㅌ: "[타-탛]",
-  ㅍ: "[파-핗]",
-  ㅎ: "[하-힣]",
+  ㄱ: "[가-깋]", ㄲ: "[까-낗]", ㄴ: "[나-닣]", ㄷ: "[다-딯]", ㄸ: "[따-띻]", ㄹ: "[라-맇]", ㅁ: "[마-밓]", ㅂ: "[바-빟]", ㅃ: "[빠-삫]", ㅅ: "[사-싷]", ㅆ: "[싸-앃]", ㅇ: "[아-잏]", ㅈ: "[자-짛]", ㅉ: "[짜-찧]", ㅊ: "[차-칳]", ㅋ: "[카-킿]", ㅌ: "[타-탛]", ㅍ: "[파-핗]", ㅎ: "[하-힣]",
 };
 
 const getHybridRegex = (keyword, forHighlight = false) => {
@@ -279,39 +211,7 @@ const getHybridRegex = (keyword, forHighlight = false) => {
 };
 
 const QWERTY_TO_KOR = {
-  q: "ㅂ",
-  w: "ㅈ",
-  e: "ㄷ",
-  r: "ㄱ",
-  t: "ㅅ",
-  y: "ㅛ",
-  u: "ㅕ",
-  i: "ㅑ",
-  o: "ㅐ",
-  p: "ㅔ",
-  a: "ㅁ",
-  s: "ㄴ",
-  d: "ㅇ",
-  f: "ㄹ",
-  g: "ㅎ",
-  h: "ㅗ",
-  j: "ㅓ",
-  k: "ㅏ",
-  l: "ㅣ",
-  z: "ㅋ",
-  x: "ㅌ",
-  c: "ㅊ",
-  v: "ㅍ",
-  b: "ㅠ",
-  n: "ㅜ",
-  m: "ㅡ",
-  Q: "ㅃ",
-  W: "ㅉ",
-  E: "ㄸ",
-  R: "ㄲ",
-  T: "ㅆ",
-  O: "ㅒ",
-  P: "ㅖ",
+  q: "ㅂ", w: "ㅈ", e: "ㄷ", r: "ㄱ", t: "ㅅ", y: "ㅛ", u: "ㅕ", i: "ㅑ", o: "ㅐ", p: "ㅔ", a: "ㅁ", s: "ㄴ", d: "ㅇ", f: "ㄹ", g: "ㅎ", h: "ㅗ", j: "ㅓ", k: "ㅏ", l: "ㅣ", z: "ㅋ", x: "ㅌ", c: "ㅊ", v: "ㅍ", b: "ㅠ", n: "ㅜ", m: "ㅡ", Q: "ㅃ", W: "ㅉ", E: "ㄸ", R: "ㄲ", T: "ㅆ", O: "ㅒ", P: "ㅖ",
 };
 
 const convertEngToKorJamo = (str) => {
@@ -324,6 +224,8 @@ const convertEngToKorJamo = (str) => {
 };
 
 const checkSearchMatch = (itemId, keyword) => {
+  if (!keyword || keyword.length > 30) return false;
+
   let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
   let cleanKeyword = rawKeyword.toLowerCase();
   let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
@@ -353,17 +255,15 @@ const checkSearchMatch = (itemId, keyword) => {
 };
 
 const getHighlightedName = (itemId, itemName, keyword) => {
-  if (!keyword) return itemName;
+  if (!keyword || keyword.length > 30) return itemName;
 
   const rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
   const cleanKeyword = rawKeyword.toLowerCase();
   const korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
   const item = items_db[itemId];
 
-  const aliasStyle =
-    "bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
-  const partialStyle =
-    "bg-rose-500 text-white dark:bg-rose-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+  const aliasStyle = "bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
+  const partialStyle = "bg-rose-500 text-white dark:bg-rose-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
 
   if (item.aliases && item.aliases.length > 0) {
     const regexAliasNormal = getHybridRegex(cleanKeyword, false);
