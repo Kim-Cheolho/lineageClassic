@@ -75,235 +75,243 @@
       }
     </style>
   </head>
-  <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans min-h-screen selection:bg-indigo-500/30 transition-colors duration-300">
-    <div class="max-w-[1400px] mx-auto p-4 md:p-6 lg:py-8">
-      <div class="flex items-center justify-between mb-6 md:mb-8">
-        <h1 class="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">축/저주 판별기</h1>
-      </div>
-
-      <div class="flex flex-col lg:flex-row gap-5 md:gap-6 items-stretch">
-        <div class="w-full lg:w-1/2 xl:w-[48%] flex flex-col gap-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl p-4 sm:p-6 md:p-8 relative h-full transition-colors duration-300">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <label class="flex items-center text-xs font-bold text-zinc-500 dark:text-zinc-400 tracking-wider uppercase"> <i data-lucide="crosshair" class="w-4 h-4 text-indigo-500 dark:text-indigo-400 mr-1.5"></i> 클래스 선택 </label>
-
-              <label class="flex items-center gap-2 cursor-pointer group" onclick="toggleClassicModeEvent(event)">
-                <span class="text-xs font-bold text-zinc-600 dark:text-zinc-300 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">클래식 모드 (전체 소급)</span>
-                <div class="relative w-10 h-5 bg-zinc-300 dark:bg-zinc-700 rounded-full transition-colors duration-300" id="classic-toggle-bg">
-                  <div class="toggle-dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full shadow-sm" id="classic-toggle-dot"></div>
-                </div>
-              </label>
-            </div>
-            <div class="grid grid-cols-4 gap-3" id="class-container"></div>
-          </div>
-
-          <div class="h-px w-full bg-zinc-100 dark:bg-zinc-800"></div>
-
-          <div class="flex flex-row flex-wrap md:flex-nowrap gap-4 lg:gap-5 w-full">
-            <div class="flex flex-col w-full md:w-[30%]">
-              <label class="flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2.5"> 현재 레벨 <span class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[10px]">LV</span> </label>
-              <div class="flex items-center gap-1.5 mb-2.5">
-                <button
-                  onclick="updateState('level', -1)"
-                  class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                  <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                </button>
-                <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/30">
-                  <input type="number" id="input-level" oninput="handleInput('level', this.value)" onblur="handleBlur('level')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
-                </div>
-                <button onclick="updateState('level', 1)" class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                </button>
-              </div>
-              <div class="mt-auto text-center bg-zinc-50 dark:bg-zinc-950 rounded-lg py-1 border border-zinc-100 dark:border-zinc-800">
-                <span id="bonus-points-label" class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 truncate block px-1">51렙 개방</span>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-2 w-[calc(50%-0.5rem)] md:w-[35%]">
-              <label class="flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1"> CON <span id="con-total-label" class="text-zinc-400 dark:text-zinc-500 text-[11px]">총 14</span> </label>
-              <div class="flex items-center gap-1 w-full">
-                <span class="text-[10px] font-bold text-zinc-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">베이스</span>
-                <div class="flex-1 flex items-center gap-1 min-w-0">
-                  <button
-                    onclick="updateState('con', -1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                  </button>
-                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8">
-                    <input type="number" id="input-con" oninput="handleInput('con', this.value)" onblur="handleBlur('con')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
-                  </div>
-                  <button onclick="updateState('con', 1)" class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="flex items-center gap-1 w-full transition-opacity duration-300 disabled-opacity" id="wrap-bonus-con">
-                <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">+보너스</span>
-                <div class="flex-1 flex items-center gap-1 min-w-0">
-                  <button
-                    onclick="updateState('bonusCon', -1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
-                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                  </button>
-                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-inner flex items-center justify-center h-8">
-                    <input type="number" id="input-bonusCon" oninput="handleInput('bonusCon', this.value)" onblur="handleBlur('bonusCon')" class="w-full text-center bg-transparent font-bold text-base text-indigo-600 dark:text-indigo-400 focus:outline-none min-w-0" />
-                  </div>
-                  <button
-                    onclick="updateState('bonusCon', 1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-2 w-[calc(50%-0.5rem)] md:w-[35%]">
-              <label class="flex items-center justify-between text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1"> WIS <span id="wis-total-label" class="text-zinc-400 dark:text-zinc-500 text-[11px]">총 9</span> </label>
-              <div class="flex items-center gap-1 w-full">
-                <span class="text-[10px] font-bold text-zinc-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">베이스</span>
-                <div class="flex-1 flex items-center gap-1 min-w-0">
-                  <button
-                    onclick="updateState('wis', -1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                  </button>
-                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8">
-                    <input type="number" id="input-wis" oninput="handleInput('wis', this.value)" onblur="handleBlur('wis')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
-                  </div>
-                  <button onclick="updateState('wis', 1)" class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="flex items-center gap-1 w-full transition-opacity duration-300 disabled-opacity" id="wrap-bonus-wis">
-                <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">+보너스</span>
-                <div class="flex-1 flex items-center gap-1 min-w-0">
-                  <button
-                    onclick="updateState('bonusWis', -1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
-                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
-                  </button>
-                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-inner flex items-center justify-center h-8">
-                    <input type="number" id="input-bonusWis" oninput="handleInput('bonusWis', this.value)" onblur="handleBlur('bonusWis')" class="w-full text-center bg-transparent font-bold text-base text-indigo-600 dark:text-indigo-400 focus:outline-none min-w-0" />
-                  </div>
-                  <button
-                    onclick="updateState('bonusWis', 1)"
-                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="h-px w-full bg-zinc-100 dark:bg-zinc-800"></div>
-
-          <div class="flex flex-col gap-4 flex-1 justify-center">
-            <div class="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 transition-colors hover:border-red-400 dark:hover:border-red-500/60 shadow-sm">
-              <div class="flex justify-between items-end">
-                <label class="text-base font-extrabold text-zinc-800 dark:text-zinc-100 flex items-center gap-2"> <i data-lucide="heart" class="w-5 h-5 text-red-500"></i> 순수 HP </label>
-                <span id="expected-hp-label" class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400"></span>
-              </div>
-              <div class="flex items-center justify-between gap-1 sm:gap-2 w-full">
-                <button
-                  onclick="updateState('hp', -10)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
-                  -10
-                </button>
-                <button
-                  onclick="updateState('hp', -1)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all shadow-sm dark:shadow-none">
-                  <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </button>
-
-                <div class="flex-1 min-w-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-inner flex items-center justify-center h-9 sm:h-11 md:h-12 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500/30">
-                  <input type="number" id="input-hp" oninput="handleInput('hp', this.value)" onblur="handleBlur('hp')" min="0" class="w-full text-center bg-transparent font-black text-xl sm:text-2xl md:text-3xl text-red-600 dark:text-red-500 focus:outline-none min-w-0" />
-                </div>
-
-                <button
-                  onclick="updateState('hp', 1)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all shadow-sm dark:shadow-none">
-                  <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </button>
-                <button
-                  onclick="updateState('hp', 10)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
-                  +10
-                </button>
-              </div>
-            </div>
-
-            <div class="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 transition-colors hover:border-blue-400 dark:hover:border-blue-500/60 shadow-sm">
-              <div class="flex justify-between items-end">
-                <label class="text-base font-extrabold text-zinc-800 dark:text-zinc-100 flex items-center gap-2"> <i data-lucide="droplets" class="w-5 h-5 text-blue-500"></i> 순수 MP </label>
-                <span id="expected-mp-label" class="text-xs font-mono font-bold text-zinc-500 dark:text-zinc-400"></span>
-              </div>
-              <div class="flex items-center justify-between gap-1 sm:gap-2 w-full">
-                <button
-                  onclick="updateState('mp', -10)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
-                  -10
-                </button>
-                <button
-                  onclick="updateState('mp', -1)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all shadow-sm dark:shadow-none">
-                  <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </button>
-
-                <div class="flex-1 min-w-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-inner flex items-center justify-center h-9 sm:h-11 md:h-12 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
-                  <input type="number" id="input-mp" oninput="handleInput('mp', this.value)" onblur="handleBlur('mp')" class="w-full text-center bg-transparent font-black text-xl sm:text-2xl md:text-3xl text-blue-600 dark:text-blue-500 focus:outline-none min-w-0" />
-                </div>
-
-                <button
-                  onclick="updateState('mp', 1)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all shadow-sm dark:shadow-none">
-                  <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
-                </button>
-                <button
-                  onclick="updateState('mp', 10)"
-                  class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
-                  +10
-                </button>
-              </div>
-            </div>
-          </div>
+  <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans min-h-screen selection:bg-indigo-500/30 transition-colors duration-300 flex flex-col overflow-x-hidden">
+    <div class="w-full flex-1 px-4 py-6 md:px-6 lg:py-8 overflow-y-auto">
+      <div class="max-w-[1400px] mx-auto w-full flex flex-col h-full">
+        <div class="flex items-center justify-between mb-6 md:mb-8">
+          <h1 class="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100">축/저주 판별기</h1>
         </div>
 
-        <div class="w-full lg:w-1/2 xl:w-[52%] flex flex-col h-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl p-4 sm:p-6 md:p-8 transition-colors duration-300">
-          <div id="result-container" class="flex-1 flex flex-col gap-4 h-full">
+        <div class="flex flex-col lg:flex-row gap-5 md:gap-6 items-stretch h-full">
+          <div class="w-full lg:w-1/2 xl:w-[48%] flex flex-col gap-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl p-4 sm:p-6 md:p-8 relative h-full transition-colors duration-300">
             <div>
               <div class="flex items-center justify-between mb-3">
-                <h3 class="text-xs font-bold text-zinc-500 dark:text-zinc-400 tracking-wider uppercase flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> 판정 기준표</h3>
+                <label class="flex items-center text-xs font-bold text-zinc-700 dark:text-zinc-300 tracking-wider uppercase"> <i data-lucide="crosshair" class="w-4 h-4 text-indigo-500 dark:text-indigo-400 mr-1.5"></i> 클래스 선택 </label>
+
+                <label class="flex items-center gap-2 cursor-pointer group" onclick="toggleClassicModeEvent(event)">
+                  <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">클래식 모드 (전체 소급)</span>
+                  <div class="relative w-10 h-5 bg-zinc-300 dark:bg-zinc-700 rounded-full transition-colors duration-300" id="classic-toggle-bg">
+                    <div class="toggle-dot absolute left-1 top-1 bg-white w-3 h-3 rounded-full shadow-sm" id="classic-toggle-dot"></div>
+                  </div>
+                </label>
               </div>
-              <div class="grid grid-cols-5 gap-2 text-center">
-                <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-                  <span class="font-black text-amber-500 dark:text-amber-400 text-lg md:text-xl">S</span><span class="text-zinc-500 dark:text-amber-400/80 font-mono text-[10px] md:text-[11px] font-bold">0~10%</span>
+              <div class="grid grid-cols-4 gap-3" id="class-container"></div>
+            </div>
+
+            <div class="h-px w-full bg-zinc-100 dark:bg-zinc-800"></div>
+
+            <div class="flex flex-row flex-wrap md:flex-nowrap gap-4 lg:gap-5 w-full">
+              <div class="flex flex-col w-full md:w-[30%]">
+                <label class="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide mb-2.5"> 현재 레벨 <span class="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded text-[10px]">LV</span> </label>
+                <div class="flex items-center gap-1.5 mb-2.5">
+                  <button
+                    onclick="updateState('level', -1)"
+                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                    <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/30">
+                    <input type="number" id="input-level" oninput="handleInput('level', this.value)" onblur="handleBlur('level')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
+                  </div>
+                  <button
+                    onclick="updateState('level', 1)"
+                    class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  </button>
                 </div>
-                <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/20">
-                  <span class="font-black text-fuchsia-500 dark:text-fuchsia-400 text-lg md:text-xl">A</span><span class="text-zinc-500 dark:text-fuchsia-400/80 font-mono text-[10px] md:text-[11px] font-bold">11~25%</span>
+                <div class="mt-auto text-center bg-zinc-50 dark:bg-zinc-950 rounded-lg py-1 border border-zinc-100 dark:border-zinc-800">
+                  <span id="bonus-points-label" class="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 truncate block px-1">51렙 개방</span>
                 </div>
-                <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                  <span class="font-black text-emerald-500 dark:text-emerald-400 text-lg md:text-xl">B</span><span class="text-zinc-500 dark:text-emerald-400/80 font-mono text-[10px] md:text-[11px] font-bold">26~70%</span>
+              </div>
+
+              <div class="flex flex-col gap-2 w-[calc(50%-0.5rem)] md:w-[35%]">
+                <label class="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide mb-1"> CON <span id="con-total-label" class="text-zinc-500 dark:text-zinc-400 text-[11px]">총 14</span> </label>
+                <div class="flex items-center gap-1 w-full">
+                  <span class="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">베이스</span>
+                  <div class="flex-1 flex items-center gap-1 min-w-0">
+                    <button
+                      onclick="updateState('con', -1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                      <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8">
+                      <input type="number" id="input-con" oninput="handleInput('con', this.value)" onblur="handleBlur('con')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
+                    </div>
+                    <button
+                      onclick="updateState('con', 1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
-                  <span class="font-black text-orange-500 dark:text-orange-400 text-lg md:text-xl">C</span><span class="text-zinc-500 dark:text-orange-400/80 font-mono text-[10px] md:text-[11px] font-bold">71~90%</span>
+                <div class="flex items-center gap-1 w-full transition-opacity duration-300 disabled-opacity" id="wrap-bonus-con">
+                  <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">+보너스</span>
+                  <div class="flex-1 flex items-center gap-1 min-w-0">
+                    <button
+                      onclick="updateState('bonusCon', -1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
+                      <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-inner flex items-center justify-center h-8">
+                      <input type="number" id="input-bonusCon" oninput="handleInput('bonusCon', this.value)" onblur="handleBlur('bonusCon')" class="w-full text-center bg-transparent font-bold text-base text-indigo-600 dark:text-indigo-400 focus:outline-none min-w-0" />
+                    </div>
+                    <button
+                      onclick="updateState('bonusCon', 1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                  <span class="font-black text-red-500 dark:text-red-400 text-lg md:text-xl">F</span><span class="text-zinc-500 dark:text-red-400/80 font-mono text-[10px] md:text-[11px] font-bold">91~100%</span>
+              </div>
+
+              <div class="flex flex-col gap-2 w-[calc(50%-0.5rem)] md:w-[35%]">
+                <label class="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wide mb-1"> WIS <span id="wis-total-label" class="text-zinc-500 dark:text-zinc-400 text-[11px]">총 9</span> </label>
+                <div class="flex items-center gap-1 w-full">
+                  <span class="text-[10px] font-bold text-zinc-600 dark:text-zinc-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">베이스</span>
+                  <div class="flex-1 flex items-center gap-1 min-w-0">
+                    <button
+                      onclick="updateState('wis', -1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                      <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-inner flex items-center justify-center h-8">
+                      <input type="number" id="input-wis" oninput="handleInput('wis', this.value)" onblur="handleBlur('wis')" class="w-full text-center bg-transparent font-bold text-base focus:outline-none dark:text-zinc-100 min-w-0" />
+                    </div>
+                    <button
+                      onclick="updateState('wis', 1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-transparent dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 w-full transition-opacity duration-300 disabled-opacity" id="wrap-bonus-wis">
+                  <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 w-8 md:w-9 flex-shrink-0 whitespace-nowrap text-right pr-0.5">+보너스</span>
+                  <div class="flex-1 flex items-center gap-1 min-w-0">
+                    <button
+                      onclick="updateState('bonusWis', -1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
+                      <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <div class="flex-1 min-w-0 bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-indigo-500/30 rounded-lg shadow-inner flex items-center justify-center h-8">
+                      <input type="number" id="input-bonusWis" oninput="handleInput('bonusWis', this.value)" onblur="handleBlur('bonusWis')" class="w-full text-center bg-transparent font-bold text-base text-indigo-600 dark:text-indigo-400 focus:outline-none min-w-0" />
+                    </div>
+                    <button
+                      onclick="updateState('bonusWis', 1)"
+                      class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-transparent dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 transition-colors">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div id="waiting-area" class="flex-1 flex flex-col items-center justify-center bg-zinc-50 dark:bg-transparent rounded-3xl p-8 text-center border border-dashed border-zinc-300 dark:border-zinc-800">
-              <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center mb-5 border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                <i data-lucide="pie-chart" class="w-8 h-8 text-zinc-400 dark:text-zinc-500"></i>
-              </div>
-              <h3 class="text-lg font-bold text-zinc-800 dark:text-zinc-200 mb-2">분석 대기중</h3>
-              <p class="text-sm text-zinc-500 dark:text-zinc-500 leading-relaxed">좌측 패널에서 레벨 2 이상의 스탯을 입력하시면<br />축/저주 판별 결과가 실시간으로 분석됩니다.</p>
-            </div>
+            <div class="h-px w-full bg-zinc-100 dark:bg-zinc-800"></div>
 
-            <div id="result-area" class="hidden flex-col justify-center gap-4 w-full flex-1"></div>
+            <div class="flex flex-col gap-4 flex-1 justify-center">
+              <div class="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 transition-colors hover:border-red-400 dark:hover:border-red-500/60 shadow-sm">
+                <div class="flex justify-between items-end">
+                  <label class="text-base font-extrabold text-zinc-800 dark:text-zinc-100 flex items-center gap-2"> <i data-lucide="heart" class="w-5 h-5 text-red-500"></i> 순수 HP </label>
+                  <span id="expected-hp-label" class="text-xs font-mono font-bold text-zinc-600 dark:text-zinc-400"></span>
+                </div>
+                <div class="flex items-center justify-between gap-1 sm:gap-2 w-full">
+                  <button
+                    onclick="updateState('hp', -10)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
+                    -10
+                  </button>
+                  <button
+                    onclick="updateState('hp', -1)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all shadow-sm dark:shadow-none">
+                    <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                  </button>
+
+                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-inner flex items-center justify-center h-9 sm:h-11 md:h-12 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500/30">
+                    <input type="number" id="input-hp" oninput="handleInput('hp', this.value)" onblur="handleBlur('hp')" min="0" class="w-full text-center bg-transparent font-black text-xl sm:text-2xl md:text-3xl text-red-600 dark:text-red-500 focus:outline-none min-w-0" />
+                  </div>
+
+                  <button
+                    onclick="updateState('hp', 1)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all shadow-sm dark:shadow-none">
+                    <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                  </button>
+                  <button
+                    onclick="updateState('hp', 10)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 dark:text-red-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
+                    +10
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 md:p-6 flex flex-col gap-4 transition-colors hover:border-blue-400 dark:hover:border-blue-500/60 shadow-sm">
+                <div class="flex justify-between items-end">
+                  <label class="text-base font-extrabold text-zinc-800 dark:text-zinc-100 flex items-center gap-2"> <i data-lucide="droplets" class="w-5 h-5 text-blue-500"></i> 순수 MP </label>
+                  <span id="expected-mp-label" class="text-xs font-mono font-bold text-zinc-600 dark:text-zinc-400"></span>
+                </div>
+                <div class="flex items-center justify-between gap-1 sm:gap-2 w-full">
+                  <button
+                    onclick="updateState('mp', -10)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
+                    -10
+                  </button>
+                  <button
+                    onclick="updateState('mp', -1)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all shadow-sm dark:shadow-none">
+                    <i data-lucide="minus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                  </button>
+
+                  <div class="flex-1 min-w-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-inner flex items-center justify-center h-9 sm:h-11 md:h-12 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/30">
+                    <input type="number" id="input-mp" oninput="handleInput('mp', this.value)" onblur="handleBlur('mp')" class="w-full text-center bg-transparent font-black text-xl sm:text-2xl md:text-3xl text-blue-600 dark:text-blue-500 focus:outline-none min-w-0" />
+                  </div>
+
+                  <button
+                    onclick="updateState('mp', 1)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all shadow-sm dark:shadow-none">
+                    <i data-lucide="plus" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                  </button>
+                  <button
+                    onclick="updateState('mp', 10)"
+                    class="w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-500 dark:text-blue-400 transition-all font-mono text-[10px] sm:text-xs font-bold shadow-sm dark:shadow-none">
+                    +10
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full lg:w-1/2 xl:w-[52%] flex flex-col h-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none rounded-3xl p-4 sm:p-6 md:p-8 transition-colors duration-300">
+            <div id="result-container" class="flex-1 flex flex-col gap-4 h-full">
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold text-zinc-700 dark:text-zinc-300 tracking-wider uppercase flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-4 h-4"></i> 판정 기준표</h3>
+                </div>
+                <div class="grid grid-cols-5 gap-2 text-center">
+                  <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                    <span class="font-black text-amber-500 dark:text-amber-400 text-lg md:text-xl">S</span><span class="text-zinc-600 dark:text-amber-400/80 font-mono text-[10px] md:text-[11px] font-bold">0~10%</span>
+                  </div>
+                  <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/20">
+                    <span class="font-black text-fuchsia-500 dark:text-fuchsia-400 text-lg md:text-xl">A</span><span class="text-zinc-600 dark:text-fuchsia-400/80 font-mono text-[10px] md:text-[11px] font-bold">11~25%</span>
+                  </div>
+                  <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                    <span class="font-black text-emerald-500 dark:text-emerald-400 text-lg md:text-xl">B</span><span class="text-zinc-600 dark:text-emerald-400/80 font-mono text-[10px] md:text-[11px] font-bold">26~70%</span>
+                  </div>
+                  <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+                    <span class="font-black text-orange-500 dark:text-orange-400 text-lg md:text-xl">C</span><span class="text-zinc-600 dark:text-orange-400/80 font-mono text-[10px] md:text-[11px] font-bold">71~90%</span>
+                  </div>
+                  <div class="flex flex-col gap-1 p-2 md:p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+                    <span class="font-black text-red-500 dark:text-red-400 text-lg md:text-xl">F</span><span class="text-zinc-600 dark:text-red-400/80 font-mono text-[10px] md:text-[11px] font-bold">91~100%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div id="waiting-area" class="flex-1 flex flex-col items-center justify-center bg-zinc-50 dark:bg-transparent rounded-3xl p-8 text-center border border-dashed border-zinc-300 dark:border-zinc-800">
+                <div class="w-16 h-16 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center mb-5 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                  <i data-lucide="pie-chart" class="w-8 h-8 text-zinc-400 dark:text-zinc-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-2">분석 대기중</h3>
+                <p class="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">좌측 패널에서 레벨 2 이상의 스탯을 입력하시면<br />축/저주 판별 결과가 실시간으로 분석됩니다.</p>
+              </div>
+
+              <div id="result-area" class="hidden flex-col justify-center gap-4 w-full flex-1"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -423,7 +431,7 @@
         container.innerHTML = Object.values(CLASS_INFO)
           .map(
             (cls) => `
-                <button onclick="setCharClass('${cls.id}')" id="btn-cls-${cls.id}" class="flex flex-col items-center justify-center py-3 md:py-3.5 px-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 dark:text-zinc-400 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all font-medium">
+                <button onclick="setCharClass('${cls.id}')" id="btn-cls-${cls.id}" class="flex flex-col items-center justify-center py-3 md:py-3.5 px-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-600 dark:text-zinc-400 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all font-medium">
                     <i data-lucide="${cls.icon}" class="w-5 h-5 mb-1.5"></i>
                     <span class="text-xs tracking-wide">${cls.name}</span>
                 </button>
@@ -453,9 +461,9 @@
           const btn = document.getElementById(`btn-cls-${id}`);
           if (!btn) return;
           btn.classList.remove("border-indigo-500", "bg-indigo-50", "dark:bg-indigo-500/10", "text-indigo-600", "dark:text-indigo-400");
-          btn.classList.add("border-zinc-200", "dark:border-zinc-800", "bg-zinc-50", "dark:bg-zinc-950/50", "text-zinc-500", "dark:text-zinc-400");
+          btn.classList.add("border-zinc-200", "dark:border-zinc-800", "bg-zinc-50", "dark:bg-zinc-950/50", "text-zinc-600", "dark:text-zinc-400");
           if (id === classId) {
-            btn.classList.remove("border-zinc-200", "dark:border-zinc-800", "bg-zinc-50", "dark:bg-zinc-950/50", "text-zinc-500", "dark:text-zinc-400");
+            btn.classList.remove("border-zinc-200", "dark:border-zinc-800", "bg-zinc-50", "dark:bg-zinc-950/50", "text-zinc-600", "dark:text-zinc-400");
             btn.classList.add("border-indigo-500", "bg-indigo-50", "dark:bg-indigo-500/10", "text-indigo-600", "dark:text-indigo-400");
           }
         });
@@ -553,16 +561,16 @@
           if (wrapWis) wrapWis.classList.remove("disabled-opacity");
           if (bonusLabel) {
             bonusLabel.innerText = `잔여 보너스: ${remainBonus}pt`;
-            bonusLabel.classList.replace("text-zinc-400", "text-indigo-600");
-            bonusLabel.classList.replace("dark:text-zinc-500", "dark:text-indigo-400");
+            bonusLabel.classList.replace("text-zinc-500", "text-indigo-600");
+            bonusLabel.classList.replace("dark:text-zinc-400", "dark:text-indigo-400");
           }
         } else {
           if (wrapCon) wrapCon.classList.add("disabled-opacity");
           if (wrapWis) wrapWis.classList.add("disabled-opacity");
           if (bonusLabel) {
             bonusLabel.innerText = `51렙부터 개방`;
-            bonusLabel.classList.replace("text-indigo-600", "text-zinc-400");
-            bonusLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-500");
+            bonusLabel.classList.replace("text-indigo-600", "text-zinc-500");
+            bonusLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-400");
           }
         }
 
@@ -575,21 +583,21 @@
         if (conTotalLabel) {
           conTotalLabel.innerText = `총 ${totalCon}`;
           if (totalCon > state.con) {
-            conTotalLabel.classList.replace("text-zinc-400", "text-indigo-500");
-            conTotalLabel.classList.replace("dark:text-zinc-500", "dark:text-indigo-400");
+            conTotalLabel.classList.replace("text-zinc-500", "text-indigo-500");
+            conTotalLabel.classList.replace("dark:text-zinc-400", "dark:text-indigo-400");
           } else {
-            conTotalLabel.classList.replace("text-indigo-500", "text-zinc-400");
-            conTotalLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-500");
+            conTotalLabel.classList.replace("text-indigo-500", "text-zinc-500");
+            conTotalLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-400");
           }
         }
         if (wisTotalLabel) {
           wisTotalLabel.innerText = `총 ${totalWis}`;
           if (totalWis > state.wis) {
-            wisTotalLabel.classList.replace("text-zinc-400", "text-indigo-500");
-            wisTotalLabel.classList.replace("dark:text-zinc-500", "dark:text-indigo-400");
+            wisTotalLabel.classList.replace("text-zinc-500", "text-indigo-500");
+            wisTotalLabel.classList.replace("dark:text-zinc-400", "dark:text-indigo-400");
           } else {
-            wisTotalLabel.classList.replace("text-indigo-500", "text-zinc-400");
-            wisTotalLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-500");
+            wisTotalLabel.classList.replace("text-indigo-500", "text-zinc-500");
+            wisTotalLabel.classList.replace("dark:text-indigo-400", "dark:text-zinc-400");
           }
         }
 
@@ -615,7 +623,6 @@
         return con <= threshold ? base : base + (con - threshold);
       }
       function getHpGrowth(classId, con) {
-        // 각 클래스별 [기본 최소치, 기본 최대치] (CON 15 이하 기준)
         const growthData = {
           knight: [6, 12],
           elf: [5, 10],
@@ -626,8 +633,6 @@
         if (!growthData[classId]) return { min: 0, max: 0, avg: 0 };
 
         const [baseMin, baseMax] = growthData[classId];
-
-        // CON 15 이하는 보너스 0, 16부터는 상한선(Cap) 없이 CON 1당 무한 증가
         const bonus = Math.max(0, con - 15);
 
         const finalMin = baseMin + bonus;
@@ -643,28 +648,24 @@
       function getMpGrowth(classId, wis) {
         switch (classId) {
           case "knight":
-            // 기사: WIS 9 이하는 고정, 10 이상부터 5단위(13, 18, 23...)로 최소치 증가, 최대치는 항상 최소치+3
             if (wis <= 9) return { min: 0, max: 2, avg: 1 };
             const kWis = Math.max(10, wis);
             const kMin = Math.floor((kWis - 8) / 5);
             return { min: kMin, max: kMin + 3, avg: kMin + 1.5 };
 
           case "elf":
-            // 요정: WIS 11 이하는 고정, 12부터 5단위마다 2씩 상승하는 계단식 패턴 적용
             if (wis <= 11) return { min: 3, max: 4, avg: 3.5 };
             const eMin = Math.floor((wis * 2 - 9) / 5);
             const eMax = Math.floor((wis * 2) / 5) + 2;
             return { min: eMin, max: eMax, avg: (eMin + eMax) / 2 };
 
           case "wizard":
-            // 마법사: WIS 2 오를 때마다 정확히 최소/최대치가 1씩 규칙적으로 상승
             const wWis = Math.max(12, wis);
             const wMin = Math.floor((wWis - 3) / 2);
             const wMax = Math.floor(wWis / 2) + 3;
             return { min: wMin, max: wMax, avg: (wMin + wMax) / 2 };
 
           case "royal":
-            // 군주: WIS 11 이하는 고정, 이후 4주기 패턴으로 교차 상승
             const rWis = Math.max(11, wis);
             const rMin = Math.floor((rWis + 1) / 4) - 1;
             const rMax = Math.floor(rWis / 4) + 2;
@@ -770,7 +771,7 @@
                                 <i data-lucide="${icon}" class="w-5 h-5"></i> ${title} 분석
                             </h3>
                             <div class="mt-1 flex items-center gap-1.5 text-[11px]">
-                                <span class="text-zinc-500 dark:text-zinc-400 font-medium">전체 유저 상위</span>
+                                <span class="text-zinc-600 dark:text-zinc-400 font-medium">전체 유저 상위</span>
                                 <span class="text-[13px] font-black ${gradeInfo.color}">${percent.toFixed(1)}%</span>
                             </div>
                         </div>
@@ -784,10 +785,10 @@
                             </p>
                             ${state.isClassicMode ? `<span class="text-[9px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 shrink-0">클래식 소급됨</span>` : ""}
                         </div>
-                        <div class="text-[10.5px] font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 mb-3 flex justify-between items-center">
+                        <div class="text-[10.5px] font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 mb-3 flex justify-between items-center">
                             <span>현재 스탯 기준 1업당 상승량</span>
                             <span class="font-mono font-bold text-zinc-700 dark:text-zinc-300">
-                                ${growth.min}~${growth.max} <span class="text-zinc-400 dark:text-zinc-500 font-normal text-[9px]">(평균 ${Math.round(growth.avg * 10) / 10})</span>
+                                ${growth.min}~${growth.max} <span class="text-zinc-500 dark:text-zinc-500 font-normal text-[9px]">(평균 ${Math.round(growth.avg * 10) / 10})</span>
                             </span>
                         </div>
                         <div class="relative w-full h-2.5 flex items-center mb-3">
@@ -799,7 +800,7 @@
                                 <div class="w-1.5 h-1.5 rounded-full ${gradeInfo.bg}"></div>
                             </div>
                         </div>
-                        <div class="flex justify-between text-xs font-mono text-zinc-500 dark:text-zinc-400 mt-2 px-1">
+                        <div class="flex justify-between text-xs font-mono text-zinc-600 dark:text-zinc-400 mt-2 px-1">
                             <span class="flex flex-col items-start font-medium">최악 <strong class="text-sm text-zinc-800 dark:text-zinc-200 mt-0.5">${min}</strong></span>
                             <span class="flex flex-col items-center font-medium">평균 <strong class="text-sm text-zinc-800 dark:text-zinc-200 mt-0.5">${Math.round(avg * 10) / 10}</strong></span>
                             <span class="flex flex-col items-end font-medium">최고 <strong class="text-sm text-zinc-800 dark:text-zinc-200 mt-0.5">${max}</strong></span>
@@ -811,7 +812,7 @@
         resultArea.innerHTML = `
                 ${createCard("체력(HP)", "heart", "hp", hpPercent, hpGrade, minHp, avgHp, maxHp, 0, currentHpGrowth)}
                 ${createCard("마나(MP)", "droplets", "mp", mpPercent, mpGrade, minMp, avgMp, maxMp, 1, currentMpGrowth)}
-                <p class="animate-fade-in-up text-xs text-center text-zinc-400 dark:text-zinc-500 mt-2 font-medium flex items-center justify-center gap-1.5" style="animation-delay: 0.3s">
+                <p class="animate-fade-in-up text-xs text-center text-zinc-500 dark:text-zinc-500 mt-2 font-medium flex items-center justify-center gap-1.5" style="animation-delay: 0.3s">
                     <i data-lucide="info" class="w-4 h-4"></i> 결과 마커가 우측(100%)에 가까울수록 축캐를 의미합니다.
                 </p>
             `;
