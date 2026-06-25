@@ -170,7 +170,6 @@
                     const btn = node.querySelector("[data-open]");
                     if (btn) {
                       btn.setAttribute("data-open", "true");
-                      // 🟢 [수정] 아이콘 텍스트 변경
                       btn.innerHTML = `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>`;
                       const children = node.querySelector(".tree-children");
                       if (children) children.classList.remove("hidden");
@@ -187,7 +186,6 @@
         }
       });
 
-      // 🔴 [삭제] 하드코딩되었던 icons SVG 문자열 객체 전체 삭제
       let state = {
         isDarkMode: true,
         searchTerm: "",
@@ -196,7 +194,8 @@
         unitPrices: {},
         previousCategory: "weapon",
         buyMode: {},
-        craftQuantity: 1,
+        craftQuantity: "1", // 🟢 빈 문자열 입력 허용을 위해 문자열 초기화
+        adenaRate: localStorage.getItem("lcraft_adena_rate") || "", // 🟢 로컬 스토리지 뎅가격 연동
         favorites: JSON.parse(localStorage.getItem("lcraft_favorites") || "[]"),
         favoritesOnly: false,
       };
@@ -336,7 +335,6 @@
             const currentBadgeClass = badgeThemes[currentThemeIndex];
             const displayName = getHighlightedName(id, item.name, state.searchTerm);
 
-            // 🟢 [수정] 사이드바 내 아이콘 Lucide로 교체
             return `
           <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
@@ -353,7 +351,7 @@
           .join("");
 
         setTimeout(() => checkSidebarScroll(container), 50);
-        lucide.createIcons(); // 🟢 랜더링 완료 후 아이콘 적용
+        lucide.createIcons();
       }
 
       function toggleBuyMode(itemId, e) {
@@ -373,7 +371,6 @@
         const shouldAutoExpand = isMatchedKeyword && hasChildren && !isBuyMode;
 
         const displayDataOpen = shouldAutoExpand ? "true" : "false";
-        // 🟢 [수정] Lucide chevron 아이콘으로 교체
         const displayIcon = shouldAutoExpand ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
         const displayHiddenClass = shouldAutoExpand ? "" : "hidden";
 
@@ -585,7 +582,7 @@
         </div>
       `;
 
-        lucide.createIcons(); // 🟢 렌더링 완료 후 아이콘 적용
+        lucide.createIcons();
       }
 
       function renderRightPanel() {
@@ -598,7 +595,9 @@
           return;
         }
 
-        const q = state.craftQuantity || 1;
+        // 🟢 계산 로직에서는 비어있을 경우 최소 1개로 처리
+        const q = (state.craftQuantity === "" || state.craftQuantity === "0") ? 1 : Number(state.craftQuantity);
+        
         const ceilMaterials = calculateFinalMaterials(state.selectedItemId, q, true, true);
         const fracMaterials = calculateFinalMaterials(state.selectedItemId, q, true, false);
 
@@ -682,6 +681,11 @@
         `;
         });
 
+        // 🟢 거래소 판매수수료 (5.5%)를 감안한 손익분기 역산가 및 현금 환산 로직 추가
+        const breakEvenPrice = Math.ceil(totalCost / 0.945);
+        const currentAdenaRate = Number(state.adenaRate) || 0;
+        const realCashValue = Math.floor(totalCost * (currentAdenaRate / 10000));
+
         container.innerHTML = `
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-950 shrink-0">
           <i data-lucide="calculator" class="w-4 h-4 text-amber-500"></i>
@@ -691,20 +695,44 @@
           ${matHTML}
         </div>
         <div class="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-50 shrink-0 mt-auto sticky bottom-0 flex flex-col gap-2">
+          
           <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
             <span class="text-xs font-bold text-zinc-500">목표 제작 갯수</span>
-            <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${q}" oninput="handleCraftQuantityInput(this)"/>
+            <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${state.craftQuantity}" oninput="handleCraftQuantityInput(this)"/>
           </div>
+
+          <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
+            <span class="text-xs font-bold text-zinc-500">1만 아데나 당 시세(원)</span>
+            <input type="text" inputmode="numeric" id="adena-rate-input" class="w-20 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 text-right text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 outline-none" placeholder="시세 입력" value="${state.adenaRate}" oninput="handleAdenaRateInput(this)"/>
+          </div>
+
           <div class="flex justify-between items-end pt-1">
-            <span class="text-xs font-bold text-zinc-500" id="total-cost-title">${q}개 총 제작 비용</span>
+            <span class="text-xs font-bold text-zinc-500" id="total-cost-title">${q}개 순수 제작 비용</span>
             <div class="text-right">
               <span id="total-cost-display" class="text-xl font-black text-amber-600 dark:text-amber-500">${Math.round(totalCost).toLocaleString()}</span>
               <span class="text-xs font-medium text-zinc-500 ml-1">아데나</span>
             </div>
           </div>
+
+          <div class="flex justify-between items-end pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span class="text-[11px] font-bold text-zinc-500 flex items-center gap-1"><i data-lucide="shopping-bag" class="w-3 h-3 text-fuchsia-500"></i> 거래소 손익분기 (수수료 5.5% 적용)</span>
+            <div class="text-right">
+              <span class="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400">${breakEvenPrice.toLocaleString()}</span>
+              <span class="text-[10px] font-medium text-zinc-500 ml-1">아데나</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-end pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+            <span class="text-[11px] font-bold text-zinc-500 flex items-center gap-1"><i data-lucide="banknote" class="w-3 h-3 text-emerald-500"></i> 실제 현금 가치</span>
+            <div class="text-right">
+              <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">${realCashValue.toLocaleString()}</span>
+              <span class="text-[10px] font-medium text-zinc-500 ml-1">원</span>
+            </div>
+          </div>
+
         </div>
       `;
-        lucide.createIcons(); // 🟢 랜더링 완료 후 아이콘 적용
+        lucide.createIcons();
       }
 
       function getMaterialBreakdown(itemId, targetMatId, requiredCount = 1, isRoot = true, useCeil = false) {
@@ -745,7 +773,7 @@
 
       function selectItem(itemId) {
         state.selectedItemId = itemId;
-        state.craftQuantity = 1;
+        state.craftQuantity = "1"; // 🟢 아이템 변경 시 초기화
         renderSidebar();
         renderMain();
         renderRightPanel();
@@ -774,39 +802,20 @@
         state.unitPrices[id] = rawValue === "" ? 0 : Number(rawValue);
         inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
 
-        const q = state.craftQuantity || 1;
-        const fracMaterials = calculateFinalMaterials(state.selectedItemId, q, true, false);
-        let newTotal = 0;
-
-        Object.entries(fracMaterials).forEach(([matId, fracCount]) => {
-          const isAdena = matId === "아데나" || (items_db[matId] && items_db[matId].name === "아데나");
-          const price = isAdena ? 1 : state.unitPrices[matId] || 0;
-
-          const fixedCount = Number(fracCount.toFixed(2));
-          const displayCount = fixedCount.toLocaleString();
-          const matTotal = fixedCount * price;
-          newTotal += matTotal;
-
-          const matTotalElem = document.getElementById(`mat-total-${matId}`);
-          if (matTotalElem) matTotalElem.textContent = Math.round(matTotal).toLocaleString();
-
-          const matCalcDescElem = document.getElementById(`mat-calc-desc-${matId}`);
-          if (matCalcDescElem) {
-            if (!isAdena && price > 0) {
-              matCalcDescElem.textContent = `1개 단가 ${price.toLocaleString()} × 실제 소모 비율 ${displayCount}개`;
-            } else {
-              matCalcDescElem.textContent = "";
-            }
-          }
-        });
-        document.getElementById("total-cost-display").textContent = Math.round(newTotal).toLocaleString();
+        renderRightPanel(); // 🟢 뎅가격 등이 연동되므로 우측 패널 전체 리렌더링 방식으로 통합
+        
+        const newInput = document.querySelector(`input[oninput*="handlePriceInput('${id}'"]`);
+        if (newInput) {
+          newInput.focus();
+          const valLen = newInput.value.length;
+          newInput.setSelectionRange(valLen, valLen);
+        }
       }
 
+      // 🟢 수정된 수량 입력 함수 (입력칸 비우기 지원)
       function handleCraftQuantityInput(inputElem) {
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
-        if (rawValue === "0") rawValue = "1";
-        state.craftQuantity = rawValue === "" ? 1 : Number(rawValue);
-        inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
+        state.craftQuantity = rawValue;
 
         renderRightPanel();
 
@@ -818,11 +827,26 @@
         }
       }
 
+      // 🟢 신규 추가된 뎅가격 입력 함수
+      function handleAdenaRateInput(inputElem) {
+        let rawValue = inputElem.value.replace(/[^0-9]/g, "");
+        state.adenaRate = rawValue;
+        localStorage.setItem("lcraft_adena_rate", rawValue);
+
+        renderRightPanel();
+
+        const newInput = document.getElementById("adena-rate-input");
+        if (newInput) {
+          newInput.focus();
+          const valLen = newInput.value.length;
+          newInput.setSelectionRange(valLen, valLen);
+        }
+      }
+
       function toggleTreeNode(btn) {
         if (!btn) return;
         const isOpen = btn.getAttribute("data-open") === "true";
         btn.setAttribute("data-open", (!isOpen).toString());
-        // 🟢 [수정] 열림/닫힘 상태에 따른 Lucide 아이콘 교체
         btn.innerHTML = !isOpen ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
         lucide.createIcons();
 
@@ -840,7 +864,6 @@
           const isOpen = btn.getAttribute("data-open") === "true";
           if ((expand && !isOpen) || (!expand && isOpen)) {
             btn.setAttribute("data-open", expand.toString());
-            // 🟢 [수정] 전체 열림/닫힘 상태에 따른 Lucide 아이콘 교체
             btn.innerHTML = expand ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
             const childrenContainer = btn.closest(".recipe-node").querySelector(".tree-children");
             if (childrenContainer) {
