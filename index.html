@@ -18,26 +18,38 @@
       })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+    </style>
     <script>
-      tailwind.config = { darkMode: "class" };
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+          },
+        },
+      };
     </script>
   </head>
-  <body class="h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 overflow-hidden">
-    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex flex-wrap items-center justify-between shadow-sm shrink-0 transition-colors duration-300 z-50 gap-3">
-      <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2 shrink-0">리니지 툴즈</h1>
+  <body class="h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 overflow-hidden font-sans">
+    <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm shrink-0 transition-colors duration-300 z-50">
+      <div class="max-w-[1400px] mx-auto w-full px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2 shrink-0"><i data-lucide="sword" class="w-5 h-5 text-indigo-500"></i> 리니지 툴즈</h1>
 
-      <div class="flex items-center gap-3 sm:gap-4 ml-auto">
-        <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors shrink-0">
-          <span id="theme-icon-container">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
-          </span>
-        </button>
+        <div class="flex items-center gap-3 sm:gap-4 ml-auto">
+          <button onclick="toggleGlobalTheme()" class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors shrink-0">
+            <span id="theme-icon-container" class="flex items-center justify-center w-4 h-4"></span>
+          </button>
 
-        <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-0.5 overflow-x-auto no-scrollbar">
-          <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">축/저주</button>
-          <button onclick="switchTab('info')" id="tab-btn-info" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">아이템</button>
-          <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작</button>
-          <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크</button>
+          <div class="flex bg-zinc-100 dark:bg-zinc-950 p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner gap-0.5 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('stat')" id="tab-btn-stat" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">축/저주</button>
+            <button onclick="switchTab('info')" id="tab-btn-info" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">아이템</button>
+            <button onclick="switchTab('craft')" id="tab-btn-craft" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">제작</button>
+            <button onclick="switchTab('mark')" id="tab-btn-mark" class="px-2.5 py-1.5 text-[11px] sm:text-sm font-bold rounded transition-all whitespace-nowrap text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200">혈마크</button>
+          </div>
         </div>
       </div>
     </header>
@@ -63,16 +75,15 @@
         const html = document.documentElement;
         const iconContainer = document.getElementById("theme-icon-container");
 
-        const sunSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
-        const moonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
-
+        // 🟢 [수정] Lucide 렌더링용 태그로 교체
         if (isGlobalDark) {
           html.classList.add("dark");
-          iconContainer.innerHTML = sunSvg;
+          iconContainer.innerHTML = `<i data-lucide="sun" class="w-4 h-4 text-amber-500"></i>`;
         } else {
           html.classList.remove("dark");
-          iconContainer.innerHTML = moonSvg;
+          iconContainer.innerHTML = `<i data-lucide="moon" class="w-4 h-4 text-indigo-500"></i>`;
         }
+        lucide.createIcons();
       }
 
       function broadcastTheme() {
@@ -120,6 +131,7 @@
         switchTab(savedTab);
 
         setTimeout(broadcastTheme, 800);
+        lucide.createIcons(); // 초기 아이콘 렌더링
       });
 
       window.addEventListener("message", (e) => {

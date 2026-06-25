@@ -6,8 +6,18 @@
     <title>L-Crafting Guide</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
     <script>
-      tailwind.config = { darkMode: "class" };
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+          },
+        },
+      };
       (function () {
         try {
           if (localStorage.getItem("lineageGlobalTheme") === "light") {
@@ -22,6 +32,8 @@
     <script src="../js/data.js"></script>
 
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -48,41 +60,43 @@
       }
     </style>
   </head>
-  <body class="transition-colors duration-300 dark bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200" id="body-root">
+  <body class="transition-colors duration-300 dark bg-zinc-50 dark:bg-zinc-950 text-zinc-800 dark:text-zinc-200 font-sans" id="body-root">
     <div id="loading-overlay" class="fixed inset-0 z-[200] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center transition-opacity duration-500">
       <div class="relative w-16 h-16 flex items-center justify-center mb-5">
         <div class="absolute inset-0 border-4 border-indigo-200 dark:border-indigo-900/50 rounded-full"></div>
         <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6 text-indigo-500 animate-pulse">
-          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-          <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
-        </svg>
+        <i data-lucide="database" class="w-6 h-6 text-indigo-500 animate-pulse"></i>
       </div>
       <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400 animate-pulse">데이터베이스 동기화 중...</span>
     </div>
 
-    <div class="lg:h-[100dvh] min-h-screen flex flex-col font-sans lg:overflow-hidden">
-      <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex flex-col z-10 transition-colors duration-300">
-        <div class="min-h-[48px] py-2 px-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex-1 w-full flex items-center px-3 py-1.5 bg-zinc-100 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-700 rounded focus-within:border-amber-500 transition-colors">
-            <span id="icon-search" class="text-zinc-400 dark:text-zinc-500 mr-2"></span>
-            <input type="text" id="search-input" placeholder="아이템/재료 검색" class="bg-transparent border-none outline-none w-full text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600" />
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <label class="flex items-center cursor-pointer group" title="즐겨찾기 보기">
-              <input type="checkbox" id="toggle-favorites" class="hidden" onchange="toggleFavoritesOnly(this)" />
-              <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-amber-50 dark:group-hover:bg-amber-500/10 transition-colors border border-zinc-200 dark:border-zinc-700 group-hover:border-amber-200 dark:group-hover:border-amber-500/30">
-                <span id="icon-star-filter" class="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors block"></span>
+    <div class="lg:h-[100dvh] min-h-screen flex flex-col lg:overflow-hidden">
+      <header class="bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex flex-col z-10 transition-colors duration-300">
+        <div class="max-w-[1400px] mx-auto w-full">
+          <div class="px-4 py-3 flex items-center gap-3">
+            <div class="flex-1 flex items-center px-4 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-inner focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500/30 transition-colors">
+              <i data-lucide="search" class="w-5 h-5 text-zinc-400 dark:text-zinc-500 mr-2 shrink-0"></i>
+              <input type="text" id="search-input" placeholder="아이템/재료 검색" class="bg-transparent border-none outline-none w-full text-sm font-medium text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600" autocomplete="off" />
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl">
+                <i data-lucide="layout-grid" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 block"></i>
+                <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">검색결과 <strong id="result-count" class="text-indigo-600 dark:text-indigo-400 text-sm ml-0.5">0</strong>건</span>
               </div>
-            </label>
-            <span class="text-xs text-zinc-500" id="result-count">결과: 0건</span>
+              <label class="flex items-center cursor-pointer group" title="즐겨찾기 보기">
+                <input type="checkbox" id="toggle-favorites" class="hidden" onchange="toggleFavoritesOnly(this)" />
+                <div class="w-9 h-9 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 group-hover:border-amber-500 transition-colors cursor-pointer">
+                  <i data-lucide="star" id="icon-star-filter" class="w-4 h-4 text-zinc-400 group-hover:text-amber-500 transition-colors block"></i>
+                </div>
+              </label>
+            </div>
           </div>
+          <div id="category-tabs" class="px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
         </div>
-        <div id="category-tabs" class="px-4 py-2 border-t border-zinc-100 dark:border-zinc-800 flex gap-2 overflow-x-auto no-scrollbar"></div>
       </header>
 
-      <div class="flex-1 flex flex-col lg:flex-row h-auto lg:h-full lg:overflow-hidden">
+      <div class="flex-1 w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row h-auto lg:h-full lg:overflow-hidden bg-white dark:bg-zinc-950 lg:border-x border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
         <aside id="left-panel" class="relative w-full lg:w-[240px] h-[35vh] lg:h-full flex flex-col bg-white dark:bg-zinc-900/50 border-b-4 lg:border-b-0 border-zinc-200 dark:border-zinc-800 shrink-0 overflow-hidden transition-colors duration-300">
           <div id="sidebar-list" class="flex-1 custom-scrollbar p-2 flex flex-col gap-1 overflow-y-auto" onscroll="checkSidebarScroll(this)"></div>
           <div id="scroll-indicator" class="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-zinc-200 dark:from-zinc-900 to-transparent flex items-end justify-center lg:hidden transition-opacity duration-300 opacity-0">
@@ -105,7 +119,6 @@
     </div>
 
     <script>
-      // 🟢 [수정] 수신 메시지에 따른 부분 교체 렌더링 로직 적용
       window.addEventListener("message", (event) => {
         if (event.data.type === "THEME_CHANGE") {
           const html = document.documentElement;
@@ -130,7 +143,6 @@
             const changedIds = event.data.changedIds || [];
             if (changedIds.length === 0) return;
 
-            // 1. 사이드바 항목만 부분 갱신
             changedIds.forEach((id) => {
               const sidebarItem = document.querySelector(`#sidebar-list [data-item-id="${id}"]`);
               if (sidebarItem) {
@@ -144,54 +156,38 @@
               }
             });
 
-            // 2. 입력 중이 아닐 때만 메인 화면 보존 갱신
             const isTyping = document.activeElement && document.activeElement.tagName === "INPUT";
             if (!isTyping) {
               if (changedIds.includes(state.selectedItemId)) {
-                // 현재 열린 트리 백업
                 const openNodes = Array.from(document.querySelectorAll('#main-content [data-open="true"]')).map((el) => el.closest(".recipe-node").querySelector(".font-medium")?.textContent);
 
                 renderMain();
                 renderRightPanel();
 
-                // 트리 복구
                 document.querySelectorAll("#main-content .recipe-node").forEach((node) => {
                   const name = node.querySelector(".font-medium")?.textContent;
                   if (openNodes.includes(name)) {
                     const btn = node.querySelector("[data-open]");
                     if (btn) {
                       btn.setAttribute("data-open", "true");
-                      btn.innerHTML = icons.chevronDown;
+                      // 🟢 [수정] 아이콘 텍스트 변경
+                      btn.innerHTML = `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>`;
                       const children = node.querySelector(".tree-children");
                       if (children) children.classList.remove("hidden");
                     }
                   }
                 });
+                lucide.createIcons();
               } else {
                 renderRightPanel();
+                lucide.createIcons();
               }
             }
           }
         }
       });
 
-      const icons = {
-        search: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
-        chevronRight: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`,
-        chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`,
-        user: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
-        mapPin: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
-        calculator: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>`,
-        shield: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`,
-        cart: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
-        hammer: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16 4.6V3.86a3.18 3.18 0 0 0-.93-2.25L13.82.36l-4.26 4.26"/><path d="m7.44 10.2 4.14-4.14"/></svg>`,
-        refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`,
-        star: `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-      };
-
-      document.getElementById("icon-search").innerHTML = icons.search;
-      document.getElementById("icon-star-filter").innerHTML = icons.star;
-
+      // 🔴 [삭제] 하드코딩되었던 icons SVG 문자열 객체 전체 삭제
       let state = {
         isDarkMode: true,
         searchTerm: "",
@@ -222,7 +218,6 @@
 
         const finalMats = {};
         const yieldAmount = recipe.yield || 1;
-
         const craftTimes = useCeil ? Math.ceil(requiredCount / yieldAmount) : requiredCount / yieldAmount;
 
         for (const mat of recipe.materials) {
@@ -238,7 +233,6 @@
         if (item.image) {
           const cleanFileName = item.image.replace(/^(\.\.\/img\/)/, "").trim();
           const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/${cleanFileName}`;
-
           return `<img src="${imgPath}" alt="${item.name}" class="${sizeClass} object-cover rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" />`;
         }
         return `<div class="${sizeClass} bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded flex items-center justify-center">${item.icon || ""}</div>`;
@@ -259,9 +253,7 @@
         const list = Object.keys(items_db).filter((id) => {
           if (!recipes_db[id]) return false;
           const item = items_db[id];
-
           if (state.favoritesOnly && !state.favorites.includes(id)) return false;
-
           if (state.searchTerm) {
             if (!checkSearchMatch(id, state.searchTerm)) return false;
           } else {
@@ -315,11 +307,9 @@
         }
       }
 
-      // 🟢 [수정] 식별자(data-item-id) 추가
-      // 🟢 [수정] renderSidebar 내부에 즐겨찾기 별(Star) 표시 아이콘 추가
       function renderSidebar() {
         const filteredList = getFilteredList();
-        document.getElementById("result-count").textContent = `결과: ${filteredList.length}건`;
+        document.getElementById("result-count").innerHTML = filteredList.length.toLocaleString();
 
         const container = document.getElementById("sidebar-list");
         container.classList.remove("gap-1");
@@ -327,7 +317,6 @@
 
         let currentThemeIndex = 1;
         let lastNpcName = null;
-
         const badgeThemes = ["bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600/80 dark:text-indigo-400/80 border-indigo-100 dark:border-indigo-800/50", "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600/80 dark:text-emerald-400/80 border-emerald-100 dark:border-emerald-800/50"];
 
         container.innerHTML = filteredList
@@ -335,8 +324,8 @@
             const item = items_db[id];
             const recipe = recipes_db[id];
             const isSelected = id === state.selectedItemId;
-            // 🟢 즐겨찾기 포함 여부 확인
             const isFav = state.favorites.includes(id);
+            const favIconColor = isFav ? "text-amber-500 fill-amber-500" : "text-zinc-300 dark:text-zinc-600 hover:text-amber-500";
             const classes = isSelected ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700 shadow-sm" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-zinc-700 dark:text-zinc-300 border-transparent";
 
             const currentNpc = recipe && recipe.npc ? recipe.npc : "";
@@ -345,17 +334,18 @@
               lastNpcName = currentNpc;
             }
             const currentBadgeClass = badgeThemes[currentThemeIndex];
-
             const displayName = getHighlightedName(id, item.name, state.searchTerm);
 
-            // 🟢 [수정] 아이템명 앞에 별 아이콘 렌더링 포함
+            // 🟢 [수정] 사이드바 내 아이콘 Lucide로 교체
             return `
           <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
-            <span class="text-sm font-medium truncate flex-1 leading-relaxed flex items-center gap-1.5">
-              ${isFav ? `<span class="text-amber-500 fill-amber-500 shrink-0 w-3 h-3">${icons.star}</span>` : ""}
-              ${displayName}
-            </span>
+            <div class="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+              <button onclick="toggleFavorite('${id}', event)" class="shrink-0 w-4 h-4 flex items-center justify-center outline-none ${favIconColor} transition-colors">
+                <i data-lucide="star" class="w-full h-full"></i>
+              </button>
+              <span class="text-sm font-medium truncate leading-relaxed">${displayName}</span>
+            </div>
             ${recipe && recipe.npc ? `<span class="text-[10px] font-bold shrink-0 truncate max-w-[70px] px-1.5 py-0.5 rounded border ${currentBadgeClass}">${recipe.npc}</span>` : ""}
           </div>
         `;
@@ -363,6 +353,7 @@
           .join("");
 
         setTimeout(() => checkSidebarScroll(container), 50);
+        lucide.createIcons(); // 🟢 랜더링 완료 후 아이콘 적용
       }
 
       function toggleBuyMode(itemId, e) {
@@ -382,7 +373,8 @@
         const shouldAutoExpand = isMatchedKeyword && hasChildren && !isBuyMode;
 
         const displayDataOpen = shouldAutoExpand ? "true" : "false";
-        const displayIcon = shouldAutoExpand ? icons.chevronDown : icons.chevronRight;
+        // 🟢 [수정] Lucide chevron 아이콘으로 교체
+        const displayIcon = shouldAutoExpand ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
         const displayHiddenClass = shouldAutoExpand ? "" : "hidden";
 
         const displayName = getHighlightedName(itemId, item.name, state.searchTerm);
@@ -398,7 +390,7 @@
           ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-800/80 shadow-sm"
           : "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-800/80 shadow-sm";
 
-        const buttonText = isBuyMode ? `${icons.hammer} 직접 제작` : `${icons.cart} 직접 구매`;
+        const buttonText = isBuyMode ? `<i data-lucide="hammer" class="w-3 h-3"></i> 직접 제작` : `<i data-lucide="shopping-cart" class="w-3 h-3"></i> 직접 구매`;
 
         let html = `<div class="recipe-node w-full text-sm font-sans">`;
 
@@ -478,7 +470,7 @@
           statsHTML = `
           <div class="mb-8 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-900/50">
             <div class="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
-              <span class="text-zinc-500">${icons.shield}</span>
+              <i data-lucide="shield" class="w-4 h-4 text-zinc-500"></i>
               <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">상세 스탯</span>
             </div>
             <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -533,7 +525,7 @@
           setEffectHTML = `
           <div class="mb-8 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-900/50">
             <div class="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-zinc-500"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m10 10 4 4"/><path d="m14 10-4 4"/></svg>
+              <i data-lucide="layers" class="w-4 h-4 text-zinc-500"></i>
               <span class="text-xs font-bold text-zinc-700 dark:text-zinc-300">세트 정보</span>
             </div>
             <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-4 text-sm items-center">
@@ -547,7 +539,6 @@
         const treeMaterials = recipe.materials || [];
         const treeHTML = treeMaterials.map((mat) => generateRecipeNodeHTML(mat.id, mat.count * 1)).join("");
 
-        // 🟢 [수정] h2 타이틀 영역 옆에 즐겨찾기 토글 버튼 추가
         container.innerHTML = `
         <div class="p-6 w-full">
           <div class="flex items-start gap-5 mb-8">
@@ -557,7 +548,7 @@
                 <h2 class="text-2xl font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                   ${displayMainName}
                   <button onclick="toggleFavorite('${state.selectedItemId}', event)" class="w-6 h-6 flex items-center justify-center outline-none ${favIconColor} transition-colors">
-                    ${icons.star}
+                    <i data-lucide="star" class="w-5 h-5"></i>
                   </button>
                 </h2>
                 <span class="text-xs px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded border border-zinc-200 dark:border-zinc-700 mb-1 shrink-0">
@@ -567,10 +558,10 @@
               </div>
               <div class="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-zinc-600 dark:text-zinc-400 mt-3">
                 <div class="flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/50 px-2.5 py-1.5 rounded text-indigo-700 dark:text-indigo-300 font-bold shadow-sm">
-                  <span class="text-indigo-500">${icons.user}</span> ${recipe.npc || "정보 없음"}
+                  <i data-lucide="user" class="w-3.5 h-3.5 text-indigo-500"></i> ${recipe.npc || "정보 없음"}
                 </div>
                 <div class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1.5 rounded text-emerald-700 dark:text-emerald-300 font-bold shadow-sm">
-                  <span class="text-emerald-500">${icons.mapPin}</span> ${recipe.location || "정보 없음"}
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-500"></i> ${recipe.location || "정보 없음"}
                 </div>
               </div>
             </div>
@@ -593,6 +584,8 @@
           </div>
         </div>
       `;
+
+        lucide.createIcons(); // 🟢 렌더링 완료 후 아이콘 적용
       }
 
       function renderRightPanel() {
@@ -643,7 +636,9 @@
           }
 
           const cardBorderClass = isBuyItem ? "border-amber-300 dark:border-amber-700/50 bg-amber-50/20 dark:bg-amber-900/10" : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950";
-          const badgeHTML = isBuyItem ? `<span class="ml-2 text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">${icons.cart} 구매</span>` : "";
+          const badgeHTML = isBuyItem
+            ? `<span class="ml-2 text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0"><i data-lucide="shopping-cart" class="w-3 h-3"></i> 구매</span>`
+            : "";
 
           matHTML += `
           <div class="p-3 rounded shadow-sm flex flex-col border ${cardBorderClass}">
@@ -664,7 +659,7 @@
                 ? `
             <div class="flex justify-end mt-2">
               <button onclick="toggleBuyMode('${id}')" class="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-amber-600 dark:text-zinc-400 dark:hover:text-amber-400 transition-colors px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700">
-                ${icons.refresh} 직접 제작으로 되돌리기
+                <i data-lucide="refresh-cw" class="w-3 h-3"></i> 직접 제작으로 되돌리기
               </button>
             </div>
             `
@@ -689,7 +684,7 @@
 
         container.innerHTML = `
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-950 shrink-0">
-          <span class="text-amber-500">${icons.calculator}</span>
+          <i data-lucide="calculator" class="w-4 h-4 text-amber-500"></i>
           <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">제작 필요 재료 및 단가</h3>
         </div>
         <div class="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
@@ -709,6 +704,7 @@
           </div>
         </div>
       `;
+        lucide.createIcons(); // 🟢 랜더링 완료 후 아이콘 적용
       }
 
       function getMaterialBreakdown(itemId, targetMatId, requiredCount = 1, isRoot = true, useCeil = false) {
@@ -826,7 +822,10 @@
         if (!btn) return;
         const isOpen = btn.getAttribute("data-open") === "true";
         btn.setAttribute("data-open", (!isOpen).toString());
-        btn.innerHTML = !isOpen ? icons.chevronDown : icons.chevronRight;
+        // 🟢 [수정] 열림/닫힘 상태에 따른 Lucide 아이콘 교체
+        btn.innerHTML = !isOpen ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
+        lucide.createIcons();
+
         const childrenContainer = btn.closest(".recipe-node").querySelector(".tree-children");
         if (childrenContainer) {
           if (!isOpen) childrenContainer.classList.remove("hidden");
@@ -841,7 +840,8 @@
           const isOpen = btn.getAttribute("data-open") === "true";
           if ((expand && !isOpen) || (!expand && isOpen)) {
             btn.setAttribute("data-open", expand.toString());
-            btn.innerHTML = expand ? icons.chevronDown : icons.chevronRight;
+            // 🟢 [수정] 전체 열림/닫힘 상태에 따른 Lucide 아이콘 교체
+            btn.innerHTML = expand ? `<i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>` : `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
             const childrenContainer = btn.closest(".recipe-node").querySelector(".tree-children");
             if (childrenContainer) {
               if (expand) childrenContainer.classList.remove("hidden");
@@ -849,6 +849,7 @@
             }
           }
         });
+        lucide.createIcons();
       }
 
       function initResizers() {

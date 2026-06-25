@@ -5,8 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>리니지 클래식 혈마크 제작 툴</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
-      tailwind.config = { darkMode: "class" };
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+          },
+        },
+      };
       (function () {
         try {
           if (localStorage.getItem("lineageGlobalTheme") === "light") {
@@ -17,14 +26,14 @@
         } catch (e) {}
       })();
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <link
-      href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300;500;700&family=Yeon+Sung&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Black+Han+Sans&family=Do+Hyeon&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300;500;700&family=Yeon+Sung&display=swap"
       rel="stylesheet" />
 
     <style>
       body {
-        font-family: "Noto Sans KR", sans-serif;
+        font-family: "Inter", sans-serif;
       }
       canvas {
         image-rendering: pixelated;
@@ -66,24 +75,24 @@
       }
     </style>
   </head>
-  <body class="min-h-screen lg:h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
-    <main class="flex-1 overflow-y-auto lg:overflow-hidden p-2 sm:p-4">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-full">
+  <body class="min-h-screen lg:h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
+    <main class="flex-1 overflow-y-auto lg:overflow-hidden p-2 sm:p-4 w-full">
+      <div class="max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-full">
         <div class="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col shadow-lg h-[300px] lg:h-full transition-colors duration-300">
           <div class="p-3 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950/50 flex justify-between items-center shrink-0 rounded-t-xl">
-            <h2 class="text-xs sm:text-sm font-bold"><i class="fa-solid fa-layer-group mr-1"></i> 레이어 관리</h2>
+            <h2 class="text-xs sm:text-sm font-bold flex items-center gap-1.5"><i data-lucide="layers" class="w-4 h-4"></i> 레이어 관리</h2>
           </div>
 
           <div class="p-2 sm:p-3 grid grid-cols-2 gap-2 bg-zinc-50 dark:bg-zinc-900/50 shrink-0">
             <button
               id="btnAddTextLayer"
               class="py-2 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded transition-colors border border-zinc-300 dark:border-zinc-700 flex flex-col items-center gap-1 shadow-sm">
-              <i class="fa-solid fa-font"></i> 텍스트 추가
+              <i data-lucide="type" class="w-4 h-4"></i> 텍스트 추가
             </button>
             <button
               id="btnAddImageLayer"
               class="py-2 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded transition-colors border border-zinc-300 dark:border-zinc-700 flex flex-col items-center gap-1 shadow-sm">
-              <i class="fa-solid fa-image"></i> 이미지 추가
+              <i data-lucide="image" class="w-4 h-4"></i> 이미지 추가
             </button>
           </div>
 
@@ -92,24 +101,24 @@
 
         <div class="lg:col-span-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex flex-col shadow-lg relative min-h-[400px] lg:h-full transition-colors duration-300">
           <div class="p-3 sm:p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-950/50 flex justify-between items-center shrink-0 rounded-t-xl">
-            <h2 class="text-xs sm:text-sm font-bold truncate">
-              <i class="fa-solid fa-sliders mr-1"></i> 속성 편집
-              <span id="propTitle" class="ml-2 text-zinc-500 dark:text-zinc-400 font-normal">선택된 레이어 없음</span>
+            <h2 class="text-xs sm:text-sm font-bold truncate flex items-center">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 mr-1.5"></i> 속성 편집
+              <span id="propTitle" class="ml-2 text-zinc-600 dark:text-zinc-400 font-normal">선택된 레이어 없음</span>
             </h2>
             <span id="propTypeBadge" class="hidden shrink-0 ml-2"></span>
           </div>
 
-          <div id="noLayerMessage" class="absolute inset-0 top-[50px] flex items-center justify-center text-zinc-500 text-sm z-10 bg-white/90 dark:bg-zinc-900/90 rounded-b-xl backdrop-blur-sm">레이어를 선택해주세요.</div>
+          <div id="noLayerMessage" class="absolute inset-0 top-[50px] flex items-center justify-center text-zinc-600 dark:text-zinc-400 text-sm z-10 bg-white/90 dark:bg-zinc-900/90 rounded-b-xl backdrop-blur-sm">레이어를 선택해주세요.</div>
 
           <div id="propertiesPanel" class="p-3 sm:p-5 overflow-y-auto hidden flex-col gap-5 flex-1">
             <div id="propTextGroup" class="flex flex-col gap-4 hidden">
               <div>
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">텍스트 내용</label>
-                <input type="text" id="propText" value="" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-2 text-sm text-zinc-900 dark:text-white focus:border-blue-500 focus:outline-none" placeholder="예: 전투, 혈" />
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">텍스트 내용</label>
+                <input type="text" id="propText" value="" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-2 text-sm text-zinc-900 dark:text-white focus:border-indigo-500 focus:outline-none" placeholder="예: 전투, 혈" />
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">글꼴 (Font)</label>
+                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">글꼴 (Font)</label>
                   <select id="propFontFamily" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none">
                     <optgroup label="고딕/스퀘어">
                       <option value="Noto Sans KR">노토 산스 (Noto Sans)</option>
@@ -138,7 +147,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">스타일</label>
+                  <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">스타일</label>
                   <div class="flex gap-2">
                     <select id="propFontWeight" class="w-1/2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none">
                       <option value="300">얇게</option>
@@ -155,10 +164,10 @@
               </div>
 
               <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800">
-                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-500 dark:text-zinc-400">색상 채우기</label>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-700 dark:text-zinc-300">색상 채우기</label>
                 <div class="flex items-center gap-3 mb-2 flex-wrap">
-                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="solid" checked class="text-blue-500" /> 단색 </label>
-                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="gradient" class="text-blue-500" /> 그라데이션 </label>
+                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="solid" checked class="text-indigo-500 accent-indigo-500" /> 단색 </label>
+                  <label class="text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer"> <input type="radio" name="colorType" value="gradient" class="text-indigo-500 accent-indigo-500" /> 그라데이션 </label>
                   <select id="propGradientDir" class="bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1 text-[11px] hidden">
                     <option value="vertical">위 ➔ 아래</option>
                     <option value="horizontal">왼쪽 ➔ 오른쪽</option>
@@ -166,16 +175,16 @@
                 </div>
                 <div class="flex gap-3">
                   <div class="flex-1">
-                    <span class="text-[10px] text-zinc-500 flex justify-between mb-1">
-                      <span>색상 1 <span class="text-zinc-400 dark:text-zinc-600 text-[9px]">(시작)</span></span>
-                      <span id="txtHexColor1" class="hex-display text-zinc-500 dark:text-zinc-400">#000000</span>
+                    <span class="text-[10px] text-zinc-600 dark:text-zinc-400 flex justify-between mb-1">
+                      <span>색상 1 <span class="text-zinc-500 dark:text-zinc-500 text-[9px]">(시작)</span></span>
+                      <span id="txtHexColor1" class="hex-display text-zinc-600 dark:text-zinc-400">#000000</span>
                     </span>
                     <input type="color" id="propColor1" value="#000000" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0" />
                   </div>
                   <div class="flex-1" id="color2Container" style="opacity: 0.3; pointer-events: none">
-                    <span class="text-[10px] text-zinc-500 flex justify-between mb-1">
-                      <span>색상 2 <span class="text-zinc-400 dark:text-zinc-600 text-[9px]">(끝)</span></span>
-                      <span id="txtHexColor2" class="hex-display text-zinc-500 dark:text-zinc-400">#AAAAAA</span>
+                    <span class="text-[10px] text-zinc-600 dark:text-zinc-400 flex justify-between mb-1">
+                      <span>색상 2 <span class="text-zinc-500 dark:text-zinc-500 text-[9px]">(끝)</span></span>
+                      <span id="txtHexColor2" class="hex-display text-zinc-600 dark:text-zinc-400">#AAAAAA</span>
                     </span>
                     <input type="color" id="propColor2" value="#aaaaaa" class="w-full h-8 rounded cursor-pointer bg-transparent border-0 p-0" />
                   </div>
@@ -185,10 +194,10 @@
 
             <div id="propImageGroup" class="flex flex-col gap-4 hidden">
               <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800">
-                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-500 dark:text-zinc-400">이미지 파일 (투명 PNG 권장)</label>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-zinc-700 dark:text-zinc-300">이미지 파일 (투명 PNG 권장)</label>
                 <input type="file" id="propImageUpload" accept="image/*" class="w-full bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-[10px] sm:text-xs cursor-pointer" />
-                <button id="btnRemoveBg" class="mt-2 w-full py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors hidden flex items-center justify-center gap-1 shadow-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> 단색 배경 자동 제거</button>
-                <p class="text-[9px] sm:text-[10px] text-zinc-500 mt-2">* 배경이 투명한 이미지를 올리거나, 배경이 완전 검정색(0,0,0)인 이미지를 올리면 자동으로 투명 처리됩니다.</p>
+                <button id="btnRemoveBg" class="mt-2 w-full py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors hidden flex items-center justify-center gap-1.5 shadow-sm"><i data-lucide="wand-2" class="w-4 h-4"></i> 단색 배경 자동 제거</button>
+                <p class="text-[9px] sm:text-[10px] text-zinc-600 dark:text-zinc-400 mt-2">* 배경이 투명한 이미지를 올리거나, 배경이 완전 검정색(0,0,0)인 이미지를 올리면 자동으로 투명 처리됩니다.</p>
               </div>
             </div>
 
@@ -196,62 +205,62 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div id="propFontSizeGroup">
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">글자 크기 (<span id="valFontSize">10</span>px)</label>
-                <input type="range" id="propFontSize" min="6" max="24" value="10" class="w-full accent-blue-500" />
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">글자 크기 (<span id="valFontSize">10</span>px)</label>
+                <input type="range" id="propFontSize" min="6" max="24" value="10" class="w-full accent-indigo-500" />
               </div>
               <div id="propImgScaleGroup" class="hidden">
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">이미지 배율 (<span id="valImgScale">100</span>%)</label>
-                <input type="range" id="propImgScale" min="10" max="200" value="100" class="w-full accent-green-500" />
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">이미지 배율 (<span id="valImgScale">100</span>%)</label>
+                <input type="range" id="propImgScale" min="10" max="200" value="100" class="w-full accent-emerald-500" />
               </div>
               <div id="propScaleXGroup">
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">가로 압축/장평 (<span id="valScaleX">100</span>%)</label>
-                <input type="range" id="propScaleX" min="30" max="150" value="100" class="w-full accent-blue-500" />
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">가로 압축/장평 (<span id="valScaleX">100</span>%)</label>
+                <input type="range" id="propScaleX" min="30" max="150" value="100" class="w-full accent-indigo-500" />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">X 위치 조정 (<span id="valOffsetX">0</span>)</label>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">X 위치 조정 (<span id="valOffsetX">0</span>)</label>
                 <input type="range" id="propOffsetX" min="-16" max="16" value="0" class="w-full accent-zinc-400" />
               </div>
               <div>
-                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-500 dark:text-zinc-400">Y 위치 조정 (<span id="valOffsetY">0</span>)</label>
+                <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">Y 위치 조정 (<span id="valOffsetY">0</span>)</label>
                 <input type="range" id="propOffsetY" min="-12" max="12" value="0" class="w-full accent-zinc-400" />
               </div>
             </div>
 
             <div class="bg-zinc-50 dark:bg-zinc-950/50 p-3 rounded border border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" id="propAddOutline" class="w-4 h-4 rounded border-zinc-400 dark:border-zinc-600 accent-blue-500" />
+                <input type="checkbox" id="propAddOutline" class="w-4 h-4 rounded border-zinc-400 dark:border-zinc-600 accent-indigo-500" />
                 <span class="text-[11px] sm:text-xs font-bold text-zinc-800 dark:text-zinc-200">1px 외곽선(Outline) 추가</span>
               </label>
               <div class="flex items-center gap-2 pl-6" id="outlineColorContainer" style="opacity: 0.3; pointer-events: none">
-                <span class="text-[10px] text-zinc-500 block w-14">외곽선 색상</span>
+                <span class="text-[10px] text-zinc-600 dark:text-zinc-400 block w-14">외곽선 색상</span>
                 <input type="color" id="propOutlineColor" value="#050505" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
-                <span id="txtHexOutline" class="hex-display text-[10px] text-zinc-500 ml-1">#050505</span>
+                <span id="txtHexOutline" class="hex-display text-[10px] text-zinc-600 dark:text-zinc-400 ml-1">#050505</span>
               </div>
             </div>
 
             <div class="bg-amber-50 dark:bg-[#2a231d] p-3 rounded border border-amber-200 dark:border-orange-900/50 shadow-inner">
               <label class="block text-[11px] sm:text-xs font-semibold mb-2 text-amber-700 dark:text-orange-200 flex justify-between items-center">
-                <span><i class="fa-solid fa-paintbrush"></i> 비파괴 직접 편집</span>
+                <span class="flex items-center gap-1.5"><i data-lucide="paintbrush" class="w-4 h-4"></i> 비파괴 직접 편집</span>
               </label>
 
               <div class="flex gap-2 mb-3">
-                <button id="btnToolBrush" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-amber-500 dark:bg-orange-600 text-white rounded shadow-sm"><i class="fa-solid fa-pen"></i> 펜</button>
-                <button id="btnToolEraser" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded shadow-sm"><i class="fa-solid fa-eraser"></i> 지우개</button>
+                <button id="btnToolBrush" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-amber-500 dark:bg-orange-600 text-white rounded shadow-sm flex items-center justify-center gap-1.5"><i data-lucide="pen" class="w-3.5 h-3.5"></i> 펜</button>
+                <button id="btnToolEraser" class="flex-1 py-1.5 text-[11px] sm:text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 rounded shadow-sm flex items-center justify-center gap-1.5"><i data-lucide="eraser" class="w-3.5 h-3.5"></i> 지우개</button>
               </div>
 
               <div class="mb-3">
                 <div class="flex items-center gap-2 mb-1.5">
-                  <span class="text-[10px] text-zinc-500 block w-10">현재 펜</span>
+                  <span class="text-[10px] text-zinc-600 dark:text-zinc-400 block w-10">현재 펜</span>
                   <input type="color" id="propDrawColor" value="#ff0000" class="w-10 h-6 rounded cursor-pointer bg-transparent border-0 p-0" />
                 </div>
                 <div class="flex flex-wrap gap-1" id="colorPalette"></div>
               </div>
 
               <div class="flex gap-2 mt-4 pt-3 border-t border-amber-200 dark:border-orange-900/30">
-                <button id="btnUndo" class="flex-1 py-1.5 text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 text-zinc-700 dark:text-white rounded transition-colors"><i class="fa-solid fa-rotate-left mr-1"></i> 취소</button>
+                <button id="btnUndo" class="flex-1 py-1.5 text-[11px] font-bold bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 text-zinc-700 dark:text-white rounded transition-colors flex items-center justify-center gap-1.5"><i data-lucide="undo" class="w-3.5 h-3.5"></i> 취소</button>
                 <button id="btnDrawClear" class="flex-1 py-1.5 text-[11px] font-bold bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 rounded transition-colors border border-red-200 dark:border-red-800">도트 비우기</button>
               </div>
             </div>
@@ -261,7 +270,7 @@
         <div class="lg:col-span-3 flex flex-col gap-4">
           <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center transition-colors duration-300">
             <h2 class="text-xs sm:text-sm font-bold w-full mb-3 sm:mb-4 flex justify-between items-center">
-              <span><i class="fa-solid fa-magnifying-glass mr-1"></i> 확대 캔버스</span>
+              <span class="flex items-center gap-1.5"><i data-lucide="zoom-in" class="w-4 h-4"></i> 확대 캔버스</span>
             </h2>
 
             <div class="relative bg-white rounded p-2 shadow-inner border border-zinc-300 dark:border-zinc-700" style="width: fit-content">
@@ -270,9 +279,9 @@
             </div>
 
             <div class="w-full mt-3 sm:mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-2">
-              <label class="flex items-center gap-2 cursor-pointer text-zinc-500 dark:text-zinc-400"> <input type="checkbox" id="showGrid" class="accent-blue-500" checked /> 격자 보기 </label>
+              <label class="flex items-center gap-2 cursor-pointer text-zinc-600 dark:text-zinc-400"> <input type="checkbox" id="showGrid" class="accent-indigo-500" checked /> 격자 보기 </label>
               <div class="flex items-center gap-1">
-                <span class="text-[10px] text-zinc-500">배경</span>
+                <span class="text-[10px] text-zinc-600 dark:text-zinc-400">배경</span>
                 <input type="color" id="bgColor" value="#ffffff" class="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0" />
               </div>
             </div>
@@ -280,9 +289,9 @@
 
           <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col items-center transition-colors duration-300">
             <h2 class="text-xs sm:text-sm font-bold w-full mb-3 flex justify-between items-center">
-              <span><i class="fa-solid fa-gamepad mr-1"></i> 인게임 적용 샷</span>
-              <button id="btnResetApp" class="text-[10px] sm:text-[11px] font-bold bg-red-50 hover:bg-red-100 dark:bg-red-900/40 dark:hover:bg-red-800 text-red-600 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800 transition-colors shadow-sm">
-                <i class="fa-solid fa-power-off"></i> 초기화
+              <span class="flex items-center gap-1.5"><i data-lucide="gamepad-2" class="w-4 h-4"></i> 인게임 적용 샷</span>
+              <button id="btnResetApp" class="text-[10px] sm:text-[11px] font-bold bg-red-50 hover:bg-red-100 dark:bg-red-900/40 dark:hover:bg-red-800 text-red-600 dark:text-red-200 px-2 py-1 rounded border border-red-200 dark:border-red-800 transition-colors shadow-sm flex items-center gap-1">
+                <i data-lucide="power" class="w-3 h-3"></i> 초기화
               </button>
             </h2>
 
@@ -309,16 +318,16 @@
                 <div class="absolute inset-[-4px] border border-dashed border-yellow-400/0 group-hover:border-yellow-400/80 rounded pointer-events-none transition-colors"></div>
               </div>
             </div>
-            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hidden sm:block">마우스로 마크를 드래그 해보세요</div>
-            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 sm:hidden">마크를 터치하여 움직여보세요</div>
+            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 hidden sm:block">마우스로 마크를 드래그 해보세요</div>
+            <div class="w-full text-center mt-2 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 sm:hidden">마크를 터치하여 움직여보세요</div>
           </div>
 
           <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-4 shadow-lg flex flex-col gap-3 transition-colors duration-300">
             <button id="btnDownload" class="w-full py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-lg shadow-md transition-all transform hover:scale-[1.02] flex justify-center items-center gap-2">
-              <i class="fa-solid fa-file-arrow-down"></i> mark.bmp 다운로드
+              <i data-lucide="download" class="w-4 h-4"></i> mark.bmp 다운로드
             </button>
-            <div class="mt-1 text-[9px] sm:text-[10px] text-zinc-500 p-2 bg-zinc-50 dark:bg-zinc-950/50 rounded border border-zinc-200 dark:border-zinc-800">
-              <strong class="text-zinc-600 dark:text-zinc-300">적용법:</strong> 리니지 폴더 이동 후 <code class="text-indigo-500 font-mono">/혈맹마크 mark.bmp</code> <br /><span class="text-emerald-500 dark:text-emerald-400">※ 다운로드 시 캔버스 배경은 검정(투명)으로 자동 변환됩니다.</span>
+            <div class="mt-1 text-[9px] sm:text-[10px] text-zinc-600 dark:text-zinc-400 p-2 bg-zinc-50 dark:bg-zinc-950/50 rounded border border-zinc-200 dark:border-zinc-800">
+              <strong class="text-zinc-700 dark:text-zinc-300">적용법:</strong> 리니지 폴더 이동 후 <code class="text-indigo-500 font-mono">/혈맹마크 mark.bmp</code> <br /><span class="text-emerald-500 dark:text-emerald-400">※ 다운로드 시 캔버스 배경은 검정(투명)으로 자동 변환됩니다.</span>
             </div>
           </div>
         </div>
@@ -327,10 +336,10 @@
 
     <div id="confirmModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden p-4">
       <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 w-full max-w-[320px] shadow-2xl">
-        <h3 class="font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-white"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> 초기화 확인</h3>
-        <p class="text-zinc-500 dark:text-zinc-400 text-xs mb-5">모든 작업 내용이 삭제되고 처음 상태로 돌아갑니다. 계속하시겠습니까?</p>
+        <h3 class="font-bold mb-3 flex items-center gap-2 text-zinc-900 dark:text-white"><i data-lucide="triangle-alert" class="w-5 h-5 text-yellow-500"></i> 초기화 확인</h3>
+        <p class="text-zinc-600 dark:text-zinc-400 text-xs mb-5">모든 작업 내용이 삭제되고 처음 상태로 돌아갑니다. 계속하시겠습니까?</p>
         <div class="flex gap-2 justify-end">
-          <button id="btnCancelReset" class="px-4 py-1.5 text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded transition-colors border border-zinc-200 dark:border-zinc-700">취소</button>
+          <button id="btnCancelReset" class="px-4 py-1.5 text-xs font-bold text-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:text-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded transition-colors border border-zinc-200 dark:border-zinc-700">취소</button>
           <button id="btnConfirmReset" class="px-4 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-500 rounded transition-colors border border-red-700">다시 시작</button>
         </div>
       </div>
@@ -571,10 +580,11 @@
           deleteLayer(id);
         };
 
+        // 🟢 [수정] JS를 통해 그려지는 레이어 리스트 텍스트의 대비도 함께 강화
         function renderLayerList() {
           layerListContainer.innerHTML = "";
           if (layers.length === 0) {
-            layerListContainer.innerHTML = '<div class="text-center text-xs text-zinc-500 py-4">레이어가 없습니다.</div>';
+            layerListContainer.innerHTML = '<div class="text-center text-xs text-zinc-600 dark:text-zinc-400 py-4">레이어가 없습니다.</div>';
             return;
           }
           const reversedLayers = [...layers].reverse();
@@ -588,22 +598,23 @@
               updatePropertiesPanel();
               if (window.innerWidth < 1024) propertiesPanel.parentElement.scrollIntoView({ behavior: "smooth", block: "start" });
             };
-            let iconStr = '<i class="fa-solid fa-font text-blue-500 w-4 text-center"></i>';
-            if (layer.type === "image") iconStr = '<i class="fa-solid fa-image text-green-500 w-4 text-center"></i>';
+            let iconStr = '<i data-lucide="type" class="text-blue-500 w-4 h-4 shrink-0"></i>';
+            if (layer.type === "image") iconStr = '<i data-lucide="image" class="text-green-500 w-4 h-4 shrink-0"></i>';
             item.innerHTML = `
                         <div class="flex items-center gap-2 flex-1 overflow-hidden">
-                            <button onclick="doToggleVisibility(${layer.id})" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white w-5 text-center shrink-0"><i class="fa-solid ${layer.visible ? "fa-eye" : "fa-eye-slash"}"></i></button>
+                            <button onclick="doToggleVisibility(${layer.id})" class="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white shrink-0"><i data-lucide="${layer.visible ? "eye" : "eye-off"}" class="w-4 h-4"></i></button>
                             ${iconStr}
                             <span class="text-[11px] sm:text-xs truncate text-zinc-800 dark:text-zinc-200">${layer.name} ${layer.type === "text" ? `"${layer.text}"` : ""}</span>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <button onclick="doMoveLayer(${layer.id}, 'up')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white px-1 sm:px-1.5" title="위로"><i class="fa-solid fa-chevron-up"></i></button>
-                            <button onclick="doMoveLayer(${layer.id}, 'down')" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-white px-1 sm:px-1.5" title="아래로"><i class="fa-solid fa-chevron-down"></i></button>
-                            <button onclick="doDeleteLayer(${layer.id})" class="text-red-500 hover:text-red-600 px-1 sm:px-1.5 ml-1" title="삭제"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="doMoveLayer(${layer.id}, 'up')" class="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white px-1 sm:px-1.5" title="위로"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                            <button onclick="doMoveLayer(${layer.id}, 'down')" class="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white px-1 sm:px-1.5" title="아래로"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                            <button onclick="doDeleteLayer(${layer.id})" class="text-red-500 hover:text-red-600 px-1 sm:px-1.5 ml-1" title="삭제"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     `;
             layerListContainer.appendChild(item);
           });
+          lucide.createIcons();
         }
 
         function updatePropertiesPanel() {
@@ -1221,6 +1232,7 @@
           }
 
           window.parent.postMessage({ type: "REQUEST_THEME" }, "*");
+          lucide.createIcons();
         });
       });
     </script>
