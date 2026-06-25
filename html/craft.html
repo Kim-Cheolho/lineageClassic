@@ -194,8 +194,8 @@
         unitPrices: {},
         previousCategory: "weapon",
         buyMode: {},
-        craftQuantity: "1", // 🟢 빈 문자열 입력 허용을 위해 문자열 초기화
-        adenaRate: localStorage.getItem("lcraft_adena_rate") || "", // 🟢 로컬 스토리지 뎅가격 연동
+        craftQuantity: "1",
+        adenaRate: localStorage.getItem("lcraft_adena_rate") || "",
         favorites: JSON.parse(localStorage.getItem("lcraft_favorites") || "[]"),
         favoritesOnly: false,
       };
@@ -595,9 +595,8 @@
           return;
         }
 
-        // 🟢 계산 로직에서는 비어있을 경우 최소 1개로 처리
-        const q = (state.craftQuantity === "" || state.craftQuantity === "0") ? 1 : Number(state.craftQuantity);
-        
+        const q = state.craftQuantity === "" || state.craftQuantity === "0" ? 1 : Number(state.craftQuantity);
+
         const ceilMaterials = calculateFinalMaterials(state.selectedItemId, q, true, true);
         const fracMaterials = calculateFinalMaterials(state.selectedItemId, q, true, false);
 
@@ -681,10 +680,17 @@
         `;
         });
 
-        // 🟢 거래소 판매수수료 (5.5%)를 감안한 손익분기 역산가 및 현금 환산 로직 추가
-        const breakEvenPrice = Math.ceil(totalCost / 0.945);
+        // 🟢 거래소 판매수수료 (5.5%, 최대 55,000 아데나 상한) 적용 손익분기 역산
+        let breakEvenPrice = 0;
+        if (totalCost <= 945000) {
+          breakEvenPrice = Math.ceil(totalCost / 0.945);
+        } else {
+          breakEvenPrice = Math.ceil(totalCost) + 55000;
+        }
+
         const currentAdenaRate = Number(state.adenaRate) || 0;
         const realCashValue = Math.floor(totalCost * (currentAdenaRate / 10000));
+        const breakEvenCashValue = Math.floor(breakEvenPrice * (currentAdenaRate / 10000));
 
         container.innerHTML = `
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2 bg-white dark:bg-zinc-950 shrink-0">
@@ -694,39 +700,46 @@
         <div class="flex-1 p-4 flex flex-col gap-3 overflow-y-auto">
           ${matHTML}
         </div>
-        <div class="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-50 shrink-0 mt-auto sticky bottom-0 flex flex-col gap-2">
+        <div class="p-4 bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)] z-50 shrink-0 mt-auto sticky bottom-0 flex flex-col gap-3">
           
-          <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
-            <span class="text-xs font-bold text-zinc-500">목표 제작 갯수</span>
-            <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${state.craftQuantity}" oninput="handleCraftQuantityInput(this)"/>
-          </div>
+          <div class="flex gap-2">
+            <div class="flex-1 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
+              <span class="text-xs font-bold text-zinc-500">제작 갯수</span>
+              <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-12 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${state.craftQuantity}" oninput="handleCraftQuantityInput(this)"/>
+            </div>
 
-          <div class="flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
-            <span class="text-xs font-bold text-zinc-500">1만 아데나 당 시세(원)</span>
-            <input type="text" inputmode="numeric" id="adena-rate-input" class="w-20 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 text-right text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 outline-none" placeholder="시세 입력" value="${state.adenaRate}" oninput="handleAdenaRateInput(this)"/>
+            <div class="flex-1 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
+              <span class="text-xs font-bold text-zinc-500">1만 아데나 당</span>
+              <input type="text" inputmode="numeric" id="adena-rate-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-right text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 outline-none" placeholder="원" value="${state.adenaRate}" oninput="handleAdenaRateInput(this)"/>
+            </div>
           </div>
 
           <div class="flex justify-between items-end pt-1">
             <span class="text-xs font-bold text-zinc-500" id="total-cost-title">${q}개 순수 제작 비용</span>
-            <div class="text-right">
-              <span id="total-cost-display" class="text-xl font-black text-amber-600 dark:text-amber-500">${Math.round(totalCost).toLocaleString()}</span>
-              <span class="text-xs font-medium text-zinc-500 ml-1">아데나</span>
+            <div class="text-right flex flex-col items-end">
+              <div>
+                <span id="total-cost-display" class="text-lg font-black text-amber-600 dark:text-amber-500">${Math.round(totalCost).toLocaleString()}</span>
+                <span class="text-[11px] font-medium text-zinc-500 ml-0.5">아데나</span>
+              </div>
+              <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                ≈ ${realCashValue.toLocaleString()} 원
+              </div>
             </div>
           </div>
 
-          <div class="flex justify-between items-end pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
-            <span class="text-[11px] font-bold text-zinc-500 flex items-center gap-1"><i data-lucide="shopping-bag" class="w-3 h-3 text-fuchsia-500"></i> 거래소 손익분기 (수수료 5.5% 적용)</span>
-            <div class="text-right">
-              <span class="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400">${breakEvenPrice.toLocaleString()}</span>
-              <span class="text-[10px] font-medium text-zinc-500 ml-1">아데나</span>
-            </div>
-          </div>
-
-          <div class="flex justify-between items-end pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
-            <span class="text-[11px] font-bold text-zinc-500 flex items-center gap-1"><i data-lucide="banknote" class="w-3 h-3 text-emerald-500"></i> 실제 현금 가치</span>
-            <div class="text-right">
-              <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400">${realCashValue.toLocaleString()}</span>
-              <span class="text-[10px] font-medium text-zinc-500 ml-1">원</span>
+          <div class="flex justify-between items-end pt-2 border-t border-zinc-100 dark:border-zinc-800/80 mt-1">
+            <span class="text-[11px] font-bold text-zinc-500 flex flex-col gap-0.5">
+              <span class="flex items-center gap-1"><i data-lucide="shopping-bag" class="w-3 h-3 text-fuchsia-500"></i> 거래소 판매 손익분기</span>
+              <span class="text-[9px] text-zinc-400 font-medium ml-4">(수수료 5.5%, 최대 5.5만 포함)</span>
+            </span>
+            <div class="text-right flex flex-col items-end">
+              <div>
+                <span class="text-sm font-bold text-fuchsia-600 dark:text-fuchsia-400">${breakEvenPrice.toLocaleString()}</span>
+                <span class="text-[10px] font-medium text-zinc-500 ml-0.5">아데나</span>
+              </div>
+              <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                ≈ ${breakEvenCashValue.toLocaleString()} 원
+              </div>
             </div>
           </div>
 
@@ -773,7 +786,7 @@
 
       function selectItem(itemId) {
         state.selectedItemId = itemId;
-        state.craftQuantity = "1"; // 🟢 아이템 변경 시 초기화
+        state.craftQuantity = "1";
         renderSidebar();
         renderMain();
         renderRightPanel();
@@ -802,8 +815,8 @@
         state.unitPrices[id] = rawValue === "" ? 0 : Number(rawValue);
         inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
 
-        renderRightPanel(); // 🟢 뎅가격 등이 연동되므로 우측 패널 전체 리렌더링 방식으로 통합
-        
+        renderRightPanel();
+
         const newInput = document.querySelector(`input[oninput*="handlePriceInput('${id}'"]`);
         if (newInput) {
           newInput.focus();
@@ -812,7 +825,6 @@
         }
       }
 
-      // 🟢 수정된 수량 입력 함수 (입력칸 비우기 지원)
       function handleCraftQuantityInput(inputElem) {
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.craftQuantity = rawValue;
@@ -827,7 +839,6 @@
         }
       }
 
-      // 🟢 신규 추가된 뎅가격 입력 함수
       function handleAdenaRateInput(inputElem) {
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.adenaRate = rawValue;
