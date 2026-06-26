@@ -680,12 +680,12 @@
         `;
         });
 
-        // 🟢 원화(KRW) 기준 거래소 판매수수료 (5.5%, 최대 55,000원 상한) 역산 로직
         const currentAdenaRate = Number(state.adenaRate) || 0;
         const realCashValue = Math.floor(totalCost * (currentAdenaRate / 10000));
 
         let breakEvenPrice = 0;
         let breakEvenCashValue = 0;
+        let actualFeeCash = 0; // 🟢 수수료 원화 금액 저장용 변수
         let feeDesc = "(수수료 5.5% 적용)";
 
         if (currentAdenaRate > 0) {
@@ -693,11 +693,13 @@
             // 순수 제작비용 현금 가치가 945,000원 이하: 5.5% 정률 수수료 적용
             breakEvenPrice = Math.ceil(totalCost / 0.945);
             breakEvenCashValue = Math.floor(breakEvenPrice * (currentAdenaRate / 10000));
+            actualFeeCash = breakEvenCashValue - realCashValue; // 실제 부과된 수수료(원) 계산
             feeDesc = "(수수료 5.5% 적용)";
           } else {
             // 순수 제작비용 현금 가치가 945,000원 초과: 수수료 55,000원 고정
             breakEvenCashValue = realCashValue + 55000;
             breakEvenPrice = Math.ceil(breakEvenCashValue * (10000 / currentAdenaRate));
+            actualFeeCash = 55000; // 고정 수수료
             feeDesc = "(최대 수수료 5.5만 원 고정)";
           }
         } else {
@@ -753,7 +755,7 @@
                 <span class="text-[10px] font-medium text-zinc-500 ml-0.5">아데나</span>
               </div>
               <div class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                ≈ ${breakEvenCashValue.toLocaleString()} 원
+                ≈ ${breakEvenCashValue.toLocaleString()} 원 ${actualFeeCash > 0 ? `<span class="text-emerald-600/70 dark:text-emerald-400/70 font-medium ml-0.5">(수수료 ${actualFeeCash.toLocaleString()}원)</span>` : ""}
               </div>
             </div>
           </div>
