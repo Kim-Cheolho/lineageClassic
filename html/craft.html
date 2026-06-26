@@ -286,12 +286,26 @@
       function toggleFavoritesOnly(checkbox) {
         state.favoritesOnly = checkbox.checked;
         const iconContainer = document.getElementById("icon-star-filter");
+
         if (state.favoritesOnly) {
           iconContainer.classList.add("text-amber-500", "fill-amber-500");
           iconContainer.classList.remove("text-zinc-400");
+
+          // 즐겨찾기 활성화 시 '전체' 탭으로 자동 이동하여 모든 목록 표시
+          if (state.selectedCategory !== "all") {
+            state.previousCategory = state.selectedCategory;
+            state.selectedCategory = "all";
+            renderCategories();
+          }
         } else {
           iconContainer.classList.remove("text-amber-500", "fill-amber-500");
           iconContainer.classList.add("text-zinc-400");
+
+          // 즐겨찾기 해제 시 (검색 중이 아니라면) 이전 탭으로 스마트하게 복귀
+          if (!state.searchTerm) {
+            state.selectedCategory = state.previousCategory || "all";
+            renderCategories();
+          }
         }
         renderSidebar();
       }
