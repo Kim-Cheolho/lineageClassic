@@ -347,7 +347,7 @@
       function getItemIconHTML(item, sizeClass = "w-14 h-14 text-sm", disableBg = false) {
         if (item.image) {
           const cleanFileName = item.image.replace(/^(\.\.\/img\/)/, "").trim();
-          const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/${cleanFileName}`;
+          const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/item/${cleanFileName}`;
           const bgClass = disableBg ? "" : "bg-zinc-100 dark:bg-[#111113] border border-zinc-200 dark:border-zinc-800 shadow-sm";
           return `<img src="${imgPath}" alt="${item.name}" class="${sizeClass} object-cover rounded-xl shrink-0 ${bgClass}" />`;
         }

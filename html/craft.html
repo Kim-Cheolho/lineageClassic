@@ -231,7 +231,7 @@
       function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
         if (item.image) {
           const cleanFileName = item.image.replace(/^(\.\.\/img\/)/, "").trim();
-          const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/${cleanFileName}`;
+          const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/item/${cleanFileName}`;
           return `<img src="${imgPath}" alt="${item.name}" class="${sizeClass} object-cover rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" />`;
         }
         return `<div class="${sizeClass} bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded flex items-center justify-center">${item.icon || ""}</div>`;
@@ -946,8 +946,20 @@
 
         document.addEventListener("mousemove", (e) => {
           if (!isResizingLeft && !isResizingRight) return;
-          if (isResizingLeft) updatePanelWidths(leftPanel, Math.max(200, Math.min(e.clientX, window.innerWidth / 3)));
-          if (isResizingRight) updatePanelWidths(rightPanel, Math.max(260, Math.min(window.innerWidth - e.clientX, window.innerWidth / 3)));
+
+          // 전체 1400px 컨테이너의 화면상 위치와 너비를 가져옵니다.
+          const containerRect = leftPanel.parentElement.getBoundingClientRect();
+
+          if (isResizingLeft) {
+            // 마우스 X좌표에서 컨테이너의 왼쪽 시작점을 빼서 실제 순수 패널 너비를 구합니다.
+            let newWidth = e.clientX - containerRect.left;
+            updatePanelWidths(leftPanel, Math.max(200, Math.min(newWidth, containerRect.width / 3)));
+          }
+          if (isResizingRight) {
+            // 컨테이너 오른쪽 끝점에서 마우스 X좌표를 빼서 우측 패널 너비를 구합니다.
+            let newWidth = containerRect.right - e.clientX;
+            updatePanelWidths(rightPanel, Math.max(260, Math.min(newWidth, containerRect.width / 3)));
+          }
         });
 
         document.addEventListener("mouseup", () => {
