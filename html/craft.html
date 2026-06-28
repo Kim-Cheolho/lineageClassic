@@ -356,10 +356,10 @@
           <div onclick="selectItem('${id}')" class="flex items-center gap-3 py-2.5 px-3 rounded cursor-pointer transition-colors border ${classes} overflow-hidden shrink-0">
             ${getItemIconHTML(item, "w-8 h-8 text-xs shrink-0")}
             <div class="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
-              <button onclick="toggleFavorite('${id}', event)" class="shrink-0 w-4 h-4 flex items-center justify-center outline-none ${favIconColor} transition-colors">
+              <span class="text-sm font-medium truncate leading-relaxed">${displayName}</span>
+              <button onclick="toggleFavorite('${id}', event)" class="shrink-0 w-4 h-4 flex items-center justify-center outline-none ${favIconColor} transition-colors ml-auto">
                 <i data-lucide="star" class="w-full h-full"></i>
               </button>
-              <span class="text-sm font-medium truncate leading-relaxed">${displayName}</span>
             </div>
             ${recipe && recipe.npc ? `<span class="text-[10px] font-bold shrink-0 truncate max-w-[70px] px-1.5 py-0.5 rounded border ${currentBadgeClass}">${recipe.npc}</span>` : ""}
           </div>
@@ -845,6 +845,9 @@
       }
 
       function handlePriceInput(id, inputElem) {
+        // 🟢 수정: 입력 전, 문자열 우측 끝을 기준으로 현재 커서의 위치를 저장합니다.
+        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.unitPrices[id] = rawValue === "" ? 0 : Number(rawValue);
         inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
@@ -856,12 +859,16 @@
         const newInput = document.querySelector(`input[oninput*="handlePriceInput('${id}'"]`);
         if (newInput) {
           newInput.focus();
-          const valLen = newInput.value.length;
-          newInput.setSelectionRange(valLen, valLen);
+          // 🟢 수정: 새롭게 포맷팅된 문자열 길이에서 저장해둔 거리를 빼서 커서를 제자리로 복원합니다.
+          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
+          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
         }
       }
 
       function handleCraftQuantityInput(inputElem) {
+        // 🟢 수정: 수량 입력란도 단가 입력란과 동일하게 커서 보존 로직 적용
+        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.craftQuantity = rawValue;
 
@@ -870,12 +877,15 @@
         const newInput = document.getElementById("craft-quantity-input");
         if (newInput) {
           newInput.focus();
-          const valLen = newInput.value.length;
-          newInput.setSelectionRange(valLen, valLen);
+          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
+          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
         }
       }
 
       function handleAdenaRateInput(inputElem) {
+        // 🟢 수정: 아데나 비율 입력란도 동일하게 커서 보존 로직 적용
+        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.adenaRate = rawValue;
         localStorage.setItem("lcraft_adena_rate", rawValue);
@@ -885,8 +895,8 @@
         const newInput = document.getElementById("adena-rate-input");
         if (newInput) {
           newInput.focus();
-          const valLen = newInput.value.length;
-          newInput.setSelectionRange(valLen, valLen);
+          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
+          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
         }
       }
 
