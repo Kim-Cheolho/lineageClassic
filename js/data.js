@@ -1,6 +1,7 @@
 // 🟢 전역 데이터베이스 객체
 let items_db = {};
 let recipes_db = {};
+let monsters_db = {}; // 🟢 몬스터 DB 추가
 
 const CSV_LINKS = {
   weapon:
@@ -13,6 +14,8 @@ const CSV_LINKS = {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQG1PEgePbi1Lz8J5dH8uGhj2bOI6Ty7fZiT2t0Gs6QhttJy8PGCm7CtqeH5o4ZF59EhMwBhJoL5VZX/pub?output=csv",
   recipe:
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlpXNyQitzPZ7u9THzc8UBlMR1lNEcBzXOkjefIJFUcd52P4HMU3mrlqgMo0xYGeB6iCUu0qQlW1e9/pub?output=csv",
+  monster:
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZLxT4a4AaDRlvkIcr9bXQUC-jIuyvsqHDhRO58oFsOpJUaeFpnGJStwAz8PImhgLTajaZAaJjrnig/pub?output=csv",
 };
 
 const STAT_ORDER = [
@@ -70,125 +73,176 @@ function parseCSVRow(str) {
   return result.map((s) => s.replace(/(^"|"$)/g, ""));
 }
 
-// 🟢 [수정] 캐시 무력화 타임스탬프 적용 및 targetDB 파라미터 추가
 async function processItemSheet(url, categoryName, targetDB = items_db) {
   if (!url) return;
-  const cacheBustUrl = url + `&t=${new Date().getTime()}`;
-  const response = await fetch(cacheBustUrl, { cache: "no-store" });
-  const csvText = await response.text();
+  try {
+    const cacheBustUrl = url + `&t=${new Date().getTime()}`;
+    const response = await fetch(cacheBustUrl, { cache: "no-store" });
+    const csvText = await response.text();
 
-  const rows = csvText.split("\n");
-  const headers = parseCSVRow(rows[0]);
+    const rows = csvText.split("\n");
+    const headers = parseCSVRow(rows[0]);
 
-  rows.slice(1).forEach((row) => {
-    if (!row.trim()) return;
-    const values = parseCSVRow(row);
-    const rowData = {};
-    headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
+    rows.slice(1).forEach((row) => {
+      if (!row.trim()) return;
+      const values = parseCSVRow(row);
+      const rowData = {};
+      headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
 
-    const id = rowData["ID"];
-    if (!id) return;
+      const id = rowData["ID"];
+      if (!id) return;
 
-    let stats = [];
-    headers.forEach((h) => {
-      const key = h.trim();
-      let val = rowData[key];
+      let stats = [];
+      headers.forEach((h) => {
+        const key = h.trim();
+        let val = rowData[key];
 
-      if (key === "클래스" && val === "") {
-        if (categoryName === "weapon" || categoryName === "armor" || categoryName === "accessory") val = "전체";
-      }
-
-      if (!ITEM_SYSTEM_COLS.includes(key) && val !== "") {
-        if (key === "옵션") {
-          const mergedOptions = val
-            .split(",")
-            .map((opt) => opt.trim())
-            .join("<br>");
-          stats.push({ label: "옵션", value: mergedOptions });
-        } else {
-          stats.push({ label: key, value: val });
+        if (key === "클래스" && val === "") {
+          if (categoryName === "weapon" || categoryName === "armor" || categoryName === "accessory") val = "전체";
         }
+
+        if (!ITEM_SYSTEM_COLS.includes(key) && val !== "") {
+          if (key === "옵션") {
+            const mergedOptions = val
+              .split(",")
+              .map((opt) => opt.trim())
+              .join("<br>");
+            stats.push({ label: "옵션", value: mergedOptions });
+          } else {
+            stats.push({ label: key, value: val });
+          }
+        }
+      });
+
+      stats.sort((a, b) => {
+        let indexA = STAT_ORDER.indexOf(a.label);
+        let indexB = STAT_ORDER.indexOf(b.label);
+        if (indexA === -1) indexA = 999;
+        if (indexB === -1) indexB = 999;
+        return indexA - indexB;
+      });
+
+      const setEffectDesc = rowData["세트 효과"];
+      const setItemsStr = rowData["세트 아이템"];
+      const aliasStr = rowData["줄임말"];
+
+      let setEffect = undefined;
+      if (setEffectDesc || setItemsStr) {
+        setEffect = {
+          description: setEffectDesc || "",
+          items: setItemsStr ? setItemsStr.split(",").map((s) => s.trim()) : [],
+        };
       }
-    });
 
-    stats.sort((a, b) => {
-      let indexA = STAT_ORDER.indexOf(a.label);
-      let indexB = STAT_ORDER.indexOf(b.label);
-      if (indexA === -1) indexA = 999;
-      if (indexB === -1) indexB = 999;
-      return indexA - indexB;
-    });
-
-    const setEffectDesc = rowData["세트 효과"];
-    const setItemsStr = rowData["세트 아이템"];
-    const aliasStr = rowData["줄임말"];
-
-    let setEffect = undefined;
-    if (setEffectDesc || setItemsStr) {
-      setEffect = {
-        description: setEffectDesc || "",
-        items: setItemsStr ? setItemsStr.split(",").map((s) => s.trim()) : [],
+      const tradeInfo = {
+        storage: rowData["창고"] || "O",
+        drop: rowData["사망 시 드롭"] || "O",
+        trade: rowData["교환"] || "O",
+        delete: rowData["삭제"] || "O",
       };
-    }
 
-    const tradeInfo = {
-      storage: rowData["창고"] || "O",
-      drop: rowData["사망 시 드롭"] || "O",
-      trade: rowData["교환"] || "O",
-      delete: rowData["삭제"] || "O",
-    };
-
-    targetDB[id] = {
-      id: id,
-      name: rowData["이름"] || id,
-      category: categoryName,
-      type: rowData["분류"] || "",
-      desc: rowData["설명"] || "",
-      icon: rowData["아이콘"] || "",
-      image: rowData["이미지"] || "",
-      stats: stats.length > 0 ? stats : undefined,
-      setEffect: setEffect,
-      aliases: aliasStr ? aliasStr.split(",").map((s) => s.trim().replace(/\s+/g, "").toLowerCase()) : [],
-      tradeInfo: tradeInfo,
-    };
-  });
+      targetDB[id] = {
+        id: id,
+        name: rowData["이름"] || id,
+        category: categoryName,
+        type: rowData["분류"] || "",
+        desc: rowData["설명"] || "",
+        icon: rowData["아이콘"] || "",
+        image: rowData["이미지"] || "",
+        stats: stats.length > 0 ? stats : undefined,
+        setEffect: setEffect,
+        aliases: aliasStr ? aliasStr.split(",").map((s) => s.trim().replace(/\s+/g, "").toLowerCase()) : [],
+        tradeInfo: tradeInfo,
+      };
+    });
+  } catch (e) {}
 }
 
-// 🟢 [수정] 캐시 무력화 타임스탬프 적용 및 targetDB 파라미터 추가
 async function processRecipeSheet(url, targetDB = recipes_db) {
   if (!url) return;
-  const cacheBustUrl = url + `&t=${new Date().getTime()}`;
-  const response = await fetch(cacheBustUrl, { cache: "no-store" });
-  const csvText = await response.text();
+  try {
+    const cacheBustUrl = url + `&t=${new Date().getTime()}`;
+    const response = await fetch(cacheBustUrl, { cache: "no-store" });
+    const csvText = await response.text();
 
-  const rows = csvText.split("\n");
-  const headers = parseCSVRow(rows[0]);
+    const rows = csvText.split("\n");
+    const headers = parseCSVRow(rows[0]);
 
-  rows.slice(1).forEach((row) => {
-    if (!row.trim()) return;
-    const values = parseCSVRow(row);
-    const rowData = {};
-    headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
+    rows.slice(1).forEach((row) => {
+      if (!row.trim()) return;
+      const values = parseCSVRow(row);
+      const rowData = {};
+      headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
 
-    const id = rowData["ID"];
-    if (!id) return;
+      const id = rowData["ID"];
+      if (!id) return;
 
-    const materialsStr = rowData["재료"];
-    if (!materialsStr) return;
+      const materialsStr = rowData["재료"];
+      if (!materialsStr) return;
 
-    targetDB[id] = {
-      npc: rowData["NPC"] || "",
-      location: rowData["장소"] || "",
-      yield: parseInt(rowData["제작수량"]) || 1,
-      materials: materialsStr.split(",").map((mat) => {
-        const parts = mat.split(":");
-        return { id: parts[0].trim(), count: parseInt(parts[1]) || 1 };
-      }),
-    };
-  });
+      targetDB[id] = {
+        npc: rowData["NPC"] || "",
+        location: rowData["장소"] || "",
+        yield: parseInt(rowData["제작수량"]) || 1,
+        materials: materialsStr.split(",").map((mat) => {
+          const parts = mat.split(":");
+          return { id: parts[0].trim(), count: parseInt(parts[1]) || 1 };
+        }),
+      };
+    });
+  } catch (e) {}
 }
 
-// 🟢 [수정] SWR 패턴 적용 및 변경된 아이템(Diff) 추출 브로드캐스팅
+async function processMonsterSheet(url, targetDB = monsters_db) {
+  if (!url) return;
+  try {
+    const cacheBustUrl = url + `&t=${new Date().getTime()}`;
+    const response = await fetch(cacheBustUrl, { cache: "no-store" });
+    const csvText = await response.text();
+
+    const rows = csvText.split("\n");
+    const headers = parseCSVRow(rows[0]);
+
+    // 🟢 forEach에 index 파라미터를 추가하여 구글 시트의 순서를 기록합니다.
+    rows.slice(1).forEach((row, index) => {
+      if (!row.trim()) return;
+      const values = parseCSVRow(row);
+      const rowData = {};
+      headers.forEach((h, i) => (rowData[h.trim()] = escapeHTML(values[i] || "")));
+
+      const id = rowData["ID"];
+      if (!id) return;
+
+      const dropsStr = rowData["드롭아이템"];
+      const weaknessStr = rowData["취약속성"];
+      const traitsStr = rowData["특성"];
+      const locationsStr = rowData["출몰지역"];
+
+      targetDB[id] = {
+        id: id,
+        sheetIndex: index, // 🟢 시트 상의 정렬 순서를 저장
+        name: rowData["이름"] || id,
+        level: parseInt(rowData["레벨"]) || 0,
+        hp: parseInt(rowData["HP"]) || 0,
+        mp: parseInt(rowData["MP"]) || 0,
+        ac: parseInt(rowData["AC"]) || 0,
+        mr: parseInt(rowData["MR"]) || 0,
+        size: rowData["크기"] || "작은", // 🟢 기본값을 "소형"에서 "작은"으로 변경
+        weakness: weaknessStr ? weaknessStr.split(",").map((s) => s.trim()) : ["무속성"],
+        traits: traitsStr ? traitsStr.split(",").map((s) => s.trim()) : [],
+        locations: locationsStr ? locationsStr.split(",").map((s) => s.trim()) : [],
+        exp: parseInt(rowData["경험치"]) || 0,
+        desc: rowData["설명"] || "",
+        image: rowData["이미지"] || "",
+        drops: dropsStr ? dropsStr.split(",").map((s) => s.trim()) : [],
+        aliases: rowData["줄임말"]
+          ? rowData["줄임말"].split(",").map((s) => s.trim().replace(/\s+/g, "").toLowerCase())
+          : [],
+      };
+    });
+  } catch (e) {}
+}
+
 async function loadDatabaseFromSheet() {
   try {
     const parentWin = window.parent || window;
@@ -196,60 +250,58 @@ async function loadDatabaseFromSheet() {
     if (parentWin.__SHARED_ITEMS_DB__) {
       items_db = parentWin.__SHARED_ITEMS_DB__;
       recipes_db = parentWin.__SHARED_RECIPES_DB__;
+      monsters_db = parentWin.__SHARED_MONSTERS_DB__ || {};
       return true;
     }
 
     const cachedItems = localStorage.getItem("lcraft_cached_items");
     const cachedRecipes = localStorage.getItem("lcraft_cached_recipes");
+    const cachedMonsters = localStorage.getItem("lcraft_cached_monsters");
     let hasCache = false;
 
     if (cachedItems && cachedRecipes) {
       items_db = JSON.parse(cachedItems);
       recipes_db = JSON.parse(cachedRecipes);
+      monsters_db = cachedMonsters ? JSON.parse(cachedMonsters) : {};
       hasCache = true;
       parentWin.__SHARED_ITEMS_DB__ = items_db;
       parentWin.__SHARED_RECIPES_DB__ = recipes_db;
+      parentWin.__SHARED_MONSTERS_DB__ = monsters_db;
     }
 
     if (!parentWin.__DB_FETCH_PROMISE__) {
       parentWin.__DB_FETCH_PROMISE__ = (async () => {
         const temp_items = {};
         const temp_recipes = {};
+        const temp_monsters = {};
 
         const itemPromises = Object.entries(CSV_LINKS)
-          .filter(([cat]) => cat !== "recipe")
+          .filter(([cat]) => cat !== "recipe" && cat !== "monster")
           .map(([cat, url]) => processItemSheet(url, cat, temp_items));
 
         const recipePromise = processRecipeSheet(CSV_LINKS.recipe, temp_recipes);
+        const monsterPromise = processMonsterSheet(CSV_LINKS.monster, temp_monsters);
 
-        await Promise.all([...itemPromises, recipePromise]);
+        await Promise.all([...itemPromises, recipePromise, monsterPromise]);
 
         const newItemsStr = JSON.stringify(temp_items);
         const newRecipesStr = JSON.stringify(temp_recipes);
-        const oldItemsStr = cachedItems || "{}";
-        const oldRecipesStr = cachedRecipes || "{}";
+        const newMonstersStr = JSON.stringify(temp_monsters);
 
-        if (oldItemsStr !== newItemsStr || oldRecipesStr !== newRecipesStr) {
+        if (cachedItems !== newItemsStr || cachedRecipes !== newRecipesStr || cachedMonsters !== newMonstersStr) {
           const changedIds = new Set();
-          const oldItems = JSON.parse(oldItemsStr);
-          const oldRecipes = JSON.parse(oldRecipesStr);
-
-          // 변경된 ID 추적 연산
-          Object.keys(temp_items).forEach((id) => {
-            if (JSON.stringify(oldItems[id]) !== JSON.stringify(temp_items[id])) changedIds.add(id);
-          });
-          Object.keys(temp_recipes).forEach((id) => {
-            if (JSON.stringify(oldRecipes[id]) !== JSON.stringify(temp_recipes[id])) changedIds.add(id);
-          });
 
           localStorage.setItem("lcraft_cached_items", newItemsStr);
           localStorage.setItem("lcraft_cached_recipes", newRecipesStr);
+          localStorage.setItem("lcraft_cached_monsters", newMonstersStr);
 
           parentWin.__SHARED_ITEMS_DB__ = temp_items;
           parentWin.__SHARED_RECIPES_DB__ = temp_recipes;
+          parentWin.__SHARED_MONSTERS_DB__ = temp_monsters;
 
           items_db = temp_items;
           recipes_db = temp_recipes;
+          monsters_db = temp_monsters;
 
           parentWin.postMessage({ type: "DATA_BACKGROUND_UPDATED", changedIds: Array.from(changedIds) }, "*");
         }
@@ -260,16 +312,17 @@ async function loadDatabaseFromSheet() {
       await parentWin.__DB_FETCH_PROMISE__;
       items_db = parentWin.__SHARED_ITEMS_DB__;
       recipes_db = parentWin.__SHARED_RECIPES_DB__;
+      monsters_db = parentWin.__SHARED_MONSTERS_DB__ || {};
     }
 
     return true;
   } catch (error) {
     console.error("🚨 데이터베이스 로드 중 오류 발생:", error);
-    alert("데이터베이스를 불러올 수 없습니다. 인터넷 연결을 확인하세요.");
     return false;
   }
 }
 
+// 자음/모음 분리 및 검색 로직 (이전과 동일)
 const decomposeChosung = (str) => {
   const map = {
     ㄳ: "ㄱㅅ",
@@ -368,19 +421,42 @@ const convertEngToKorJamo = (str) => {
   return result;
 };
 
-const checkSearchMatch = (itemId, keyword) => {
+const checkSearchMatch = (itemId, keyword, isMonster = false) => {
   if (!keyword || keyword.length > 30) return false;
 
   let rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
   let cleanKeyword = rawKeyword.toLowerCase();
   let korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
 
-  const item = items_db[itemId];
-  const itemName = item.name;
-  const cleanItemName = itemName.replace(/\s+/g, "").toLowerCase();
-
   const regexNormal = getHybridRegex(cleanKeyword);
   const regexKor = getHybridRegex(korKeyword);
+
+  if (isMonster) {
+    const mob = monsters_db[itemId];
+    if (!mob) return false;
+    const cleanName = mob.name.replace(/\s+/g, "").toLowerCase();
+
+    if (mob.aliases && mob.aliases.length > 0) {
+      for (const alias of mob.aliases) {
+        if (regexNormal.test(alias) || regexKor.test(alias)) return true;
+      }
+    }
+    if (regexNormal.test(cleanName) || regexKor.test(cleanName)) return true;
+
+    // 드롭 아이템으로 몬스터 검색 허용
+    if (mob.drops && mob.drops.length > 0) {
+      for (const drop of mob.drops) {
+        const cleanDrop = drop.replace(/\s+/g, "").toLowerCase();
+        if (regexNormal.test(cleanDrop) || regexKor.test(cleanDrop)) return true;
+      }
+    }
+    return false;
+  }
+
+  // 기존 아이템 검색 로직
+  const item = items_db[itemId];
+  if (!item) return false;
+  const cleanItemName = item.name.replace(/\s+/g, "").toLowerCase();
 
   if (item.aliases && item.aliases.length > 0) {
     for (const alias of item.aliases) {
@@ -399,23 +475,25 @@ const checkSearchMatch = (itemId, keyword) => {
   return false;
 };
 
-const getHighlightedName = (itemId, itemName, keyword) => {
+const getHighlightedName = (itemId, itemName, keyword, isMonster = false) => {
   if (!keyword || keyword.length > 30) return itemName;
 
   const rawKeyword = decomposeChosung(keyword.replace(/\s+/g, ""));
   const cleanKeyword = rawKeyword.toLowerCase();
   const korKeyword = convertEngToKorJamo(rawKeyword).toLowerCase();
-  const item = items_db[itemId];
+
+  const targetObj = isMonster ? monsters_db[itemId] : items_db[itemId];
+  if (!targetObj) return itemName;
 
   const aliasStyle =
     "bg-indigo-500 text-white dark:bg-indigo-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
   const partialStyle =
     "bg-rose-500 text-white dark:bg-rose-500 dark:text-white px-1 py-0.5 rounded shadow-sm font-black";
 
-  if (item.aliases && item.aliases.length > 0) {
+  if (targetObj.aliases && targetObj.aliases.length > 0) {
     const regexAliasNormal = getHybridRegex(cleanKeyword, false);
     const regexAliasKor = getHybridRegex(korKeyword, false);
-    for (const alias of item.aliases) {
+    for (const alias of targetObj.aliases) {
       if (regexAliasNormal.test(alias) || regexAliasKor.test(alias)) {
         return `<span class="${aliasStyle}">${itemName}</span>`;
       }

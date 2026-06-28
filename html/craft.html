@@ -230,7 +230,10 @@
 
       function getItemIconHTML(item, sizeClass = "w-8 h-8 text-sm") {
         if (item.image) {
-          const cleanFileName = item.image.replace(/^(\.\.\/img\/)/, "").trim();
+          const cleanFileName = item.image
+            .replace(/^(\.\.\/img\/)/, "")
+            .replace(/^(\.\.\/img\/item\/)/, "")
+            .trim();
           const imgPath = cleanFileName.startsWith("http") ? cleanFileName : `../img/item/${cleanFileName}`;
           return `<img src="${imgPath}" alt="${item.name}" class="${sizeClass} object-cover rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700" />`;
         }
