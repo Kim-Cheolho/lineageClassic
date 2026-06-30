@@ -294,7 +294,6 @@
           iconContainer.classList.add("text-amber-500", "fill-amber-500");
           iconContainer.classList.remove("text-zinc-400");
 
-          // 즐겨찾기 활성화 시 '전체' 탭으로 자동 이동하여 모든 목록 표시
           if (state.selectedCategory !== "all") {
             state.previousCategory = state.selectedCategory;
             state.selectedCategory = "all";
@@ -304,7 +303,6 @@
           iconContainer.classList.remove("text-amber-500", "fill-amber-500");
           iconContainer.classList.add("text-zinc-400");
 
-          // 즐겨찾기 해제 시 (검색 중이 아니라면) 이전 탭으로 스마트하게 복귀
           if (!state.searchTerm) {
             state.selectedCategory = state.previousCategory || "all";
             renderCategories();
@@ -664,7 +662,7 @@
                 <span class="text-xs font-bold text-amber-600 dark:text-amber-500 shrink-0 whitespace-nowrap">× ${ceilCount.toLocaleString()}</span>
                 ${badgeHTML}
               </div>
-              ${isAdena ? "" : `<input type="text" inputmode="numeric" class="w-20 md:w-24 shrink-0 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-right text-xs text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" placeholder="단가" value="${currentPrice ? currentPrice.toLocaleString() : ""}" oninput="handlePriceInput('${id}', this)"/>`}
+              ${isAdena ? "" : `<input type="text" inputmode="numeric" class="w-20 md:w-24 shrink-0 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-right text-xs text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" placeholder="단가" value="${currentPrice ? currentPrice.toLocaleString() : ""}" onkeydown="handleNumericKeydown(event)" oninput="handlePriceInput('${id}', this)"/>`}
             </div>
             
             ${breakdownHTML}
@@ -702,25 +700,22 @@
 
         let breakEvenPrice = 0;
         let breakEvenCashValue = 0;
-        let actualFeeCash = 0; // 🟢 수수료 원화 금액 저장용 변수
+        let actualFeeCash = 0;
         let feeDesc = "(수수료 5.5% 적용)";
 
         if (currentAdenaRate > 0) {
           if (realCashValue <= 945000) {
-            // 순수 제작비용 현금 가치가 945,000원 이하: 5.5% 정률 수수료 적용
             breakEvenPrice = Math.ceil(totalCost / 0.945);
             breakEvenCashValue = Math.floor(breakEvenPrice * (currentAdenaRate / 10000));
-            actualFeeCash = breakEvenCashValue - realCashValue; // 실제 부과된 수수료(원) 계산
+            actualFeeCash = breakEvenCashValue - realCashValue;
             feeDesc = "(수수료 5.5% 적용)";
           } else {
-            // 순수 제작비용 현금 가치가 945,000원 초과: 수수료 55,000원 고정
             breakEvenCashValue = realCashValue + 55000;
             breakEvenPrice = Math.ceil(breakEvenCashValue * (10000 / currentAdenaRate));
-            actualFeeCash = 55000; // 고정 수수료
+            actualFeeCash = 55000;
             feeDesc = "(최대 수수료 5.5만 원 고정)";
           }
         } else {
-          // 시세가 입력되지 않은 경우 기본 아데나 기준 5.5% 적용
           breakEvenPrice = Math.ceil(totalCost / 0.945);
           breakEvenCashValue = 0;
           feeDesc = "(시세 입력 시 원화 상한 적용)";
@@ -739,12 +734,12 @@
           <div class="flex gap-2">
             <div class="flex-1 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
               <span class="text-xs font-bold text-zinc-500">제작 갯수</span>
-              <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-12 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${state.craftQuantity}" oninput="handleCraftQuantityInput(this)"/>
+              <input type="text" inputmode="numeric" id="craft-quantity-input" class="w-12 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-center text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-amber-500 outline-none" value="${state.craftQuantity}" onkeydown="handleNumericKeydown(event)" oninput="handleCraftQuantityInput(this)"/>
             </div>
 
             <div class="flex-1 flex justify-between items-center bg-zinc-50 dark:bg-zinc-900 p-2 rounded border border-zinc-200 dark:border-zinc-800">
               <span class="text-xs font-bold text-zinc-500">1만 아데나 당</span>
-              <input type="text" inputmode="numeric" id="adena-rate-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-right text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 outline-none" placeholder="원" value="${state.adenaRate}" oninput="handleAdenaRateInput(this)"/>
+              <input type="text" inputmode="numeric" id="adena-rate-input" class="w-16 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-right text-xs font-bold text-zinc-900 dark:text-zinc-100 focus:border-emerald-500 outline-none" placeholder="원" value="${state.adenaRate}" onkeydown="handleNumericKeydown(event)" oninput="handleAdenaRateInput(this)"/>
             </div>
           </div>
 
@@ -844,59 +839,123 @@
         renderSidebar();
       }
 
+      function handleNumericKeydown(e) {
+        const input = e.target;
+        // 백스페이스(Backspace) 키 처리
+        if (e.key === "Backspace" && input.selectionStart === input.selectionEnd) {
+          const cursor = input.selectionStart;
+          // 커서 바로 앞이 콤마(,)인 경우
+          if (cursor > 0 && input.value[cursor - 1] === ",") {
+            e.preventDefault(); // 브라우저의 기본 백스페이스 동작 막기
+
+            // 콤마(,)와 그 앞의 숫자를 함께 제거한 새로운 문자열 생성
+            const valBefore = input.value.substring(0, cursor - 2);
+            const valAfter = input.value.substring(cursor);
+            input.value = valBefore + valAfter;
+
+            // 지워진 만큼 커서를 정교하게 당겨서 설정
+            input.setSelectionRange(cursor - 2, cursor - 2);
+
+            // 값을 수동으로 변경했으므로, oninput 이벤트를 강제로 발생시켜 렌더링 파이프라인 작동
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        }
+        // 딜리트(Delete) 키 처리
+        else if (e.key === "Delete" && input.selectionStart === input.selectionEnd) {
+          const cursor = input.selectionStart;
+          if (cursor < input.value.length && input.value[cursor] === ",") {
+            e.preventDefault();
+            const valBefore = input.value.substring(0, cursor);
+            const valAfter = input.value.substring(cursor + 2); // 콤마(,)와 그 뒤의 숫자를 제거
+            input.value = valBefore + valAfter;
+            input.setSelectionRange(cursor, cursor);
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        }
+      }
+
       function handlePriceInput(id, inputElem) {
-        // 🟢 수정: 입력 전, 문자열 우측 끝을 기준으로 현재 커서의 위치를 저장합니다.
-        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+        let digitsBeforeCursor = 0;
+        for (let i = 0; i < inputElem.selectionEnd; i++) {
+          if (/[0-9]/.test(inputElem.value[i])) digitsBeforeCursor++;
+        }
 
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.unitPrices[id] = rawValue === "" ? 0 : Number(rawValue);
         inputElem.value = rawValue === "" ? "" : Number(rawValue).toLocaleString();
 
         localStorage.setItem("lcraft_unit_prices", JSON.stringify(state.unitPrices));
-
         renderRightPanel();
 
         const newInput = document.querySelector(`input[oninput*="handlePriceInput('${id}'"]`);
         if (newInput) {
           newInput.focus();
-          // 🟢 수정: 새롭게 포맷팅된 문자열 길이에서 저장해둔 거리를 빼서 커서를 제자리로 복원합니다.
-          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
-          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
+
+          let newCursorPos = newInput.value.length;
+          let currentDigits = 0;
+          for (let i = 0; i < newInput.value.length; i++) {
+            if (currentDigits === digitsBeforeCursor) {
+              newCursorPos = i;
+              break;
+            }
+            if (/[0-9]/.test(newInput.value[i])) currentDigits++;
+          }
+          newInput.setSelectionRange(newCursorPos, newCursorPos);
         }
       }
 
       function handleCraftQuantityInput(inputElem) {
-        // 🟢 수정: 수량 입력란도 단가 입력란과 동일하게 커서 보존 로직 적용
-        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+        let digitsBeforeCursor = 0;
+        for (let i = 0; i < inputElem.selectionEnd; i++) {
+          if (/[0-9]/.test(inputElem.value[i])) digitsBeforeCursor++;
+        }
 
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.craftQuantity = rawValue;
-
         renderRightPanel();
 
         const newInput = document.getElementById("craft-quantity-input");
         if (newInput) {
           newInput.focus();
-          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
-          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
+
+          let newCursorPos = newInput.value.length;
+          let currentDigits = 0;
+          for (let i = 0; i < newInput.value.length; i++) {
+            if (currentDigits === digitsBeforeCursor) {
+              newCursorPos = i;
+              break;
+            }
+            if (/[0-9]/.test(newInput.value[i])) currentDigits++;
+          }
+          newInput.setSelectionRange(newCursorPos, newCursorPos);
         }
       }
 
       function handleAdenaRateInput(inputElem) {
-        // 🟢 수정: 아데나 비율 입력란도 동일하게 커서 보존 로직 적용
-        const cursorOffsetFromEnd = inputElem.value.length - inputElem.selectionEnd;
+        let digitsBeforeCursor = 0;
+        for (let i = 0; i < inputElem.selectionEnd; i++) {
+          if (/[0-9]/.test(inputElem.value[i])) digitsBeforeCursor++;
+        }
 
         let rawValue = inputElem.value.replace(/[^0-9]/g, "");
         state.adenaRate = rawValue;
         localStorage.setItem("lcraft_adena_rate", rawValue);
-
         renderRightPanel();
 
         const newInput = document.getElementById("adena-rate-input");
         if (newInput) {
           newInput.focus();
-          const restoredCursorPos = Math.max(0, newInput.value.length - cursorOffsetFromEnd);
-          newInput.setSelectionRange(restoredCursorPos, restoredCursorPos);
+
+          let newCursorPos = newInput.value.length;
+          let currentDigits = 0;
+          for (let i = 0; i < newInput.value.length; i++) {
+            if (currentDigits === digitsBeforeCursor) {
+              newCursorPos = i;
+              break;
+            }
+            if (/[0-9]/.test(newInput.value[i])) currentDigits++;
+          }
+          newInput.setSelectionRange(newCursorPos, newCursorPos);
         }
       }
 
@@ -960,16 +1019,13 @@
         document.addEventListener("mousemove", (e) => {
           if (!isResizingLeft && !isResizingRight) return;
 
-          // 전체 1400px 컨테이너의 화면상 위치와 너비를 가져옵니다.
           const containerRect = leftPanel.parentElement.getBoundingClientRect();
 
           if (isResizingLeft) {
-            // 마우스 X좌표에서 컨테이너의 왼쪽 시작점을 빼서 실제 순수 패널 너비를 구합니다.
             let newWidth = e.clientX - containerRect.left;
             updatePanelWidths(leftPanel, Math.max(200, Math.min(newWidth, containerRect.width / 3)));
           }
           if (isResizingRight) {
-            // 컨테이너 오른쪽 끝점에서 마우스 X좌표를 빼서 우측 패널 너비를 구합니다.
             let newWidth = containerRect.right - e.clientX;
             updatePanelWidths(rightPanel, Math.max(260, Math.min(newWidth, containerRect.width / 3)));
           }
