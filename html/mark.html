@@ -27,7 +27,6 @@
       })();
     </script>
 
-    <!-- 🟢 [수정] 60종 이상의 구글 폰트 대거 추가 (한글 + 영문 픽셀/판타지/호러/디스플레이) -->
     <link
       href="https://fonts.googleapis.com/css2?family=Almendra&family=Anton&family=Bagel+Fat+One&family=Bangers&family=Bebas+Neue&family=Black+And+White+Picture&family=Black+Han+Sans&family=Cinzel:wght@700&family=Creepster&family=Cute+Font&family=Diphylleia&family=Do+Hyeon&family=Dokdo&family=Dongle:wght@400;700&family=DotGothic16&family=Gaegu:wght@400;700&family=Gamja+Flower&family=Gasoek+One&family=Gothic+A1:wght@400;700;900&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Gugi&family=Hahmlet:wght@400;700;900&family=Hi+Melody&family=IBM+Plex+Sans+KR:wght@400;700&family=Jolly+Lodger&family=Jua&family=Kirang+Haerang&family=Lobster&family=MedievalSharp&family=Metal+Mania&family=Moirai+One&family=Nanum+Brush+Script&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Nanum+Pen+Script&family=Nosifer&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@300;400;500;700;900&family=Orbit&family=Pacifico&family=Permanent+Marker&family=Pirata+One&family=Pixelify+Sans:wght@400;700&family=Poor+Story&family=Press+Start+2P&family=Righteous&family=Rye&family=Satisfy&family=Silkscreen:wght@400;700&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300;500;700&family=Uncial+Antiqua&family=VT323&family=Yeon+Sung&display=swap"
       rel="stylesheet" />
@@ -120,8 +119,6 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label class="block text-[11px] sm:text-xs font-semibold mb-1 text-zinc-700 dark:text-zinc-300">글꼴 (Font)</label>
-
-                  <!-- 🟢 [수정] 확장된 폰트 리스트 적용 -->
                   <select id="propFontFamily" class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded p-1.5 text-xs text-zinc-900 dark:text-white focus:outline-none">
                     <optgroup label="고딕/스퀘어 (한글)">
                       <option value="Noto Sans KR">노토 산스 (Noto Sans)</option>
@@ -636,7 +633,6 @@
           deleteLayer(id);
         };
 
-        // 🟢 [추가] 레이어 복사 로직 추가
         window.doDuplicateLayer = function (id) {
           const originalLayer = layers.find((l) => l.id === id);
           if (!originalLayer) return;
@@ -681,7 +677,6 @@
             let iconStr = '<i data-lucide="type" class="text-blue-500 w-4 h-4 shrink-0"></i>';
             if (layer.type === "image") iconStr = '<i data-lucide="image" class="text-green-500 w-4 h-4 shrink-0"></i>';
 
-            // 🟢 [추가] 레이어 렌더링 시 복사(doDuplicateLayer) 버튼 추가
             item.innerHTML = `
                         <div class="flex items-center gap-2 flex-1 overflow-hidden">
                             <button onclick="doToggleVisibility(${layer.id})" class="text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white shrink-0"><i data-lucide="${layer.visible ? "eye" : "eye-off"}" class="w-4 h-4"></i></button>
@@ -963,6 +958,9 @@
 
         let isDrawing = false;
         let strokeChanged = false;
+        // 🟢 추가: 현재 드래그 중인 임시 도구 상태 저장 변수 (우클릭 지우개 구현용)
+        let currentDragTool = "brush";
+
         function handleCanvasDraw(e) {
           if (!isDrawing) return;
           const layer = layers.find((l) => l.id === selectedLayerId);
@@ -984,19 +982,35 @@
             const localY = y - (layer.offsetY || 0);
             const key = `${localX},${localY}`;
             const beforeVal = layer.pixelOverrides[key]?.color || layer.pixelOverrides[key]?.type;
-            if (activeDrawTool === "brush") layer.pixelOverrides[key] = { type: "brush", color: activeDrawColor };
-            else if (activeDrawTool === "eraser") layer.pixelOverrides[key] = { type: "erase" };
-            if (beforeVal !== (activeDrawTool === "brush" ? activeDrawColor : "erase")) {
+
+            // 🟢 수정: 설정된 도구가 아닌 현재 드래그 중인 도구(currentDragTool)를 사용하여 그리거나 지우게 합니다.
+            if (currentDragTool === "brush") layer.pixelOverrides[key] = { type: "brush", color: activeDrawColor };
+            else if (currentDragTool === "erase") layer.pixelOverrides[key] = { type: "erase" };
+
+            if (beforeVal !== (currentDragTool === "brush" ? activeDrawColor : "erase")) {
               strokeChanged = true;
               drawComposite();
             }
           }
         }
+
         displayCanvas.addEventListener("mousedown", (e) => {
           isDrawing = true;
           strokeChanged = false;
+          // 🟢 추가: 마우스 우클릭(e.button === 2)일 경우 임시로 지우개 툴을 활성화합니다.
+          if (e.button === 2) {
+            currentDragTool = "erase";
+          } else {
+            currentDragTool = activeDrawTool;
+          }
           handleCanvasDraw(e);
         });
+
+        // 🟢 추가: 캔버스 내부에서 마우스 우클릭 시 나오는 브라우저 기본 컨텍스트 메뉴를 완전히 차단합니다.
+        displayCanvas.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+        });
+
         window.addEventListener("mouseup", () => {
           if (isDrawing) {
             isDrawing = false;
@@ -1010,6 +1024,7 @@
             if (e.cancelable) e.preventDefault();
             isDrawing = true;
             strokeChanged = false;
+            currentDragTool = activeDrawTool;
             handleCanvasDraw(e);
           },
           { passive: false },
@@ -1141,34 +1156,10 @@
               }
             }
 
-            for (let y = 0; y < 12; y++) {
-              for (let x = 0; x < 16; x++) {
-                const localX = x - (layer.offsetX || 0);
-                const localY = y - (layer.offsetY || 0);
-                const key = `${localX},${localY}`;
-                const override = layer.pixelOverrides[key];
-                if (override) {
-                  const i = (y * 16 + x) * 4;
-                  if (override.type === "brush") {
-                    const rgb = hexToRgb(override.color);
-                    if (rgb) {
-                      data[i] = rgb.r;
-                      data[i + 1] = rgb.g;
-                      data[i + 2] = rgb.b;
-                      data[i + 3] = 255;
-                    }
-                  } else if (override.type === "erase") {
-                    data[i] = 0;
-                    data[i + 1] = 0;
-                    data[i + 2] = 0;
-                    data[i + 3] = 0;
-                  }
-                }
-              }
-            }
-
             const outData = new Uint8ClampedArray(data.length);
             const outlineRgb = hexToRgb(layer.outlineColor || "#050505");
+
+            // 🟢 수정: 1단계 - 텍스트, 이미지의 외곽선을 먼저 계산하고 생성합니다.
             for (let y = 0; y < 12; y++) {
               for (let x = 0; x < 16; x++) {
                 const i = (y * 16 + x) * 4;
@@ -1210,10 +1201,46 @@
               }
             }
 
+            // 🟢 수정: 2단계 - 유저가 직접 수동으로 그린 1px짜리 점들을 가장 마지막에 덮어씌웁니다 (외곽선 영향을 받지 않음).
+            for (let y = 0; y < 12; y++) {
+              for (let x = 0; x < 16; x++) {
+                const localX = x - (layer.offsetX || 0);
+                const localY = y - (layer.offsetY || 0);
+                const key = `${localX},${localY}`;
+                const override = layer.pixelOverrides[key];
+                if (override) {
+                  const i = (y * 16 + x) * 4;
+                  if (override.type === "brush") {
+                    const rgb = hexToRgb(override.color);
+                    if (rgb) {
+                      outData[i] = rgb.r;
+                      outData[i + 1] = rgb.g;
+                      outData[i + 2] = rgb.b;
+                      outData[i + 3] = 255;
+                    }
+                  } else if (override.type === "erase") {
+                    outData[i] = 0;
+                    outData[i + 1] = 0;
+                    outData[i + 2] = 0;
+                    outData[i + 3] = 0;
+                  }
+                }
+              }
+            }
+
             ctxLayerTemp.putImageData(new ImageData(outData, 16, 12), 0, 0);
             displayCtx.drawImage(canvasLayerTemp, 0, 0);
             inGameCtx.drawImage(canvasLayerTemp, 0, 0);
           });
+
+          // 🟢 추가: 인게임 캔버스 렌더링 시, 완전한 검은색(#000000) 픽셀의 투명도를 0으로 깎아내어 투명하게 만듭니다.
+          const inGameImgData = inGameCtx.getImageData(0, 0, 16, 12);
+          for (let i = 0; i < inGameImgData.data.length; i += 4) {
+            if (inGameImgData.data[i] === 0 && inGameImgData.data[i + 1] === 0 && inGameImgData.data[i + 2] === 0 && inGameImgData.data[i + 3] > 0) {
+              inGameImgData.data[i + 3] = 0;
+            }
+          }
+          inGameCtx.putImageData(inGameImgData, 0, 0);
         }
 
         inShowGrid.addEventListener("change", (e) => {
