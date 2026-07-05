@@ -347,15 +347,19 @@
               </button>
             </h2>
 
-            <div id="previewContainer" class="relative w-[102px] h-[132px] bg-[#7a6b58] rounded border border-zinc-300 dark:border-zinc-700 overflow-hidden mx-auto flex-shrink-0 touch-none">
+            <!-- 🟢 수정: 1.3배 컨테이너 가로(133), 세로(172) 크기 조정 -->
+            <div id="previewContainer" class="relative w-[133px] h-[172px] bg-[#7a6b58] rounded border border-zinc-300 dark:border-zinc-700 overflow-hidden mx-auto flex-shrink-0 touch-none">
               <img id="inGameBgImg" src="https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true" class="absolute inset-0 w-full h-full object-cover pointer-events-none" />
               <div id="defaultBgPattern" class="absolute inset-0 hidden pointer-events-none" style="background-image: radial-gradient(#635545 1px, transparent 1px); background-size: 8px 8px"></div>
 
-              <div id="dragMark" class="absolute top-[20px] left-[31px] cursor-move group z-10 flex items-center gap-[2px] touch-none">
-                <canvas id="inGameCanvas" width="16" height="12" class="w-[16px] h-[12px] shadow-sm pointer-events-none" style="image-rendering: pixelated"></canvas>
+              <!-- 🟢 수정: 1.3배 시작 위치 좌표 top(26), left(40) 재조정 -->
+              <div id="dragMark" class="absolute top-[26px] left-[40px] cursor-move group z-10 flex items-center gap-[2px] touch-none">
+                <!-- 🟢 수정: 1.3배 캔버스 디스플레이 크기(21x16) 증대. 해상도는 그대로 유지(width="16" height="12") -->
+                <canvas id="inGameCanvas" width="16" height="12" class="w-[21px] h-[16px] shadow-sm pointer-events-none" style="image-rendering: pixelated"></canvas>
+                <!-- 🟢 수정: 1.3배 텍스트 크기(13px) 증대 -->
                 <span
                   id="defaultAceText"
-                  class="text-[10px] font-bold text-[#5c6dff] hidden pointer-events-none"
+                  class="text-[13px] font-bold text-[#5c6dff] hidden pointer-events-none"
                   style="
                     text-shadow:
                       1px 0px 0 #000,
@@ -958,7 +962,6 @@
 
         let isDrawing = false;
         let strokeChanged = false;
-        // 🟢 추가: 현재 드래그 중인 임시 도구 상태 저장 변수 (우클릭 지우개 구현용)
         let currentDragTool = "brush";
 
         function handleCanvasDraw(e) {
@@ -983,7 +986,6 @@
             const key = `${localX},${localY}`;
             const beforeVal = layer.pixelOverrides[key]?.color || layer.pixelOverrides[key]?.type;
 
-            // 🟢 수정: 설정된 도구가 아닌 현재 드래그 중인 도구(currentDragTool)를 사용하여 그리거나 지우게 합니다.
             if (currentDragTool === "brush") layer.pixelOverrides[key] = { type: "brush", color: activeDrawColor };
             else if (currentDragTool === "erase") layer.pixelOverrides[key] = { type: "erase" };
 
@@ -997,7 +999,6 @@
         displayCanvas.addEventListener("mousedown", (e) => {
           isDrawing = true;
           strokeChanged = false;
-          // 🟢 추가: 마우스 우클릭(e.button === 2)일 경우 임시로 지우개 툴을 활성화합니다.
           if (e.button === 2) {
             currentDragTool = "erase";
           } else {
@@ -1006,7 +1007,6 @@
           handleCanvasDraw(e);
         });
 
-        // 🟢 추가: 캔버스 내부에서 마우스 우클릭 시 나오는 브라우저 기본 컨텍스트 메뉴를 완전히 차단합니다.
         displayCanvas.addEventListener("contextmenu", (e) => {
           e.preventDefault();
         });
@@ -1075,12 +1075,15 @@
             clientY = e.clientY;
           }
           const rect = previewContainer.getBoundingClientRect();
-          let x = clientX - rect.left - 8;
-          let y = clientY - rect.top - 6;
+          let x = clientX - rect.left - 10;
+          let y = clientY - rect.top - 8;
+
           if (x < 0) x = 0;
-          if (x > rect.width - 16) x = rect.width - 16;
+          if (x > rect.width - 21) x = rect.width - 21;
+
           if (y < 0) y = 0;
-          if (y > rect.height - 12) y = rect.height - 12;
+          if (y > rect.height - 16) y = rect.height - 16;
+
           dragMark.style.left = `${x}px`;
           dragMark.style.top = `${y}px`;
         }
@@ -1159,7 +1162,6 @@
             const outData = new Uint8ClampedArray(data.length);
             const outlineRgb = hexToRgb(layer.outlineColor || "#050505");
 
-            // 🟢 수정: 1단계 - 텍스트, 이미지의 외곽선을 먼저 계산하고 생성합니다.
             for (let y = 0; y < 12; y++) {
               for (let x = 0; x < 16; x++) {
                 const i = (y * 16 + x) * 4;
@@ -1201,7 +1203,6 @@
               }
             }
 
-            // 🟢 수정: 2단계 - 유저가 직접 수동으로 그린 1px짜리 점들을 가장 마지막에 덮어씌웁니다 (외곽선 영향을 받지 않음).
             for (let y = 0; y < 12; y++) {
               for (let x = 0; x < 16; x++) {
                 const localX = x - (layer.offsetX || 0);
@@ -1233,7 +1234,6 @@
             inGameCtx.drawImage(canvasLayerTemp, 0, 0);
           });
 
-          // 🟢 추가: 인게임 캔버스 렌더링 시, 완전한 검은색(#000000) 픽셀의 투명도를 0으로 깎아내어 투명하게 만듭니다.
           const inGameImgData = inGameCtx.getImageData(0, 0, 16, 12);
           for (let i = 0; i < inGameImgData.data.length; i += 4) {
             if (inGameImgData.data[i] === 0 && inGameImgData.data[i + 1] === 0 && inGameImgData.data[i + 2] === 0 && inGameImgData.data[i + 3] > 0) {
@@ -1319,8 +1319,8 @@
           syncDrawToolUI();
           const inGameBgImg = document.getElementById("inGameBgImg");
           inGameBgImg.src = "https://github.com/Kim-Cheolho/cat-dog.github.io/blob/main/%EB%AF%B8%EB%A6%AC%EB%B3%B4%EA%B8%B0.jpg?raw=true";
-          document.getElementById("dragMark").style.left = "20px";
-          document.getElementById("dragMark").style.top = "31px";
+          document.getElementById("dragMark").style.left = "40px";
+          document.getElementById("dragMark").style.top = "26px";
           renderLayerList();
           updatePropertiesPanel();
           drawComposite();
